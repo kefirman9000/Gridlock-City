@@ -304,7 +304,7 @@ function renderGround(heads){
   const buf=lowBuf,lw=LW,fr=FOGC[0],fgc=FOGC[1],fb=FOGC[2];buf.fill(0);
   const ar=AMB[0],ag=AMB[1],ab=AMB[2],lk=LIGHTK,nh=heads.length,rn=rain,gt=(game.t*14)|0;
   const snk=SNOWK,flk=FLOODK;
-  const pix=(wx,wy,f,water,hh)=>{
+  const pix=(wx,wy,f,water,hh,flat)=>{ // flat: no glints (used where one sample fills a tall gap)
     let r,g,b;
     if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){
       const xi=wx|0,yi=wy|0,tx=xi>>5,ty=yi>>5,ti=ty*W+tx,t=map[ti],u=xi&31,v=yi&31,h=TILEH[ti];
@@ -359,7 +359,7 @@ function renderGround(heads){
             else if(PARKT[ti]===4){r=128+nz*3;g=102+nz*3;b=72+nz*2;if((u+((h>>3)&7))%13<2){r-=18;g-=16;b-=12;}if(((u*5+v*3+h)&47)===0){r=150;g=150;b=150;}}
             else if(PARKT[ti]===3){if((u&15)===0||(v&15)===0){r=138;g=132;b=122;}else{r=168+nz;g=160+nz;b=148+nz;}}
             else if((tx&1)===0&&u<2&&(MXT[ty]===6||MXT[ty]===11)){r=138;g=138;b=130;}else{r=55+nz;g=56+nz;b=59+nz;}break;
-          case 8:{r=38+nz*2;g=86+nz*2;b=116+nz*2;if(((u*3+v*5+gt)%29)===0){r+=55;g+=65;b+=60;}
+          case 8:{r=38+nz*2;g=86+nz*2;b=116+nz*2;if(!flat&&((u*3+v*5+gt)%29)===0){r+=55;g+=65;b+=60;}
             {const sw=Math.sin(wx*0.035+wy*0.02+game.t*1.2)*6,fz=Math.min(0.45,f/1400);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
             if(RIV[ti]){if((u<4&&map[ti-1]!==8)||(u>27&&map[ti+1]!==8)||(v<4&&map[ti-W]!==8&&!BRT[ti-W])||(v>27&&map[ti+W]!==8&&!BRT[ti+W])){r=118;g=116;b=110;}break;}
             if((u<3&&map[ti-1]!==8)||(u>28&&map[ti+1]!==8)||(v<3&&map[ti-W]!==8)||(v>28&&map[ti+W]!==8)){if(PARKT[ti]===3){r=170;g=166;b=158;}else{r=150+nz*3;g=140+nz*3;b=108+nz*2;}}
@@ -384,7 +384,7 @@ function renderGround(heads){
       r*=lr;g*=lg;b*=lb;
     }else{
       const xi=wx|0,yi=wy|0,gi=(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0),tt=TTYPE[gi],nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
-      if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if((((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
+      if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
       else{const c=TCOL[gi]||0xff406a3a,sh=SHMAP[gi];r=((c&255)+nz*2-7)*sh;g=(((c>>8)&255)+nz*2-7)*sh;b=(((c>>16)&255)+nz-3)*sh;
         if(tt===7&&(xi&3)===0){r*=0.85;g*=0.85;b*=0.85;}if(snk>0.02){const k=snk*0.8;r+=(236-r)*k;g+=(240-g)*k;b+=(246-b)*k;}}
       r*=ar;g*=ag;b*=ab;
@@ -401,7 +401,7 @@ function renderGround(heads){
       const wx=CX+dx*f,wy=CY+dy*f;let h=GH(wx,wy);let water=h<0&&(wx<0||wy<0||wx>=WPX||wy>=WPX),deck=false;if(water)h=0;else if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){const ti=((wy|0)>>5)*W+((wx|0)>>5);if(RIV[ti])h=RIVL;else if(BRT[ti])deck=true;}
       const sy=HOR+(CZ-h)*FOC/f;let yi=Math.ceil(sy-0.5);if(yi<0)yi=0;
       // a bridge deck is a slab with open air under it: whatever lies beyond fills the gap underneath
-      if(hB>hT&&!deck&&yi<hB){const y0=Math.max(yi,hT),col=pix(wx,wy,f,water,h);for(let y=y0;y<hB;y++)buf[y*lw+x]=col;hB=y0;}
+      if(hB>hT&&!deck&&yi<hB){const y0=Math.max(yi,hT),col=pix(wx,wy,f,water,h,true);for(let y=y0;y<hB;y++)buf[y*lw+x]=col;hB=y0;}
       if(yi<yb){const col=pix(wx,wy,f,water,h);
         if(deck&&!pDeck){const yd=Math.ceil(HOR+(CZ-h+9)*FOC/f-0.5),ybot=Math.min(yd,yb),fg=fogAt(f),dk=0xff000000|((44+(FOGC[2]-44)*fg|0)<<16)|((42+(FOGC[1]-42)*fg|0)<<8)|(42+(FOGC[0]-42)*fg|0);
           for(let y=yi;y<ybot;y++)buf[y*lw+x]=y<yi+1?col:dk;if(ybot<yb&&!(hB>hT)){hT=ybot;hB=yb;}}
