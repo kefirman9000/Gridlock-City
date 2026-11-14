@@ -519,7 +519,7 @@ function busted(){if(game.state!=='play')return;game.state='busted';game.timer=D
 // ================= MESSAGES =================
 let big=null;const ticker=[];
 function showBig(text,sub,col,dur){big={text,sub,col,t:dur||2.5,max:dur||2.5}}
-function note(text){ticker.push({text,t:4});if(ticker.length>4)ticker.shift()}
+function note(text){const old=ticker.find(q=>q.text===text);if(old){old.t=4;return;}ticker.push({text,t:4});if(ticker.length>4)ticker.shift()}
 
 // ================= PICKUPS / PHONES / MISSIONS =================
 const pickups=[];

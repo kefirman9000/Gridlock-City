@@ -419,7 +419,8 @@ function update(dt){
     const inBoat=player.car&&player.car.t.boat;if(inBoat){hgt+=14;dist+=10;}if(player.car&&player.car.t.heli){dist+=50;hgt+=26;}if(player.car&&player.car.t.rc){dist*=0.55;hgt*=0.5;}
     // pull the camera in when a wall is between it and you; up on a roof or fire escape, only things taller than the camera count
     {const camZ=GH(player.x,player.y)+(player.jz||0)+hgt,hi=(player.jz||0)>12;
-    for(let s2=10;s2<=dist;s2+=6){const qx=player.x-ca*s2,qy=player.y-sa*s2;if(!solidPx(qx,qy)||(inBoat&&tileAt(Math.floor(qx/T),Math.floor(qy/T))===WATER))continue;
+    const side=(qx,qy)=>solidPx(qx,qy)||solidPx(qx-sa*9,qy+ca*9)||solidPx(qx+sa*9,qy-ca*9);
+    for(let s2=10;s2<=dist;s2+=6){const qx=player.x-ca*s2,qy=player.y-sa*s2;if(!(s2>=30?side(qx,qy):solidPx(qx,qy))||(inBoat&&tileAt(Math.floor(qx/T),Math.floor(qy/T))===WATER))continue;
       if(hi){const tt=tileAt(Math.floor(qx/T),Math.floor(qy/T));if(tt===TREE)continue;const bb=bldAt(qx,qy);if(bb&&roofAbs(bb,qx,qy)<camZ-6)continue;}
       dd=Math.max(24,s2-10);break;}}
     cam.dist=lerp(cam.dist,dd,Math.min(1,dt*(dd<cam.dist?16:2.5)));cam.h=lerp(cam.h,Math.max(10,hgt),Math.min(1,dt*(cam.pidle<0.3?14:3)));

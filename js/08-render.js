@@ -293,7 +293,7 @@ function glow(x,y,s0,col,a){const s=clamp(s0,1,12);L3.globalCompositeOperation='
 // billboard rectangle in local units (u across, z up) around the last projected point
 let BX=0,BY=0,BK=1;
 function bb(u0,z0,u1,z1,c){const xa=R2(BX+u0*BK),xb=R2(BX+u1*BK),ya=R2(BY-z1*BK),yb=R2(BY-z0*BK);L3.fillStyle=c;L3.fillRect(xa,ya,Math.max(1,xb-xa),Math.max(1,yb-ya));}
-function sign3(x,y,z,txt,bg,fgc,size,fg){if(!proj(x,y,z))return;const k=PK;if(k<0.18)return;const fs=Math.max(5,R2(size*k));L3.font=`${fs}px "Pixelify Sans",monospace`;const w=L3.measureText(txt).width+fs*0.8,h=fs*1.25;
+function sign3(x,y,z,txt,bg,fgc,size,fg){if(!proj(x,y,z))return;const k=PK;if(k<0.18)return;const fs=Math.max(5,Math.min(R2(size*k),Math.round(LH*0.075)));L3.font=`${fs}px "Pixelify Sans",monospace`;const w=L3.measureText(txt).width+fs*0.8,h=fs*1.25;
   L3.fillStyle=lit(rgbOf(bg),1,fg);L3.fillRect(R2(PX-w/2),R2(PY-h),R2(w),R2(h));L3.fillStyle=lit(rgbOf(fgc),1,fg,LIGHTK>0.3);L3.textAlign='center';L3.textBaseline='middle';L3.fillText(txt,R2(PX),R2(PY-h/2+1));}
 
 // ---------- ground ----------
@@ -1431,6 +1431,7 @@ function drawHUD(){
   if(radioBanner&&player.car){ctx.globalAlpha=Math.min(1,radioBanner.t*1.5);const rx=touchMode?VW/2:(16*sc+msz+16*sc),ry=touchMode?VH*0.3:VH-34*sc,al=touchMode?'center':'left';hudText('📻 '+radioBanner.text+(radioBanner.sub?'  ·  '+radioBanner.sub:''),rx,ry,Math.round(14*sc),'#9fe0ff',al,`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ctx.globalAlpha=1;}
   // ticker
   let ty=touchMode?VH*0.62:VH-40*sc;
+  if(game.t<12&&game.state==='play'&&!touchMode)ty=VH-108*sc; // keep clear of the controls hint
   for(let i=ticker.length-1;i>=0;i--){const t=ticker[i];ctx.globalAlpha=Math.min(1,t.t);hudText(t.text,VW/2,ty,Math.round(14*sc),'#fff','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ty-=22*sc;}
   ctx.globalAlpha=1;
   // big message
