@@ -45,10 +45,10 @@ function updateRooms(dt){roomCool-=dt;if(roomCool>0||player.car||DLG.open||game.
 
 // ---------- weather: winter snow, morning fog, flooding storms, lightning blackouts ----------
 const SEASON=()=>OPT.season==='winter'?'winter':OPT.season==='summer'?'summer':([11,0,1].includes(new Date().getMonth())?'winter':'auto');
-let SNOWK=0,FOGK=0,fogTarget=0,FLOODK=0,BLACKOUT=null;
+let SNOWK=0,FOGK=0,fogTarget=0,FLOODK=0,BLACKOUT=null,wetK=0;
 function updateWeather(dt){const snow=SEASON()==='winter';
   SNOWK=lerp(SNOWK,snow?(rain>0.2?1:0.35):0,Math.min(1,dt*0.03));
-  if(R()<dt/120&&rain<0.1)fogTarget=R()<0.5?rr(0.5,0.9):0;if(rain>0.3)fogTarget=0;FOGK=lerp(FOGK,fogTarget,Math.min(1,dt*0.1));
+  if(R()<dt/120&&rain<0.1)fogTarget=R()<0.5?rr(0.5,0.9):0;if(rain>0.3)fogTarget=0;wetK=rain>0.25?Math.min(1,wetK+dt*0.12):Math.max(0,wetK-dt/150);FOGK=lerp(FOGK,fogTarget,Math.min(1,dt*0.1));
   FLOODK=lerp(FLOODK,!snow&&rain>0.85?1:0,Math.min(1,dt*(rain>0.85?0.03:0.06)));
   if(lightning>0.95&&rain>0.8&&!BLACKOUT&&R()<0.4){BLACKOUT={x:player.x+rr(-500,500),y:player.y+rr(-500,500),r:1500,t:35};note('Lightning knocked out the power. Traffic lights are down!');}
   if(BLACKOUT){BLACKOUT.t-=dt;if(BLACKOUT.t<=0){BLACKOUT=null;note('Power is back on');}}}

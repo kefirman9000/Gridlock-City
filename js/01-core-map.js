@@ -543,6 +543,20 @@ const DRIVEWAYS=[];
       if(map[ny*W+nx]===WALK&&!trees.some(t=>Math.abs(t.x-(nx+.5)*T)<20&&Math.abs(t.y-(ny+.5)*T)<20))props.push({x:(nx+.5)*T,y:(ny+.5)*T,k:'hotdog',a:cr()*TAU,c:cp([[220,50,40],[40,110,200],[240,190,30],[40,150,80]]),rad:12,ht:28});}
   }
 })();
+// ---- extra street clutter: trash bags, parked bikes, A-frame shop signs (own seeded stream) ----
+(function streetClutter(){
+  const cr=(a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296})(CITY_SEED^0x27d4eb2f);
+  const BIKE=[[180,40,40],[40,90,170],[40,140,70],[230,200,40],[30,30,34]];
+  for(let y=0;y<W;y++)for(let x=0;x<W;x++){
+    if(map[y*W+x]!==WALK||PARKT[y*W+x])continue;const mx=x%P,my=y%P;
+    const sideX=mx===4?1:mx===13?-1:0,sideY=my===4?1:my===13?-1:0;if((sideX!==0)===(sideY!==0))continue;
+    const r=cr(),cx=(x+.5)*T,cy=(y+.5)*T,z=zoneOf(cx,cy);
+    const curbX=cx-sideX*11,curbY=cy-sideY*11,inX=cx+sideX*11,inY=cy+sideY*11,along=sideX?PI/2:0;
+    if(r<0.035)props.push({x:inX+sideY*6,y:inY+sideX*6,k:'bags'});
+    else if(r<0.06)props.push({x:curbX,y:curbY,k:'pbike',a:along+(cr()<0.5?0:PI),c:BIKE[Math.floor(cr()*BIKE.length)]});
+    else if(r<0.08&&z!==2)props.push({x:inX-sideX*3,y:inY-sideY*3,k:'aframe',a:along+PI/2});
+  }
+})();
 const streetLights=[];
 for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){const cx=ix*P*T,cy=iy*P*T;
   for(const o of [[-0.5,-0.5],[4.5,4.5],[4.5,-0.5],[-0.5,4.5]]){const x=cx+o[0]*T,y=cy+o[1]*T;if(tileAt(Math.floor(x/T),Math.floor(y/T))===WALK&&R()<0.7)streetLights.push({x,y});}}
