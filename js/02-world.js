@@ -684,9 +684,11 @@ function spawnPed(){
     if(t!==WALK&&t!==GRASS&&!(t===LOT&&PARKT[Math.floor(y/T)*W+Math.floor(x/T)]===9))continue;if(y>=WPX||x<0||y<0||x>=WPX)continue;
     if(camSees(x,y))continue;
     const p=makePed(x,y,R()<0.04);if(p.cop)p.state='walk';else{const z=zoneOf(x,y);if(z>=0&&R()<0.28)makeGang(p,z);}
-    if(!p.cop&&p.gang==null&&PARKT[Math.floor(y/T)*W+Math.floor(x/T)]===1&&R()<0.45){p.jog=true;p.col=pick(['#ff5a8a','#5ad1ff','#ffe25a','#7cff6a']);}
+    const jogK=(clock>0.24&&clock<0.38)||(clock>0.7&&clock<0.8)?1.6:(clock>0.88||clock<0.2)?0.25:1;
+    if(!p.cop&&p.gang==null&&PARKT[Math.floor(y/T)*W+Math.floor(x/T)]===1&&R()<0.45*jogK){p.jog=true;p.col=pick(['#ff5a8a','#5ad1ff','#ffe25a','#7cff6a']);}
     // people dress for their part of town: hard hats and hi-vis at the docks, suits uptown, tourists in Times Square
     if(!p.cop&&p.gang==null&&!p.jog){const dn=districtAt(x,y);
+      if((clock>0.86||clock<0.12)&&(dn==='DOWNTOWN'||dn==='TIMES SQUARE'||dn==='LOTUS QUARTER')&&R()<0.5){p.col=pick(['#ff3aa0','#3affd0','#b03aff','#ffe23a','#ff6a2a']);p.party=true;}else
       if(dn==='THE DOCKS'&&R()<0.7){p.col=pick(['#e8701a','#e8c81a','#3a5a8a']);p.hat=pick(['#f0c020','#f0f0ea','#e8701a']);}
       else if((dn==='UPTOWN'||dn==='MILLIONAIRE\'S ROW'||dn==='MIDTOWN')&&R()<0.4){p.col=pick(['#2a2c34','#3a3c44','#22283a','#4a4038']);}
       else if(dn==='TIMES SQUARE'&&R()<0.5){p.col=pick(['#ff5a8a','#5ad1ff','#ffe25a','#ffffff','#7cff6a']);if(R()<0.5)p.hat=pick(['#f0e6c8','#d8302a','#2a6ad8']);}

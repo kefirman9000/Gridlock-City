@@ -879,6 +879,18 @@ function drawProp3(o,fg){
     case 'bin':obox(o.x,o.y,0,3,3,0,9,[40,70,50],[30,50,36],fg);return;
     case 'mail':obox(o.x,o.y,0,0.8,0.8,0,6,[40,40,44],null,fg);obox(o.x,o.y,0,3,2.5,6,13,[40,80,170],[50,90,180],fg);return;
     case 'news':obox(o.x,o.y,0,2.5,3,0,10,[220,50,40],[200,40,30],fg,[230,230,220]);return;
+    case 'tvtower':{const blink=(Math.floor(game.t*1.5)%2)===0;obox(o.x,o.y,0,9,9,0,6,[150,150,154],[170,170,174],fg);obox(o.x,o.y,0,5,5,6,214,[176,176,180],null,fg);
+      obox(o.x,o.y,0,13,13,214,238,[110,124,140],[140,150,164],fg,null,null,LIGHTK>0.2);obox(o.x,o.y,0,10,10,238,248,[170,170,174],[190,190,194],fg);
+      obox(o.x,o.y,0,1.2,1.2,248,318,[200,200,204],null,fg);obox(o.x,o.y,0,2,2,318,322,blink?[255,40,30]:[90,20,20],null,fg,null,null,blink);return;}
+    case 'clocktower':{obox(o.x,o.y,0,14,14,0,118,[140,72,56],[120,62,48],fg);obox(o.x,o.y,0,16,16,118,124,[170,160,140],[180,170,150],fg);
+      for(const[dx,dy]of[[0,-14.6],[0,14.6],[-14.6,0],[14.6,0]])obox(o.x+dx,o.y+dy,0,dx?0.4:7,dy?0.4:7,94,110,[236,232,214],null,fg,null,null,LIGHTK>0.2);
+      obox(o.x,o.y,0,11,11,124,138,[150,80,62],null,fg);obox(o.x,o.y,0,6,6,138,152,[70,90,80],[60,80,70],fg);obox(o.x,o.y,0,1,1,152,166,[180,170,120],null,fg);return;}
+    case 'ferris':{const R0=62,hub=74,rot=game.t*0.12,lit2=LIGHTK>0.2;
+      for(const s of[-1,1]){obox(o.x-26,o.y+s*7,0,2,2,0,hub,[200,200,206],null,fg);obox(o.x+26,o.y+s*7,0,2,2,0,hub,[200,200,206],null,fg);}
+      obox(o.x,o.y,0,2.5,8,hub-2,hub+2,[220,220,226],null,fg);
+      for(let i=0;i<20;i++){const t=rot+i/20*TAU;obox(o.x+Math.cos(t)*R0,o.y,0,2,0.8,hub+Math.sin(t)*R0-1.5,hub+Math.sin(t)*R0+1.5,[230,230,236],null,fg,null,null,lit2&&i%2===0);}
+      for(let i=0;i<10;i++){const t=rot+i/10*TAU,gx=o.x+Math.cos(t)*R0,gz=hub+Math.sin(t)*R0;obox(gx,o.y,0,4,4,gz-9,gz-1,[[220,60,60],[60,120,220],[240,200,60],[80,180,90]][i%4],[240,240,240],fg,null,null,lit2);}
+      return;}
     case 'bags':obox(o.x,o.y,0.3,3,2.4,0,4.6,[30,32,32],[44,46,46],fg);obox(o.x+3.5,o.y+2,1.1,2.4,2,0,3.8,[36,38,36],[50,52,50],fg);obox(o.x-1,o.y+3.6,0.7,2,1.8,0,3.2,[52,56,40],[64,68,50],fg);return;
     case 'pbike':{const ca=Math.cos(o.a),sa=Math.sin(o.a);for(const s of[-4.5,4.5])obox(o.x+ca*s,o.y+sa*s,o.a,2.6,0.5,0,5.6,[26,26,28],null,fg);
       obox(o.x,o.y,o.a,4.6,0.5,4.4,5.6,o.c,null,fg);obox(o.x-ca*2.4,o.y-sa*2.4,o.a,1.6,0.9,6.2,7,[30,30,30],null,fg);obox(o.x+ca*4.2,o.y+sa*4.2,o.a+PI/2,2.4,0.4,7,7.6,[60,60,64],null,fg);return;}

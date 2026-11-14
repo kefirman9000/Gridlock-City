@@ -376,6 +376,13 @@ function carAlarm(c){if(c.driver||c.t.boat||c.t.heli||R()>0.3)return;alarm={c,t:
 function updateAlarm(dt){if(!alarm)return;alarm.t-=dt;if(Math.floor(alarm.t*4)!==Math.floor((alarm.t+dt)*4))sfx('ring',0.25);if(alarm.t<=0||player.car!==alarm.c)alarm=null;}
 function extTick9(dt){updateShouts(dt);updateAlarm(dt);}
 
+// ---------- v5.1 landmarks: a TV tower downtown, a clock tower in Old Town, a Ferris wheel on South Beach ----------
+{const pickBlock=(want,fn)=>{let best=null,bd=1e18;for(let i=0;i<NB*NB;i++){if(BLOCKK[i]!==want)continue;const bx=i%NB,by=Math.floor(i/NB),d=fn(bx,by);if(d!=null&&d<bd){bd=d;best=[bx,by];}}return best;};
+  const dt=pickBlock('plaza',(bx,by)=>districtAt((bx*P+9)*T,(by*P+9)*T)==='DOWNTOWN'?hyp(bx-13,by-11):null)||pickBlock('plaza',(bx,by)=>zoneOf((bx*P+9)*T,(by*P+9)*T)===-1?hyp(bx-13,by-11):null);
+  if(dt)props.push({x:(dt[0]*P+6.6)*T,y:(dt[1]*P+6.6)*T,k:'tvtower',rad:40,ht:330});
+  const ot=pickBlock('plaza',(bx,by)=>districtAt((bx*P+9)*T,(by*P+9)*T)==='OLD TOWN'?hyp(bx-5,by-8):null)||pickBlock('park',(bx,by)=>districtAt((bx*P+9)*T,(by*P+9)*T)==='OLD TOWN'?0:null);
+  if(ot)props.push({x:(ot[0]*P+6.4)*T,y:(ot[1]*P+11.6)*T,k:'clocktower',rad:30,ht:170});
+  if(LM&&LM.beach)props.push({x:LM.beach.x+140,y:LM.beach.y+10,k:'ferris',rad:80,ht:170});}
 // ---------- landmarks: the stadium and the statue on the Westside beach ----------
 if(STADIUM)SIGNS.push({x:STADIUM.x,y:STADIUM.y+150,text:'GRIDLOCK STADIUM',bg:'#1f3f9f',fg:'#ffffff',h:60,on:()=>true});
 {let sx=null;for(let bx=0;bx<6;bx++)if(BLOCKK[(NB-1)*NB+bx]==='beach'){sx=bx;break;}const x=((sx==null?2:sx)*P+9)*T,y=((NB-1)*P+7)*T;props.push({x,y,k:'statue',rad:30,ht:130});SIGNS.push({x,y:y-60,text:'STATUE OF GRIDLOCK',bg:'#3a6a5a',fg:'#ffffff',h:24,on:()=>true});}
@@ -669,13 +676,38 @@ for(const k of['diner','gym','pawn']){const r=ROOMS[k];r.id=k;r.x0=r.tx0*T;r.y0=
   r.props.push({x:r.cx,y:r.y0+T*1.1,k:'rsign',text:'LUCKY PAWN',bg:'#d8a020',fg:'#202020',z:48,rad:30,ht:56});}
 const PLACES=[['diner',4,5,'BLUE PLATE DINER','#2a7a8a'],['gym',4,12,'IRON WORKS GYM','#202020'],['pawn',13,14,'LUCKY PAWN','#d8a020']].map(([id,bx,by,txt,bg])=>{
   const l=nearestLot((bx*P+9)*T,(by*P+9)*T)||lotBlocks[0];const d={id,x:l.x-60,y:l.y-40};SIGNS.push({x:d.x,y:d.y-36,text:txt,bg,fg:'#ffffff',h:40,on:()=>true});return d;});
+// ---------- v5.1: an arcade and a bar ----------
+ROOMS.arcade={tx0:194,ty0:W+13,tx1:206,ty1:W+21,floor:[30,26,44],wall:[60,40,90],name:'PIXEL PALACE'};
+ROOMS.bar={tx0:210,ty0:W+13,tx1:220,ty1:W+20,floor:[92,64,44],wall:[120,90,64],name:'THE CORNER TAP'};
+for(const k of['arcade','bar']){const r=ROOMS[k];r.id=k;r.x0=r.tx0*T;r.y0=r.ty0*T;r.x1=r.tx1*T;r.y1=r.ty1*T;r.cx=(r.x0+r.x1)/2;r.cy=(r.y0+r.y1)/2;r.door={x:r.cx,y:r.y1-T*1.6};r.props=[];
+  const hw=(r.x1-r.x0)/2,hh=(r.y1-r.y0)/2;
+  r.props.push({x:r.cx,y:r.y0+T/2,k:'rwall',hl:hw,hw:T/2,rad:hw+20,ht:70,c:r.wall},{x:r.cx,y:r.y1-T/2,k:'rwall',hl:hw,hw:T/2,rad:hw+20,ht:70,c:r.wall},
+    {x:r.x0+T/2,y:r.cy,k:'rwall',hl:T/2,hw:hh,rad:hh+20,ht:70,c:r.wall},{x:r.x1-T/2,y:r.cy,k:'rwall',hl:T/2,hw:hh,rad:hh+20,ht:70,c:r.wall},{x:r.door.x,y:r.y1-T*1.05,k:'rdoor',rad:30,ht:60});
+  ROOMLIST.push(r);}
+{const r=ROOMS.arcade;r.counter={x:r.cx,y:r.y0+T*2.2};
+  const CAB=[[220,40,90],[40,180,220],[240,200,40],[120,220,80],[200,90,240],[240,120,40]];
+  for(let i=0;i<6;i++){const x=r.x0+T*(1.8+i*1.6);r.props.push({x,y:r.y0+T*1.3,k:'rbox',hl:T*0.45,hw:T*0.35,z0:0,z1:26,c:[34,30,40],rad:20,ht:28},{x,y:r.y0+T*1.66,k:'rbox',hl:T*0.36,hw:1,z0:14,z1:23,c:CAB[i],rad:16,ht:24});}
+  r.props.push({x:r.cx,y:r.y0+T*2.2,k:'rbox',hl:T*1.2,hw:T*0.4,z0:0,z1:14,c:[60,50,80],rad:44,ht:16},
+    {x:r.x0+T*2.5,y:r.y1-T*2.6,k:'rbox',hl:T*1.1,hw:T*0.7,z0:0,z1:12,c:[30,110,60],rad:40,ht:14},{x:r.x1-T*2.5,y:r.y1-T*2.6,k:'rbox',hl:T*0.6,hw:T*0.6,z0:0,z1:30,c:[200,60,60],rad:30,ht:32},
+    {x:r.cx,y:r.y0+T*0.9,k:'rsign',text:'PIXEL PALACE',bg:'#2a1a4a',fg:'#4fffd8',z:52,rad:30,ht:60});}
+{const r=ROOMS.bar;r.counter={x:r.cx,y:r.y0+T*2.2};r.props.push({x:r.cx,y:r.y0+T*2.2,k:'rbox',hl:T*3,hw:T*0.45,z0:0,z1:16,c:[70,40,26],rad:110,ht:18},
+    {x:r.cx,y:r.y0+T*1.1,k:'rbox',hl:T*3,hw:T*0.3,z0:20,z1:44,c:[50,34,26],rad:110,ht:46});
+  for(let i=-3;i<=3;i++)r.props.push({x:r.cx+i*T*0.85,y:r.y0+T*3,k:'rbox',hl:3,hw:3,z0:0,z1:10,c:[150,40,36],rad:8,ht:10});
+  for(const sx of[-1,1])r.props.push({x:r.cx+sx*T*2.8,y:r.y1-T*2.8,k:'rbox',hl:T*0.7,hw:T*0.7,z0:0,z1:11,c:[90,60,40],rad:30,ht:12});
+  r.props.push({x:r.cx,y:r.y0+T*0.8,k:'rsign',text:'THE CORNER TAP',bg:'#3a2414',fg:'#ffcf6a',z:52,rad:30,ht:60});}
+for(const[id,bx,by,txt,bg]of[['arcade',3,8,'PIXEL PALACE','#2a1a4a'],['bar',6,4,'THE CORNER TAP','#3a2414']]){
+  const l=nearestLot((bx*P+9)*T,(by*P+9)*T)||lotBlocks[0];const d={id,x:l.x+60,y:l.y-40};SIGNS.push({x:d.x,y:d.y-36,text:txt,bg,fg:'#ffffff',h:40,on:()=>true});PLACES.push(d);}
 let placeCool=0;
 function updatePlaces(dt){placeCool-=dt;if(placeCool>0||player.car||DLG.open||game.state!=='play')return;
   if(!ROOM){if(roomCool>0)return;for(const d of PLACES)if(dist2(d.x,d.y,player.x,player.y)<30*30){enterRoom(d.id,{x:d.x,y:d.y+40});return;}return;}
-  const r=ROOM.r;if(!r.counter||!['diner','gym','pawn'].includes(ROOM.id)||dist2(player.x,player.y,r.counter.x,r.counter.y+T)>30*30)return;placeCool=4;
+  const r=ROOM.r;if(!r.counter||!['diner','gym','pawn','arcade','bar'].includes(ROOM.id)||dist2(player.x,player.y,r.counter.x,r.counter.y+T)>30*30)return;placeCool=4;
   const buy=(p,f)=>()=>{if(money<p){note('Not enough cash');return;}addMoney(-p);sfx('pickup');f();};
   if(ROOM.id==='diner')say([['Waitress','What\'ll it be, hon?']],null,[['COFFEE $5',buy(5,()=>{player.hp=Math.min(PMAX(),player.hp+15);note('+15 health');})],['BURGER $15',buy(15,()=>{player.hp=PMAX();note('Full health');})],
     ['BLUE PLATE SPECIAL $40',buy(40,()=>{player.hp=PMAX();player.armor=Math.max(player.armor||0,25);note('Full health and a little armor');})],['NOTHING',()=>{},'no']]);
+  else if(ROOM.id==='arcade')say([['Attendant','Five bucks a game. Beat the high score and the jackpot is yours.']],null,[['PLAY $5',buy(5,()=>{const r2=R(),won=r2<0.06?500:r2<0.3?Math.round(rr(2,8))*5:0;
+      if(won){addMoney(won);showBig(won>=500?'NEW HIGH SCORE!':'NICE RUN','+$'+won,'#4fffd8',2);}else note('Game over. Insert coin');})],['NOT NOW',()=>{},'no']]);
+  else if(ROOM.id==='bar')say([['Bartender','What are you having?']],null,[['SODA $4',buy(4,()=>{player.hp=Math.min(PMAX(),player.hp+10);note('+10 health');})],
+    ['HOT WINGS $12',buy(12,()=>{player.hp=Math.min(PMAX(),player.hp+30);note('+30 health');})],['JUST LOOKING',()=>{},'no']]);
   else if(ROOM.id==='gym'){if(GYM>=5){say([['Trainer','You\'re in the best shape of your life. Nothing left to teach you.']]);return;}const pr=150+GYM*100;
     say([['Trainer','A session costs $'+pr+'. Every one makes you tougher.']],null,[['TRAIN $'+pr,buy(pr,()=>{GYM++;player.hp=PMAX();showBig('TOUGHER','Max health '+PMAX(),'#ffb03a',2);})],['LATER',()=>{},'no']]);}
   else say([['Pawnbroker','Everything\'s a bargain. Mostly.']],null,[['BODY ARMOR $350',buy(350,()=>{player.armor=100;note('Body armor on');})],['BASEBALL BAT $60',buy(60,()=>{player.w=BATIDX();note('Bat ready');})],
@@ -688,7 +720,7 @@ function initPlanksRuns(){{const cand=buildings.filter(b=>!b.outside&&b.st!=='ho
     const ox=Math.min(A.x+A.w,B.x+B.w)-Math.max(A.x,B.x),oy=Math.min(A.y+A.h,B.y+B.h)-Math.max(A.y,B.y);let pl=null;
     if(oy>=26){const g1=B.x-(A.x+A.w),g2=A.x-(B.x+B.w),gap=Math.max(g1,g2);if(gap>=24&&gap<=80){const x=g1>0?A.x+A.w+gap/2:B.x+B.w+gap/2,y=Math.max(A.y,B.y)+oy/2;pl={x,y,a:0,hl:gap/2+7};}}
     else if(ox>=26){const g1=B.y-(A.y+A.h),g2=A.y-(B.y+B.h),gap=Math.max(g1,g2);if(gap>=24&&gap<=80){const y=g1>0?A.y+A.h+gap/2:B.y+B.h+gap/2,x=Math.max(A.x,B.x)+ox/2;pl={x,y,a:PI/2,hl:gap/2+7};}}
-    if(!pl)continue;const ra=A.base+(A.tier?A.hg:A.hg)*BH,rb=B.base+B.hg*BH;if(Math.abs(ra-rb)>8||Math.min(ra,rb)<60)continue;if(hash(A.id,B.id)%10>5)continue;
+    if(!pl)continue;const ra=A.base+(A.tier?A.hg:A.hg)*BH,rb=B.base+B.hg*BH;if(Math.abs(ra-rb)>8||Math.min(ra,rb)<60)continue;if(hash(A.id,B.id)%10>7)continue;
     const ca=Math.cos(pl.a),sa=Math.sin(pl.a),gA=(A.x<=pl.x&&pl.x<=A.x+A.w)?0:1,end=(sg)=>{const ex=pl.x+ca*pl.hl*sg,ey=pl.y+sa*pl.hl*sg;return bldAt(ex,ey);};
     const e1=end(-1),e2=end(1);if(!e1||!e2||e1===e2)continue;const z1=e1.base+e1.hg*BH,z2=e2.base+e2.hg*BH,g0=GH(pl.x,pl.y);
     pl.z=(z1+z2)/2-g0;PLANKS.push(pl);WALKS.push({x:pl.x,y:pl.y,a:pl.a,hl:pl.hl,hw:5.5,h0:z1-g0+0.5,h1:z2-g0+0.5});props.push({x:pl.x,y:pl.y,k:'plank',a:pl.a,hl:pl.hl,z:pl.z,rad:pl.hl+4,ht:pl.z+2});}}
