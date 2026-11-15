@@ -53,6 +53,20 @@ CHECKS = {
         return ok||('top '+Math.round(top)+', alt '+Math.round(c.alt)+', wreck '+c.wreck)}""",
     'rating, sleep and the PS2 look': """()=>{const r=RANKS[crimRank(crimScore())][1];const c0=clock;enterRoom('safe',{x:player.x,y:player.y});sleepSix();const d=((clock-c0)%1+1)%1;leaveRoom();
         OPT.ps2=true;rain=1;for(let i=0;i<60;i++)update(1/60);game.paused=false;render();rain=0;rainTarget=0;return (!!r&&Math.abs(d-0.25)<0.01)||('rank '+r+', slept '+d)}""",
+    'swimming in the river': """()=>{player.car=null;player.riding=null;const y=(5*P+8)*T;let x=null;for(let tx=RIVX0+2;tx<RIVX1-2;tx++)if(map[Math.floor(y/T)*W+tx]===WATER&&RIV[Math.floor(y/T)*W+tx]){x=(tx+.5)*T;break;}
+        if(x==null)return true;player.x=x;player.y=y;player.jz=0;player.jv=-10;for(let i=0;i<20;i++){player.hp=1000;update(1/60);}const ok=!!player.swim;player.swim=false;return ok||'not swimming in the river'}""",
+    'garage roof deck carries a car': """()=>{if(!GARAGE)return true;const c=makeCar('sedan',GARAGE.cx,GARAGE.cy,0);c.az=200;c.air=1;c.vz=0;c.airT=1;for(let i=0;i<60;i++)update(1/60);
+        const ok=(c.az||0)>40;cars.splice(cars.indexOf(c),1);return ok||'car fell through the decks (az '+Math.round(c.az||0)+')'}""",
+    'walk-in gun shops exist': """()=>SHOPS.length>0||'no Ammu-Nation stores'""",
+    'the cathedral is placed': """()=>(!!CATH)||'no cathedral'""",
+    'floaty car jump hangs in the air': """()=>{OPT.floaty=true;const r=RAMPS.find(r=>r.h>8);if(!r)return true;const ca=Math.cos(r.a),sa=Math.sin(r.a);
+        const c=makeCar('sports',r.x-ca*(r.hl+120),r.y-sa*(r.hl+120),r.a);player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;c.vx=ca*520;c.vy=sa*520;
+        keys.KeyW=true;let air=0;for(let i=0;i<60*4;i++){update(1/60);if(c.air>0)air=Math.max(air,c.airT);}keys.KeyW=false;c.vx=c.vy=0;exitCar(true);return air>0.6||('air '+air.toFixed(2))}""",
+    'cars splash through a pond': """()=>{let pt=null;for(let ty=0;ty<W&&!pt;ty++)for(let tx=0;tx<W;tx++)if(shallowTile(tx,ty)){pt={x:(tx+.5)*T,y:(ty+.5)*T};break;}if(!pt)return true;
+        const c=makeCar('sedan',pt.x,pt.y,0);c.vx=200;for(let i=0;i<10;i++)update(1/60);const ok=shallowAt(c.x,c.y)||hyp(c.x-pt.x,c.y-pt.y)>15;cars.splice(cars.indexOf(c),1);return ok||'pond blocked the car'}""",
+    'radio stations keep their own clock': """()=>{const k0=radioNow(3).key;RCLK[3]+=60;const k1=radioNow(3).key;return (k0!==k1)||'talk station did not move on'}""",
+    'new story jobs are in the chapters': """()=>{const t=CHAPTERS.flat().map(d=>d.title);return ['Top Floor','Pier Pressure','Container Job','Sanctuary'].every(n=>t.includes(n))||'missing new jobs'}""",
+    'parked cars go to sleep': """()=>{for(let i=0;i<60;i++)update(1/60);return cars.some(c=>c.zz>30)||'no parked car asleep'}""",
     'renders a frame': """()=>{game.paused=false;render();return true}""",
 }
 
