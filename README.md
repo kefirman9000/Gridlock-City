@@ -31,13 +31,12 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.22
+- **Audio balance**: car horns go through the main volume (they used to skip it and were about twice as loud), softer and quieter with distance, and only one at a time; a compressor evens out sudden peaks and phones get a gentle treble cut. New **Effects volume** and **Radio volume** settings (effects default to medium on phones).
+- **Phone camera**: tap the upper screen to put the camera straight back behind you; walking sideways no longer swings the camera round (no more circling when you strafe).
+
 ## What's new in v5.21
 - **Phone camera**: drag anywhere on the upper part of the screen to look around (on foot and in cars, left-right and up-down); the camera settles back behind you on its own and follows you sooner when you walk; portrait mode pulls back a little with a wider view so you can see what's ahead.
-
-## What's new in v5.20
-- **Fewer endless fights**: gang grudges heal over time, gangs only shoot on sight when they really hate you (and their cars only hunt you at the very bottom), killing gang members costs less respect, and angry gangs give up once you've left.
-- **Self-defence**: shooting back at a gang that's shooting at you doesn't bring the police.
-- **Turf**: gangs try to take a block back every 7 to 12 minutes instead of every 3, and the attackers give up after a minute.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

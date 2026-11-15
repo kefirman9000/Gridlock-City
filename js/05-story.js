@@ -416,8 +416,8 @@ function updateNitro(dt){const c=player.car;nitroFuel=Math.min(1,nitroFuel+dt/9)
 // ---------- horn: tap in a taxi / ambulance / squad car / fire truck to go on or off duty, hold to honk ----------
 let duty=false,hornT=-1,hornNode=null,dutyCar=null;
 const dutyKind=c=>!c?null:c.t.taxi?'taxi':c.t.ambulance?'amb':c.t.fire?'fire':c.type==='garbage'?'trash':c.type==='foodtruck'?'taco':c.type==='bus'?'bus':c.type==='van'?'deliv':(c.t.police&&!c.t.army&&!c.t.tank&&!c.t.boat)?'vig':null;
-function hornStart(){if(!AC||hornNode)return;try{const g=AC.createGain();g.gain.value=muted?0:0.11;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=1600;
-  const o1=AC.createOscillator(),o2=AC.createOscillator();o1.type=o2.type='square';o1.frequency.value=349;o2.frequency.value=440;o1.connect(f);o2.connect(f);f.connect(g);g.connect(AC.destination);o1.start();o2.start();hornNode={g,o1,o2};}catch(_){}}
+function hornStart(){if(!AC||hornNode||!master)return;try{const g=AC.createGain();g.gain.value=muted?0:0.14;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=1600;
+  const o1=AC.createOscillator(),o2=AC.createOscillator();o1.type=o2.type='square';o1.frequency.value=349;o2.frequency.value=440;o1.connect(f);o2.connect(f);f.connect(g);g.connect(master);o1.start();o2.start();hornNode={g,o1,o2};}catch(_){}}
 function hornStop(){if(!hornNode)return;try{const n=hornNode;n.g.gain.setTargetAtTime(0,AC.currentTime,0.02);n.o1.stop(AC.currentTime+0.1);n.o2.stop(AC.currentTime+0.1);}catch(_){}hornNode=null;}
 function updateHorn(dt){const c=player.car,on=!!(c&&(kd.KeyH||tbtn.horn.on)&&game.state==='play');
   if(c!==dutyCar){if(duty&&dutyCar)note('Off duty');duty=false;dutyCar=c;if(c&&c.t.tow)note('Tow truck: back up to a car and tap the horn ('+(touchMode?'HORN':'H')+') to hook it. Drop a towed car on the crusher to sell it');if(dutyKind(c))note('Tap the horn ('+(touchMode?'HORN':'H')+') to start '+{taxi:'taxi fares',amb:'ambulance calls',fire:'fire calls',vig:'vigilante missions',trash:'a garbage route',taco:'taco service',bus:'your bus route',deliv:'parcel deliveries'}[dutyKind(c)]);}

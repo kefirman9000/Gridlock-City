@@ -407,8 +407,11 @@ function pedLife(dt){if(game.state!=='play')return;
 if(STADIUM)SIGNS.push({x:STADIUM.x,y:STADIUM.y+150,text:'GRIDLOCK STADIUM',bg:'#1f3f9f',fg:'#ffffff',h:60,on:()=>true});
 {let sx=null;for(let bx=0;bx<6;bx++)if(BLOCKK[(NB-1)*NB+bx]==='beach'){sx=bx;break;}const x=((sx==null?2:sx)*P+9)*T,y=((NB-1)*P+7)*T;props.push({x,y,k:'statue',rad:30,ht:130});SIGNS.push({x,y:y-60,text:'STATUE OF GRIDLOCK',bg:'#3a6a5a',fg:'#ffffff',h:24,on:()=>true});}
 // ---------- AI horns: drivers honk when you block them ----------
-function hornBeep(x,y,pitch){if(!AC||muted)return;const d=hyp(x-player.x,y-player.y);if(d>700)return;try{const g=AC.createGain(),o1=AC.createOscillator(),o2=AC.createOscillator(),t=AC.currentTime,v=0.08*(1-d/700);
-  o1.type=o2.type='square';o1.frequency.value=pitch;o2.frequency.value=pitch*1.26;o1.connect(g);o2.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(v,t);g.gain.setTargetAtTime(0,t+0.22,0.03);o1.start(t);o2.start(t);o1.stop(t+0.35);o2.stop(t+0.35);}catch(_){}}
+// v5.22: horns go through the master volume (they used to skip it and were twice as loud as everything else), softened by a low-pass,
+// quieter with distance, and at most one honk every 0.4 s so a jam doesn't become a wall of beeps
+let HONKT=0;
+function hornBeep(x,y,pitch){if(!AC||muted||!master)return;const d=hyp(x-player.x,y-player.y);if(d>600)return;const t=AC.currentTime;if(t-HONKT<0.4)return;HONKT=t;try{const g=AC.createGain(),f=AC.createBiquadFilter(),o1=AC.createOscillator(),o2=AC.createOscillator(),k=1-d/600,v=0.07*k*k;
+  f.type='lowpass';f.frequency.value=1300;o1.type=o2.type='square';o1.frequency.value=pitch;o2.frequency.value=pitch*1.26;o1.connect(f);o2.connect(f);f.connect(g);g.connect(master);g.gain.setValueAtTime(v,t);g.gain.setTargetAtTime(0,t+0.22,0.03);o1.start(t);o2.start(t);o1.stop(t+0.35);o2.stop(t+0.35);}catch(_){}}
 function aiHonk(c,ai,dt,byPlayer){if(!byPlayer){ai.honkW=0;return;}ai.honkW=(ai.honkW||0)+dt;if(ai.honkW>1.2){ai.honkW=-rr(1,2.5);hornBeep(c.x,c.y,c.t.truck||c.t.bus?260:c.t.bike?520:380);if(!player.car)shoutCar(c);}}
 function shoutCar(c){if(dist2(c.x,c.y,player.x,player.y)<300*300){c.say={t:1.6,text:pick(['Move it!','Get outta the road!','Come on!','Hey, buddy!'])};}}
 // ---------- bus stops: shelters on the sidewalks; buses pull in, people get on and off ----------

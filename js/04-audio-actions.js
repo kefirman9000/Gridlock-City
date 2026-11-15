@@ -4,7 +4,10 @@ function initAudio(){
   if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return;}
   try{
     AC=new (window.AudioContext||window.webkitAudioContext)();
-    master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination);
+    // v5.22: everything goes through master -> a compressor (no sudden peaks) -> a gentle treble cut on phones (small speakers make square waves shrill)
+    master=AC.createGain();master.gain.value=0.45*fxv();const comp=AC.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=12;comp.ratio.value=4;comp.attack.value=0.004;comp.release.value=0.2;
+    const shelf=AC.createBiquadFilter();shelf.type='highshelf';shelf.frequency.value=2800;shelf.gain.value=(typeof touchMode!=='undefined'&&touchMode)||matchMedia('(pointer:coarse)').matches?-5:-2;
+    master.connect(comp);comp.connect(shelf);shelf.connect(AC.destination);
     noiseBuf=AC.createBuffer(1,Math.floor(AC.sampleRate*1.6),AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=R()*2-1;
     const o1=AC.createOscillator();o1.type='sawtooth';const o2=AC.createOscillator();o2.type='square';
     const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=520;f.Q.value=4;const g=AC.createGain();g.gain.value=0;
@@ -82,7 +85,10 @@ function radioTick(){
   }
   }catch(e){}
 }
-function toggleMute(){muted=!muted;if(master)master.gain.value=muted?0:0.45;note(muted?'Sound off':'Sound on');}
+function fxv(){const v=typeof OPT!=='undefined'&&OPT.fxv!=null?OPT.fxv:(matchMedia('(pointer:coarse)').matches?0.75:1);return v;}
+function radv(){return typeof OPT!=='undefined'&&OPT.radv!=null?OPT.radv:1;}
+function audioLevels(){if(master)master.gain.value=muted?0:0.45*fxv();}
+function toggleMute(){muted=!muted;if(master)master.gain.value=muted?0:0.45*fxv();note(muted?'Sound off':'Sound on');}
 function noise(dur,freq,type,vol,q){if(!AC||muted)return;try{const s=AC.createBufferSource();s.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;if(q)f.Q.value=q;const g=AC.createGain();const t=AC.currentTime;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);s.connect(f);f.connect(g);g.connect(master);s.start(t,R()*0.1);s.stop(t+dur+0.05);}catch(e){}}
 function tone(freq,dur,type,vol,slide){if(!AC||muted)return;try{const o=AC.createOscillator();o.type=type||'square';const g=AC.createGain();const t=AC.currentTime;o.frequency.setValueAtTime(freq,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02);}catch(e){}}
 function sfx(n,vol){vol=vol==null?1:vol;switch(n){
@@ -121,7 +127,7 @@ function updateAudio(){
    siren.o.frequency.setTargetAtTime((720+260*Math.sin(game.t*4.2))*dop,t,0.02);}
   squeal.g.gain.setTargetAtTime(player.car&&player.car.skid&&!player.car.t.boat&&!muted&&game.state==='play'?0.045:0,t,0.05);
   const ron=(!!player.car||(ROOM&&ROOM.id==='club'))&&game.state==='play'&&RADIO[radio.st].kind!=='off'&&!muted&&!game.paused;
-  radioG.gain.setTargetAtTime(ron?(typeof RTALK!=='undefined'&&RTALK?0.15:0.3):0,t,0.2);if(ron)radioTick();
+  radioG.gain.setTargetAtTime(ron?(typeof RTALK!=='undefined'&&RTALK?0.15:0.3)*radv()/Math.max(0.2,fxv()):0,t,0.2);if(ron)radioTick();
 }
 
 // ================= GAME ACTIONS =================

@@ -129,6 +129,8 @@ function openPanel(kind){
     <div class="opt"><span>Controller layout</span><button data-opt="pad">${OPT.pad==='classic'?'GTA III (PS2)':'MODERN'}</button></div>
     <div class="opt"><span>Autosave every 90 s</span><button data-opt="autosave">${onoff(OPT.autosave)}</button></div>
     <div class="opt"><span>Sound (M)</span><button data-opt="sound">${muted?'OFF':'ON'}</button></div>
+    <div class="opt"><span>Effects volume (cars, horns, guns)</span><button data-opt="fxv">${(()=>{const v=fxv();return v<0.6?'LOW':v<0.9?'MEDIUM':'HIGH'})()}</button></div>
+    <div class="opt"><span>Radio volume</span><button data-opt="radv">${(()=>{const v=radv();return v<0.6?'LOW':v<0.9?'MEDIUM':v<1.2?'HIGH':'LOUD'})()}</button></div>
     <div class="opt"><span>Season</span><button data-opt="season">${(OPT.season||'auto').toUpperCase()}</button></div>
     <div class="opt"><span>Lane assist (straightens you onto the road)</span><button data-opt="assist">${onoff(OPT.assist)}</button></div>
     <div class="opt"><span>On-foot controls</span><button data-opt="gta3">${OPT.gta3!==false?'GTA III (CAMERA)':'CLASSIC (TANK)'}</button></div>
@@ -154,7 +156,7 @@ function openPanel(kind){
   p.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{sleepSix();if(writeSave(b.dataset.save)){note('Saved to '+slotName(b.dataset.save));openPanel('save');}});
   p.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const k=b.dataset.opt;
     if(k==='floaty')OPT.floaty=OPT.floaty===false;else if(k==='cam')OPT.camMode=(camMode()+1)%CAMV.length;else if(k==='pad')OPT.pad=OPT.pad==='classic'?'modern':'classic';else if(k==='handling')OPT.handling=OPT.handling==='gta3'?'gta2':'gta3';else if(k==='season')OPT.season=OPT.season==='winter'?'summer':OPT.season==='summer'?'auto':'winter';else if(k==='steer')OPT.steer=OPT.steer==='wheel'?'stick':'wheel';else if(k==='btn')OPT.btn=OPT.btn<1?1:OPT.btn>1?0.85:1.2;else if(k==='msens')OPT.msens=OPT.msens<1?1:OPT.msens>1?0.6:1.6;
-    else if(k==='fs'){try{if(document.fullscreenElement)document.exitFullscreen();else{document.documentElement.requestFullscreen().catch(()=>{});}}catch(_){}setTimeout(()=>openPanel('options'),300);return;}else if(k==='sound'){toggleMute();}else if(k==='city'){openPanel('newcity');return;}else if(k==='keys'||k==='padmap'){openPanel(k);return;}else if(k==='ps2'){OPT.ps2=OPT.ps2===false;}else{OPT[k]=!OPT[k];if(k==='rearview')mirrorOn=OPT.rearview;}
+    else if(k==='fs'){try{if(document.fullscreenElement)document.exitFullscreen();else{document.documentElement.requestFullscreen().catch(()=>{});}}catch(_){}setTimeout(()=>openPanel('options'),300);return;}else if(k==='sound'){toggleMute();}else if(k==='fxv'){const v=fxv();OPT.fxv=v<0.6?0.75:v<0.9?1:0.5;audioLevels();}else if(k==='radv'){const v=radv();OPT.radv=v<0.6?0.75:v<0.9?1:v<1.2?1.35:0.5;}else if(k==='city'){openPanel('newcity');return;}else if(k==='keys'||k==='padmap'){openPanel(k);return;}else if(k==='ps2'){OPT.ps2=OPT.ps2===false;}else{OPT[k]=!OPT[k];if(k==='rearview')mirrorOn=OPT.rearview;}
     saveOpts();openPanel('options');});
   p.querySelectorAll('[data-yes]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('gc_city_seed',String(((Math.random()*2**31)|0)||7))}catch(_){}location.reload();});
   p.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{if(b.dataset.back==='options')openPanel('options');else closePanel();});

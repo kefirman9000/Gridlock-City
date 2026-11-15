@@ -42,7 +42,8 @@ function footLook(dt){
   LOCK.rx0=pad.on?pad.rx:0;mouse.turn=0;mouse.look=0;
   if(orbit){cam.base+=orbit;cam.idle=0;}else cam.idle+=dt;
   // after a moment without touching the camera it drifts back behind you while you move (but not when you run at it)
-  {const ti=touchMode?0.45:0.7,tr=touchMode?3.4:2.4;if(!LOCK.t&&!mlLocked()&&lookT.id===null&&cam.idle>ti&&player.moving){const d=Math.abs(angDiff(player.body,cam.base));if(d<2.1)cam.base=lerpAng(cam.base,player.body,Math.min(1,dt*tr*(1-d/2.4)));}}
+  {const ti=touchMode?0.45:0.7,tr=touchMode?3.4:2.4;if(!LOCK.t&&!mlLocked()&&lookT.id===null&&cam.idle>ti&&player.moving){const d=Math.abs(angDiff(player.body,cam.base));if(d<(touchMode?1.15:2.1)) // on touch, walking sideways doesn't swing the camera (no circling when you strafe)
+      cam.base=lerpAng(cam.base,player.body,Math.min(1,dt*tr*(1-d/2.4)));}}
 }
 function baseScale(){return clamp(Math.sqrt(VW*VH)/900*(VH>VW?0.86:1),0.5,2.2)}
 

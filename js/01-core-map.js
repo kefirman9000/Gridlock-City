@@ -84,6 +84,8 @@
 //  E4. On-screen text uses showBig() and note(). Overlays use the same panel as COMPLETION and ERROR LOG (#16171b
 //      background, gold border, Pixelify Sans heading).
 //  E5. Sound goes through master (or radioG for the radio) and respects muted. Spoken lines go through talkSay2.
+//      Never connect a sound straight to AC.destination: it skips the volume settings and the compressor (horns once
+//      did, and were twice as loud as everything else). Repeating sounds from many sources (horns) are rate-limited.
 //  E6. HUD text never sits on top of the player or their car (warnings like COPS BEHIND go near the top).
 //
 // F. CODE
@@ -112,7 +114,7 @@
 //      police; hitting bystanders or cops still does. One incident raises the wanted level by one star at most.
 //  G4. New enemies or chases say why they're happening (a note, a WANTED reason, a radio line).
 // =====================================================================================================================
-const VERSION='5.21.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.22.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');

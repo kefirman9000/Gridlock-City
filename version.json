@@ -1,4 +1,4 @@
 {
-  "version": "5.21.0",
-  "notes": "A better camera on phones: drag the upper screen to look around, it follows you sooner, and portrait mode sees further ahead."
+  "version": "5.22.0",
+  "notes": "Balanced audio (horns no longer blast, a compressor evens out peaks, effects and radio volume settings) and more phone camera work (tap to recenter, no circling when strafing)."
 }

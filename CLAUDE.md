@@ -58,6 +58,7 @@ v5.19 (end of 08g): walk-in shops (`WALKSHOPS`, built with `liveRoom` behind a s
 v5.20 (end of 08g): `underFire()` (a gang member shot at you in the last 4 s; set by a `gangAttack` wrapper) makes firing back and killing attackers self-defence (no crime);
 `gangCalm` heals negative respect over time and clears anger once you leave. Hostility thresholds: peds at respect <= -3, gang cars at <= -4. See DESIGN RULES G.
 v5.21: touch look-drag (`lookT` in 03's onTouch feeds `mouse.turn` on foot / `mouse.look` in cars and `mouse.lookY`); the aim stick starts only in the lower right half. Portrait camera is further back (07) with a wider FOC (08-render).
+v5.22: audio chain master -> compressor -> high-shelf -> destination (04 `initAudio`); `fxv()`/`radv()` read `OPT.fxv`/`OPT.radv`. Every sound must connect to `master` (or `radioG`), never straight to `AC.destination` (DESIGN RULES E5). Touch tap on the upper screen recentres the camera.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

@@ -2,6 +2,12 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.22.0
+- Audio: AI horns and the player's horn were wired straight to the speakers, skipping the master volume, so they played at about twice the level of everything else as raw square waves. Both now go through master; AI horns are low-passed, fall off with the square of distance (out to 600) and are limited to one every 0.4 s.
+- Audio: master now runs through a compressor (threshold -18 dB, 4:1) and a high-shelf cut (-5 dB above 2.8 kHz on touch devices, -2 dB elsewhere).
+- Settings: Effects volume (LOW / MEDIUM / HIGH; MEDIUM is the default on phones) and Radio volume (LOW / MEDIUM / HIGH / LOUD).
+- Touch camera: a quick tap on the upper screen recentres the camera behind you (on foot and in cars); on foot the camera only swings back behind you when you walk roughly away from it, so strafing doesn't make you circle.
+
 ## v5.21.0
 - Touch: a drag that starts on the upper part of the screen (not on a button, the move stick or the aim stick) turns and tilts the camera, on foot and in cars; the aim/fire stick now starts in the lower half of the right side. A one-time tip explains it.
 - Touch: on foot the camera swings back behind you after 0.45 s (was 0.7) and faster; in a car it waits while you're dragging.
