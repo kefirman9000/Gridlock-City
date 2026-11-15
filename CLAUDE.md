@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js` and `js/08g-world.js` between 08 and 09), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js`, `js/08g-world.js` and `js/08h-metro.js` between 08 and 09), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -62,8 +62,15 @@ v5.22: audio chain master -> compressor -> high-shelf -> destination (04 `initAu
 v5.23: index.html loads the scripts in sequence from a small loader (the list is in index.html, keep it in step with sw.js ASSETS); `window.GC_READY` is true once all have run. Tests wait for it.
 v5.24 (end of 08g): a `carAir` wrapper launches cars off crests (`c._zg`/`c._vg` ground height and vertical speed while grounded) and flies airborne cars on an absolute height `c._za` (az = _za - GH).
 
+## Ironwood Island and the subway (v5.26)
+`js/08h-metro.js`: the Ironwood Bridge dressing, Port Ironwood, the lighthouse, island traffic and names, and the subway. The bridge and island road are
+`RING.isl`/`RING.br2` (built in 08-render's `ringRoad`; deck points `q.br` keep water beside them). The subway (`METRO`) is an underground loop off the
+map south of the rooms (a 0.38-scale copy of the station layout, one `ROOMLIST` rect, `roomTile` wrapped, rock `HMAP` 90 round the tunnels); trains `MTR`
+are drawn through a `forCells` wrapper; `SUBRIDE` is set while you ride (the player is hidden; `update` is wrapped for boarding, riding, the ride camera
+and train strikes; `updateSubway` is replaced so entrances lead to the platforms).
+
 ## The island (v5.11)
-The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
+The terrain grid reaches `HM` (6400 since v5.26; was 2600) beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
 `COAST` in 08-render shapes the coastline after the land types are set (no `R()`): since v5.13 a hand-placed Oahu-style outline (`COAST.pts`, a Catmull-Rom spline) filled into `COAST.LAND` with a distance transform `COAST.D`; heights above 150 are eased and high ground is forest; the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`
 (08f, one pixel per tile, offset `ISLEO` tiles) under `mmc`; `bigMapGeom()` returns the island box (`gx`,`gy`,`gs`) and the city box (`ox`,`oy`,`s`).
 Note `ISLE` is already taken (the river island). Cars that drive into deep water sink (`sinkTick` in 08f).

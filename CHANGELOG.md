@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.26.0
+- HM 2600 -> 6400 (terrain reaches further; load ~2.5 s). COAST.pts reshaped (south-west coves, east coast and Diamond Head kept); COAST.isl2 is Ironwood Island (ISL2M marks its cells, ISL2C its centre; its terrain is set in the coast pass).
+- ringRoad: RING.isl (the bridge + island road, `isl:true`, joins the beltway at `ringI`; `q.br` points are the deck, cells beside them stay water) and RING.br2 (bridge span). aiRing turns round at its far end; beltway cars sometimes take it. Graded to slope 0.11.
+- js/08h-metro.js: bridge dressing (igird/ipier/itower/icable props), Port Ironwood (outsideBuilding), lighthouse, districtAt wrapper (IRONWOOD BRIDGE / PORT IRONWOOD / IRONWOOD ISLAND / SUBWAY), island traffic.
+- The subway (METRO): an underground loop off the map (south of the rooms), a 0.38 scale copy of the station layout; one ROOMLIST rect, roomTile wrapped for its tiles, rock 90 high round it. Trains (MTR) drawn through a forCells wrapper; update() wrapped for boarding/riding (SUBRIDE), the ride camera and train strikes; updateSubway replaced (entrances lead to platforms; stairs lead back up); cycleCam toggles the driver's view while riding. The old hall stays but is no longer used by the entrances.
+- 08-render: rain/snow skipped when the camera is in the hall or a room (UNDERG); the shallow -40 sea band south of the city now deepens like the rest. 08f: the off-map rooms strip is drawn as open sea on the map.
+
 ## v5.25.0
 - From a screenshot sweep: drawBike3 rebuilt (fender, tail light, seat, bars, exhaust, headlight; the rider sits leaning forward with legs out and the player's outfit colours; parts sorted back to front).
 - The fire truck no longer shares the Hauler's plain box: lower body, white band, side lockers, roof ladder and a flashing light bar. Box trucks, the taco truck and the ice cream van get rear doors/windows, a bumper and lights; the ice cream van a pastel stripe, a lit serving hatch with an awning, and a cone on the roof.

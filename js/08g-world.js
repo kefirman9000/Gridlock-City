@@ -236,14 +236,14 @@ function dirtLine(ax,ay,bx,by,w){const L=hyp(bx-ax,by-ay),n=Math.ceil(L/8);for(l
 
 // ---- the beltway dressed as an expressway: guard rails on the bends and embankments, tall highway lamps, green exit signs ----
 const HWYL=[];
-(function expressway(){const R0=RING.paths[0];if(!R0)return;const hw=RING.hw,gaps=[];for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm){for(const q of S)gaps.push(q);}else gaps.push(S[S.length-1]);}
+(function expressway(){const R0=RING.paths[0];if(!R0)return;const hw=RING.hw,gaps=[];for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm){for(const q of S)gaps.push(q);}else gaps.push(S.isl?S[0]:S[S.length-1]);}
   const near=(x,y,r)=>gaps.some(q=>dist2(q.x,q.y,x,y)<r*r);
   for(let i=4;i<R0.length-4;i+=2){const q=R0[i],a=Math.atan2(q.uy,q.ux),bend=Math.abs(angDiff(Math.atan2(R0[i+3].uy,R0[i+3].ux),Math.atan2(R0[i-3].uy,R0[i-3].ux)));
     for(const s of[-1,1]){const x=q.x-q.uy*(hw+7)*s,y=q.y+q.ux*(hw+7)*s,fill=q.h-GH(q.x-q.uy*(hw+60)*s,q.y+q.ux*(hw+60)*s);
       if((bend>0.12||fill>8)&&!near(x,y,90))props.push({x,y,k:'rail',a,rad:22,ht:12});}
     if(i%22===0){const s=(i/22)%2?1:-1,x=q.x-q.uy*(hw+12)*s,y=q.y+q.ux*(hw+12)*s;if(!near(x,y,60)){props.push({x,y,k:'hwylamp',a:a+(s>0?-PI/2:PI/2),rad:10,ht:44});HWYL.push({x:x+q.uy*s*14,y:y-q.ux*s*14});}}}
   // an exit sign over the beltway before each spur, both ways
-  for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm||S.ringI==null)continue;const nm=(districtAt((S.node[0]*P+2)*T,(S.node[1]*P+2)*T)||'CITY').toUpperCase();
+  for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm||S.ringI==null)continue;const nm=S.isl?'IRONWOOD ISLAND':(districtAt((S.node[0]*P+2)*T,(S.node[1]*P+2)*T)||'CITY').toUpperCase();
     for(const d of[-1,1]){const i=clamp(S.ringI-d*9,0,R0.length-1),q=R0[i];props.push({x:q.x,y:q.y,k:'gantry',a:Math.atan2(q.uy,q.ux),txt:'EXIT  '+nm,rad:hw+12,ht:46});}}})();
 
 // ---- landmarks after Oahu's ----

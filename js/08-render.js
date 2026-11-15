@@ -115,7 +115,7 @@ function decalSkid(x1,y1,x2,y2){const d=hyp(x2-x1,y2-y1),n=Math.max(1,Math.ceil(
 const LMS=8,LMW=(WPX/LMS)|0,LMAP=new Float32Array(LMW*LMW);
 for(const s of streetLights){const cx=s.x/LMS,cy=s.y/LMS,R0=150/LMS;for(let j=-R0;j<=R0;j++)for(let i=-R0;i<=R0;i++){const d=Math.sqrt(i*i+j*j)/R0;if(d>=1)continue;const X=(cx+i)|0,Y=(cy+j)|0;if(X<0||Y<0||X>=LMW||Y>=LMW)continue;LMAP[Y*LMW+X]=Math.min(1.1,LMAP[Y*LMW+X]+(1-d)*(1-d)*0.95);}}
 // ---------- terrain: rolling city hills, mountains north and west, ocean south, farmland east ----------
-const HS=16,HM=2600,HM0=1400,HN=Math.ceil((WPX+2*HM)/HS)+2,HMAP=new Float32Array(HN*HN),SHMAP=new Float32Array(HN*HN),TTYPE=new Uint8Array(HN*HN),TCOL=new Uint32Array(HN*HN);
+const HS=16,HM=6400,HM0=1400,HN=Math.ceil((WPX+2*HM)/HS)+2,HMAP=new Float32Array(HN*HN),SHMAP=new Float32Array(HN*HN),TTYPE=new Uint8Array(HN*HN),TCOL=new Uint32Array(HN*HN);
 function vnoise(x,y,s){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
   const h=(a,b)=>(hash(a*31+s*7919,b*17-s*104729)&65535)/65535,a=h(ix,iy),b=h(ix+1,iy),c=h(ix,iy+1),d=h(ix+1,iy+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
 const fbm=(x,y,s)=>vnoise(x,y,s)*0.55+vnoise(x*2.1,y*2.1,s+1)*0.28+vnoise(x*4.3,y*4.3,s+2)*0.17;
@@ -189,23 +189,31 @@ for(let i=0;i<9;i++){const y=rr(300,WPX-300),x=WPX+rr(160,700);if(GH(x,y)>150)co
 // south; past the city's south-east corner a Diamond Head-style crater headland; Ka'ena Point and Kahuku Point at the north-west and
 // north-east tips; the long North Shore; Kane'ohe Bay and a Mokapu-style peninsula on the windward east side. A hand-placed outline
 // through a Catmull-Rom spline, roughened a little with noise, filled on the terrain grid; a distance transform shapes the shore.
+// v5.26: the main island's outline (clockwise from the city's south-west corner; the south shore under the city closes the loop). It keeps the
+// south-west coves (the marina), the east coast and Diamond Head, and gets a south-west peninsula, a bulging west coast, a north-west cape,
+// a ragged north shore with a bay, and a north-east cape. ISL2 is Ironwood Island, out east across the Ironwood Bridge.
 const COAST={pts:[[-200,8230],[-330,8120],[-430,7350],[-640,6500],[-860,6620],[-980,7050],[-1150,7350],[-1020,7800],[-900,8180],
-  [-1320,8380],[-1880,7980],[-1760,6350],[-1640,4300],[-1820,2300],[-1700,700],[-1840,-600],[-2050,-1550],[-1450,-1800],
-  [-300,-1720],[900,-1900],[2300,-1760],[3700,-1920],[5200,-1760],[6600,-1880],[8000,-1720],[9100,-1800],[9900,-2000],
-  [10060,-1000],[10140,300],[10200,1400],[9920,1900],[9700,2300],[9880,2780],[10200,2980],[10360,3300],[10150,3620],[10200,4000],
-  [10230,4500],[10120,5200],[10250,6000],[10260,6900],[10000,7500],[9520,8000],[9080,8300],[8880,8720],[8540,8860],[8300,8420],[8230,8230]]};
+  [-1500,8700],[-2300,9500],[-3100,10100],[-3600,9850],[-3150,8950],[-2850,8150],[-3150,7000],[-2650,5900],[-2950,4600],[-3550,3700],[-3350,2500],[-2650,1500],[-2950,350],
+  [-3650,-700],[-4650,-1800],[-4400,-2600],[-3350,-2400],[-2550,-2700],[-1450,-2550],[-300,-2350],[800,-2750],[2000,-3350],[3000,-3050],[3500,-2350],[4300,-2150],
+  [5200,-2550],[6400,-2950],[7600,-2650],[8600,-2350],[9600,-2950],[10600,-3650],[11250,-3350],[10950,-2350],[10500,-1100],
+  [10140,300],[10200,1400],[9920,1900],[9700,2300],[9880,2780],[10200,2980],[10360,3300],[10150,3620],[10200,4000],
+  [10230,4500],[10120,5200],[10250,6000],[10260,6900],[10000,7500],[9520,8000],[9080,8300],[8880,8720],[8540,8860],[8300,8420],[8230,8230]],
+  isl2:[[11450,3300],[11600,2300],[11950,1100],[12600,250],[13450,350],[14050,1150],[14250,2300],[13950,3300],[14200,4300],[14050,5500],[13550,6500],[12850,7250],[12100,7300],[11650,6650],[11500,5600],[11750,4650],[11430,4150]]};
+const ISL2C={x:12850,y:3800},ISL2M=new Uint8Array(HN*HN);
 (function coast(){const C=COAST.pts,n=C.length,cr=(p0,p1,p2,p3,t)=>{const t2=t*t,t3=t2*t;return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);};
   // the south shore under the city closes the loop: the outline runs along the city's beach from the south-east corner to the south-west
-  const loop=C.concat([[WPX*0.66,8230],[WPX*0.33,8230]]),N=loop.length,poly=[];
+  const outline=(loop,isMain)=>{const N=loop.length,poly=[];
   for(let a=0;a<N;a++){const p0=loop[(a-1+N)%N],p1=loop[a],p2=loop[(a+1)%N],p3=loop[(a+2)%N],seg=Math.max(4,Math.ceil(hyp(p2[0]-p1[0],p2[1]-p1[1])/30));
     for(let k=0;k<seg;k++){const t=k/seg;poly.push([cr(p0[0],p1[0],p2[0],p3[0],t),cr(p0[1],p1[1],p2[1],p3[1],t)]);}}
   // roughen the outline: small coves and points along the normal (none along the city's own beach)
   const P2=poly.map((q,i)=>{const a=poly[(i-1+poly.length)%poly.length],b=poly[(i+1)%poly.length],tx=b[0]-a[0],ty=b[1]-a[1],tl=hyp(tx,ty)||1;
-    if(q[1]>8100&&q[0]>-60&&q[0]<WPX+60)return q;const o=110*(fbm(q[0]/520,q[1]/520,41)-0.5)+50*(fbm(q[0]/170,q[1]/170,42)-0.5);return[q[0]+ty/tl*o,q[1]-tx/tl*o];});
-  // fill: land inside the outline (even-odd scanlines), and the city square is always land
+    if(isMain&&q[1]>8100&&q[0]>-60&&q[0]<WPX+60)return q;const o=110*(fbm(q[0]/520,q[1]/520,41)-0.5)+50*(fbm(q[0]/170,q[1]/170,42)-0.5);return[q[0]+ty/tl*o,q[1]-tx/tl*o];});
+  return P2;};
+  // fill: land inside each outline (even-odd scanlines), and the city square is always land
   const LAND=new Uint8Array(HN*HN);
+  for(const[P2,isMain]of[[outline(C.concat([[WPX*0.66,8230],[WPX*0.33,8230]]),true),true],[outline(COAST.isl2,false),false]])
   for(let j=0;j<HN;j++){const y=-HM+j*HS,xs=[];for(let a=0;a<P2.length;a++){const p=P2[a],q=P2[(a+1)%P2.length];if((p[1]<=y)!==(q[1]<=y))xs.push(p[0]+(y-p[1])/(q[1]-p[1])*(q[0]-p[0]));}
-    xs.sort((u,v)=>u-v);for(let a=0;a+1<xs.length;a+=2){const i0=Math.max(0,Math.ceil((xs[a]+HM)/HS)),i1=Math.min(HN-1,Math.floor((xs[a+1]+HM)/HS));for(let i=i0;i<=i1;i++)LAND[j*HN+i]=1;}}
+    xs.sort((u,v)=>u-v);for(let a=0;a+1<xs.length;a+=2){const i0=Math.max(0,Math.ceil((xs[a]+HM)/HS)),i1=Math.min(HN-1,Math.floor((xs[a+1]+HM)/HS));for(let i=i0;i<=i1;i++){LAND[j*HN+i]=1;if(!isMain)ISL2M[j*HN+i]=1;}}}
   for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(x>=-HS&&y>=-HS&&x<=WPX+HS&&y<=WPX+HS)LAND[j*HN+i]=1;}
   // distance to the shore, on both sides (two-pass chamfer, in cells)
   const DL=new Float32Array(HN*HN),BIG=1e9;for(let k=0;k<HN*HN;k++)DL[k]=BIG;
@@ -219,6 +227,7 @@ const COAST={pts:[[-200,8230],[-330,8120],[-430,7350],[-640,6500],[-860,6620],[-
     if(y>WPX&&x>-40&&x<WPX+40){ // the city's own south shore: a few sandbars and grassy points off the beach, clear of the pier and the river mouth
       if(Math.abs(x-LM.beach.x)<520||(x>RIVX0*T-200&&x<RIVX1*T+200))continue;const d=y-WPX,Ls=Math.min(380,-60+2000*Math.max(0,fbm(x/700,y/700,35)-0.4)+160*(fbm(x/240,y/240,36)-0.5));
       if(d<Ls&&d>60){const h=Math.max(HMAP[k],2+(Ls-d)*0.06),n=fbm(x/90,y/90,34);HMAP[k]=h;if(h<8){TTYPE[k]=2;TCOL[k]=packC(212+n*12,194+n*10,148+n*8);}else{TTYPE[k]=3;TCOL[k]=packC(96+n*20,118+n*18,62+n*10);}}
+      else if(!LAND[k]&&d>420)HMAP[k]=Math.min(HMAP[k],-2-Math.min(100,DL[k]*HS*0.26)); // open sea south of the city deepens like the rest (was a shallow -40 band)
       continue;}
     if(x>=0&&y>=0&&x<=WPX&&y<=WPX)continue;
     // the north-east and south-east: the land types were chosen by which side of the city a point is on, which leaves a straight seam
@@ -228,6 +237,11 @@ const COAST={pts:[[-200,8230],[-330,8120],[-430,7350],[-640,6500],[-860,6620],[-
       const t=smooth01((ey-ex)/1100+0.5+0.5*(fbm(x/700,y/700,44)-0.5));HMAP[k]=lerp(hE,hO,t);
       if(y<0){const nn=fbm(x/260,y/260,45);if(t>0.5&&TTYPE[k]===7){TTYPE[k]=nn>0.5?4:3;TCOL[k]=nn>0.5?packC(38+nn*20,70+nn*24,38+nn*10):packC(84+nn*20,112+nn*20,56+nn*10);}
         else if(t<0.35&&TTYPE[k]!==7&&TTYPE[k]!==9&&HMAP[k]<150){TTYPE[k]=3;TCOL[k]=packC(90+nn*20,118+nn*20,58+nn*10);}}}
+    if(ISL2M[k]){const r=hyp((x-ISL2C.x)*1.6,y-ISL2C.y),n1=fbm(x/600,y/600,61),n2=fbm(x/220,y/220,62),nn=fbm(x/90,y/90,63);
+      const h=12+60*n1+230*Math.exp(-((r/1500)**2))*(0.65+0.7*n2);HMAP[k]=h;
+      if(h>165&&n2>0.35){TTYPE[k]=4;TCOL[k]=packC(36+nn*20,66+nn*24,36+nn*12);}
+      else if(x>ISL2C.x+250&&h<120&&h>18){const fx=Math.floor(x/176),fy=Math.floor(y/128),fh=hash(fx+700,fy+300)%4;TTYPE[k]=7;TCOL[k]=[packC(110,140,62),packC(150,170,80),packC(178,150,70),packC(96,128,58)][fh];if(((x%176)+176)%176<HS||((y%128)+128)%128<HS)TCOL[k]=packC(60,92,44);}
+      else{TTYPE[k]=3;TCOL[k]=packC(84+nn*22,114+nn*22,58+nn*10);}}
     // Diamond Head: a crater on the headland past the city's south-east corner
     {const r=hyp(x-(WPX+500),y-(WPX+380));if(LAND[k]&&r<420){HMAP[k]=Math.max(HMAP[k],8)+120*Math.exp(-(((r-170)/80)**2))+(r<170?30:0);const nn=fbm(x/80,y/80,46);
       if(r>90){TTYPE[k]=3;TCOL[k]=packC(132+nn*30,124+nn*24,78+nn*14);}else{TTYPE[k]=3;TCOL[k]=packC(110+nn*20,128+nn*20,66+nn*10);}}}
@@ -294,6 +308,22 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
   for(const[jx,jy]of RINGJ){if(jy===NB-1)continue;const[nx,ny]=node(jx,jy),sx=jy===0?nx:jx===0?0:WPX,sy=jy===0?0:ny;let b=null,bd=1e18;for(const q of ring){const d=dist2(q.x,q.y,sx,sy);if(d<bd){bd=d;b=q;}}
     const out=jy===0?[0,-1]:jx===0?[-1,0]:[1,0],mid=[sx+out[0]*Math.sqrt(bd)*0.55,sy+out[1]*Math.sqrt(bd)*0.55];let p=[[sx-out[0]*8,sy-out[1]*8],mid,[b.x,b.y]];for(let k=0;k<3;k++)p=chaikin(p);
     const sp2=mk(p),h0=GH(sx,sy),h1=b.h,n=sp2.length-1,tot=sp2[n].s||1;sp2.ringI=ring.indexOf(b);sp2.node=[jx,jy];for(let i=0;i<=n;i++){const t=sp2[i].s/tot;sp2[i].h=lerp(h0,h1,t*t*(3-2*t)*0.5+t*0.5);}RING.paths.push(sp2);}
+  // v5.26 the Ironwood Bridge and the island road: from the beltway's east side straight out to the coast, over the sea on a high deck,
+  // then most of the way round Ironwood Island (cars turn round at the far end). Cells beside the deck stay open water (q.br).
+  {const YB=3800,land=(x,y)=>COAST.LAND[(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0)];let bi=0,bd=1e18;ring.forEach((q,i)=>{if(q.x<WPX)return;const d=dist2(q.x,q.y,WPX+300,YB);if(d<bd){bd=d;bi=i;}});const st=ring[bi];
+   let xc0=WPX+1200;while(xc0<WPX+3000&&land(xc0,YB))xc0+=16;let xc1=xc0+32;while(xc1<WPX+6000&&!land(xc1,YB))xc1+=16;
+   const C=ISL2C,rx=1000,ry=2950,a0=PI,pts=[[st.x,st.y]];for(let x=st.x+80;x<C.x-rx;x+=40)pts.push([x,YB+(C.y-YB)*smooth01((x-(xc1+100))/(C.x-rx-xc1-100))]);
+   for(let a=a0;a<a0+PI*1.86;a+=0.03)pts.push([C.x+Math.cos(a)*rx*(1+0.07*Math.sin(a*3)),C.y+Math.sin(a)*ry]);
+   let p=pts;for(let k=0;k<2;k++)p=chaikin(p);const I=mk(p),DK=38;
+   for(const q of I){if(Math.abs(q.y-YB)>40&&q.x>xc1+200)continue;const t=(q.x-xc0)/(xc1-xc0);
+     if(q.x>=xc0-24&&q.x<=xc1+24){q.h=DK+12*Math.sin(PI*clamp(t,0,1));q.br=true;}
+     else if(q.x<xc0&&q.x>xc0-1400)q.h=lerp(q.h,DK,smooth01((q.x-(xc0-1400))/1400)); // a long, gentle approach (cut through the coastal hills)
+     else if(q.x>xc1&&q.x<xc1+700)q.h=lerp(DK,q.h,smooth01((q.x-xc1)/700));}
+   // grade it like the beltway (DESIGN RULE B5): the deck stays put, everything else eased to no steeper than 0.11 either way
+   I[0].h=st.h;I[0].br=I[0].br||false;const fix=q=>q.br||q===I[0];
+   for(let pass=0;pass<6;pass++){for(let i=1;i<I.length;i++)if(!fix(I[i])){const m=0.11*(I[i].s-I[i-1].s);I[i].h=clamp(I[i].h,I[i-1].h-m,I[i-1].h+m);}
+     for(let i=I.length-2;i>=0;i--)if(!fix(I[i])){const m=0.11*(I[i+1].s-I[i].s);I[i].h=clamp(I[i].h,I[i+1].h-m,I[i+1].h+m);}}
+   I.isl=true;I.ringI=bi;I.lo=14;RING.paths.push(I);RING.isl=I;RING.br2={x0:xc0,x1:xc1,y:YB,h:DK};}
   // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
   const hw=RING.hw,bank=180;
   for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);
@@ -310,7 +340,7 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
         // the ground height comes from the ring where it runs, else the nearest road
         const pr=main&&d<hw+4?d-1000:d;if(pr<RHB[k]){RHB[k]=pr;HMAP[k]=q.h;}
         TTYPE[k]=10;TCOL[k]=packC(70,70,74);}
-      else if(d<hw+bank&&TTYPE[k]!==10){const w=1-smooth01((d-hw-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
+      else if(d<hw+bank&&TTYPE[k]!==10&&!q.br){const w=1-smooth01((d-hw-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
   // nothing standing in the road; the guard rail opens where the spurs leave town and is gone where the edge has gone wild
   const onRoad=(x,y,m)=>{const k=(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);if(TTYPE[k]===10)return true;if(!m)return false;for(const[dx,dy]of[[m,0],[-m,0],[0,m],[0,-m]]){const k2=(((y+dy+HM)/HS)|0)*HN+(((x+dx+HM)/HS)|0);if(TTYPE[k2]===10)return true;}return false;};
   for(let i=trees.length-1;i>=0;i--){const t=trees[i];if((t.x<0||t.y<0||t.x>WPX||t.y>WPX)&&onRoad(t.x,t.y,26))trees.splice(i,1);}
@@ -1234,7 +1264,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
     ITEMS.push({kind,o,f,slot,rad,sx,sw,yt,yb});};
   for(const c of cars){if(c===player.car)continue;add(0,c,c.x,c.y,Math.max(c.t.L,c.t.Wd)/2+4,null,carRoof(c)+3,c.az||0);}
   if(MIRROR||MENUVIEW){}else if(player.car)add(14,player.car,player.car.x,player.car.y,Math.max(player.car.t.L,player.car.t.Wd)/2+4,null,30,player.car.az||0);
-  else if(!player.riding&&!SCOPE.on)add(14,player,player.x,player.y,6,null,26,player.jz||0);
+  else if(!player.riding&&!SCOPE.on&&!(typeof SUBRIDE!=='undefined'&&SUBRIDE))add(14,player,player.x,player.y,6,null,26,player.jz||0);
   for(const d of DECKS)add(24,d,d.x,d.y,70,null,14);
   for(let i=0;i<train.cars;i++){const p=trainCar(i);add(22,{x:p.x,y:p.y,a:p.a,i},p.x,p.y,50,null,EL_H+30);}
   {const rm=roomAt(CX,CY);if(rm)for(const o of rm.props)add(13,o,o.x,o.y,o.rad,null,o.ht);}
@@ -1294,7 +1324,8 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
       const cl=occClip(b.fm-6,mnx,mxx,mxy);drawBuilding(b,fogAt(f));if(cl){L3.restore();L3.beginPath();}}
   }
   // ---- weather ----
-  if(rain>0.03&&SEASON()==='winter'){L3.fillStyle=`rgba(245,248,255,${0.8*rain})`;const n=Math.floor(140*rain);for(let i=0;i<n;i++){const fx=((i*61.3+Math.sin(game.t*0.9+i)*6+cam.yaw*120)%LW+LW)%LW,fy=((i*37.1+game.t*(26+i%5*6))%LH+LH)%LH;L3.fillRect(fx|0,fy|0,i%3?1:2,i%3?1:2);}}
+  const UNDERG=inHall(CX,CY)||!!roomAt(CX,CY); // no rain or snow indoors, in the hall or down in the subway
+  if(UNDERG){}else if(rain>0.03&&SEASON()==='winter'){L3.fillStyle=`rgba(245,248,255,${0.8*rain})`;const n=Math.floor(140*rain);for(let i=0;i<n;i++){const fx=((i*61.3+Math.sin(game.t*0.9+i)*6+cam.yaw*120)%LW+LW)%LW,fy=((i*37.1+game.t*(26+i%5*6))%LH+LH)%LH;L3.fillRect(fx|0,fy|0,i%3?1:2,i%3?1:2);}}
   else if(rain>0.03){L3.fillStyle=`rgba(200,215,240,${0.45*rain})`;const n=Math.floor(110*rain);for(let i=0;i<n;i++){const fx=((i*61.3-game.t*40+cam.yaw*120)%LW+LW)%LW,fy=((i*37.1+game.t*(190+i%5*25))%LH+LH)%LH;L3.fillRect(fx|0,fy|0,1,4);}}
   if(!MIRROR&&boostLines())for(let i=0;i<8;i++){L3.fillStyle='rgba(255,255,255,.4)';const sx=R()<.5?rr(0,LW*.14):rr(LW*.86,LW),sy=rr(HOR,LH);L3.fillRect(sx|0,sy|0,1,R2(rr(6,14)));}
   if(lightning>0){L3.fillStyle=`rgba(220,230,255,${lightning*0.35})`;L3.fillRect(0,0,LW,LH);}
