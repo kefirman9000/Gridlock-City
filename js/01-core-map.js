@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='5.11.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.12.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -631,6 +631,56 @@ const DRIVEWAYS=[];
 const streetLights=[];
 for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){const cx=ix*P*T,cy=iy*P*T;
   for(const o of [[-0.5,-0.5],[4.5,4.5],[4.5,-0.5],[-0.5,4.5]]){const x=cx+o[0]*T,y=cy+o[1]*T;if(tileAt(Math.floor(x/T),Math.floor(y/T))===WALK&&R()<0.7)streetLights.push({x,y});}}
+// ---- v5.12: the city's edge isn't a ruler line. The corners round off and the countryside eats into the outer blocks in an
+// uneven line; the perimeter road breaks where it does. Hash noise only (no R()), so the city's random stream is untouched. ----
+const WILD=new Uint8Array(W*W);
+// where the ring road (08-render) meets the city's streets: [ix,iy] grid nodes on the edge
+const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB,NB-1]];
+(function cityEdge(){const lk=(x,y,d)=>linkBase(x,y,d)&&!CUT.has(segKey(x,y,d));const n1=(s,k)=>{const i=Math.floor(s),f=s-i,u=f*f*(3-2*f),h=q=>(hash(q*73+k*911,k*37+5)&65535)/65535;return h(i)+(h(i+1)-h(i))*u;},
+    prof=(s,k)=>n1(s/18,k)*0.65+n1(s/7,k+50)*0.35;
+  const okKind=k=>k==='res'||k==='park'||k==='bld'||k==='lot';const sp=new Set(Object.keys(SPECIAL));
+  const protect=(tx,ty)=>{const ti=ty*W+tx;if(RIV[ti]||BRT[ti]||DIAGT[ti]||map[ti]===WATER)return true;
+    for(const[jx,jy]of RINGJ){const nx=jx*P,ny=jy*P;if(tx>=nx-1&&tx<=nx+4&&ty>=ny-1&&ty<=ny+4)return true;if(jy===0&&tx>=nx&&tx<=nx+3&&ty<=ny+P)return true;if(jx===0&&ty>=ny&&ty<=ny+3&&tx<=nx+P)return true;if(jx===NB&&ty>=ny&&ty<=ny+3&&tx>=nx-P)return true;}if(tx>=RIVX0-6&&tx<RIVX1+6)return true;
+    const bx=Math.floor(tx/P),by=Math.floor(ty/P),mx=tx%P,my=ty%P;
+    if(by>=NB-1)return true; // South Beach stays as it is
+    if(mx>=4&&my>=4&&bx<NB&&by<NB){const k=BLOCKK[by*NB+bx];if(!okKind(k)||sp.has(bx+','+by))return true;}
+    // the dirt roads out to the farms leave along three streets on the east side
+    if(tx>=W-20&&[3,9,15].some(iy=>ty>=iy*P-1&&ty<=iy*P+4))return true;return false;};
+  const RC=44,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
+  for(let ty=0;ty<W;ty++)for(let tx=0;tx<W;tx++){if(protect(tx,ty))continue;let w=false;
+    const dN=ty,dW=tx,dE=W-1-tx;
+    if(dN<14&&dN<Math.max(0,46*(prof(tx,1)-0.56)))w=true;
+    if(dW<14&&dW<Math.max(0,46*(prof(ty,2)-0.56))&&ty<LIM-P)w=true;
+    if(dE<14&&dE<Math.max(0,46*(prof(ty,3)-0.56))&&ty<LIM-P)w=true;
+    const rc=RC+14*(prof(tx+ty,4)-0.5);
+    if(tx<rc&&ty<rc&&Math.hypot(rc-tx,rc-ty)>rc)w=true;
+    if(dE<rc&&ty<rc&&Math.hypot(rc-dE,rc-ty)>rc)w=true;
+    if(w)WILD[ty*W+tx]=1;}
+  // a street segment touched by the wild is closed and grassed over along its whole length; nodes left with no road go too
+  const segTiles=(h,a,b)=>h?{x0:a*P+4,x1:a*P+13,y0:b*P,y1:b*P+3}:{x0:a*P,x1:a*P+3,y0:b*P+4,y1:b*P+13};
+  const hit=r=>{for(let y=r.y0;y<=r.y1;y++)for(let x=r.x0;x<=r.x1;x++)if(x>=0&&y>=0&&x<W&&y<W&&WILD[y*W+x])return true;return false;};
+  const fill=r=>{for(let y=r.y0;y<=r.y1;y++)for(let x=r.x0;x<=r.x1;x++)if(x>=0&&y>=0&&x<W&&y<W&&!protect(x,y))WILD[y*W+x]=1;};
+  for(let b=0;b<=NB;b++)for(let a=0;a<NB;a++){
+    if(linkBase(a,b,0)&&!CUT.has(segKey(a,b,0))){const r=segTiles(true,a,b);if(hit(r)){CUT.add(segKey(a,b,0));fill(r);}}
+    if(linkBase(b,a,1)&&!CUT.has(segKey(b,a,1))){const r=segTiles(false,b,a);if(hit(r)){CUT.add(segKey(b,a,1));fill(r);}}}
+  // keep every road the traffic can reach in one piece: anything cut off from the middle of town is closed too
+  {const c=[Math.floor(NB/2)+1,Math.floor(NB/2)],seen=new Set([c+'']),q=[c];while(q.length){const[x,y]=q.pop();for(let d=0;d<4;d++)if(lk(x,y,d)){const k=[x+DX[d],y+DY[d]];if(!seen.has(k+'')){seen.add(k+'');q.push(k);}}}
+   for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(seen.has(ix+','+iy))continue;for(let d=0;d<4;d++)if(linkBase(ix,iy,d)&&!CUT.has(segKey(ix,iy,d))){CUT.add(segKey(ix,iy,d));const h=d===0||d===2,a=h?(d===0?ix:ix-1):ix,b=h?iy:(d===1?iy:iy-1);fill(segTiles(h,a,b));}}}
+  for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){let deg=0;for(let d=0;d<4;d++)if(lk(ix,iy,d))deg++;if(!deg)fill({x0:ix*P,x1:ix*P+3,y0:iy*P,y1:iy*P+3});}
+  // clear what stood there, then grass, woods and a few rocks
+  const wildAt=(x,y)=>{const tx=Math.floor(x/T),ty=Math.floor(y/T);return tx>=0&&ty>=0&&tx<W&&ty<W&&WILD[ty*W+tx];};
+  for(let i=buildings.length-1;i>=0;i--){const b=buildings[i];if(wildAt(b.x+b.w/2,b.y+b.h/2)||wildAt(b.x+2,b.y+2)||wildAt(b.x+b.w-2,b.y+b.h-2)||wildAt(b.x+b.w-2,b.y+2)||wildAt(b.x+2,b.y+b.h-2))buildings.splice(i,1);}
+  for(const arr of[trees,props,lotBlocks,parkedSpots,RAMPS,streetLights]){const keep=arr.filter(o=>!wildAt(o.x,o.y));arr.length=0;arr.push(...keep);}
+  for(let i=walkTiles.length-1;i>=0;i--){const[x,y]=walkTiles[i];if(WILD[y*W+x])walkTiles.splice(i,1);}
+  for(let ty=0;ty<W;ty++)for(let tx=0;tx<W;tx++){const ti=ty*W+tx;if(!WILD[ti])continue;
+    // a building that stays (it was mostly inside the line) keeps its footprint
+    if(map[ti]===BLD&&buildings.some(b=>(tx+.5)*T>b.x&&(tx+.5)*T<b.x+b.w&&(ty+.5)*T>b.y&&(ty+.5)*T<b.y+b.h)){WILD[ti]=0;continue;}
+    map[ti]=GRASS;PARKT[ti]=1;
+    const h=hash(tx*13+7,ty*29+3),r=(h&1023)/1023,edgeD=Math.min(tx,ty,W-1-tx);
+    if(r<0.11+(edgeD<6?0.12:0)){const pine=((h>>>10)&3)!==0,sp2=pine?'pine':'round',cs=TREEC[sp2],sc=0.8+((h>>>12)&7)/14;
+      trees.push({x:(tx+.5)*T+((h>>>15)&15)-8,y:(ty+.5)*T+((h>>>19)&15)-8,sp:sp2,r:(12+((h>>>23)&7))*sc,h:(0.8+((h>>>26)&3)*0.15)*sc,c:cs[(h>>>8)%cs.length],o1:0,o2:0});}
+    else if(r>0.97)props.push({x:(tx+.5)*T,y:(ty+.5)*T,k:r>0.985?'rock':'bush',c:'#3e6a2c'});}
+})();
 // ---- gangs ----
 const GANGS=[{name:'Red Sabres',col:'#a3222b',car:'#4f1418'},{name:'Chrome Saints',col:'#c4c7cc',car:'#2a2c31'},{name:'Jade Lotus',col:'#1f9a62',car:'#173d2d'}];
 function zoneOf(x,y){const bx=Math.floor(x/T/P),by=Math.floor(y/T/P);const H=NB/2;if(bx<H&&by<H)return 0;if(bx>=H&&by<H)return 1;if(bx<H&&by>=H)return 2;return -1}

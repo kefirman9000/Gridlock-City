@@ -31,16 +31,14 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.12
+- **A ring road** winds round the city through the hills and farmland, with spurs into town.
+- **A natural city edge:** rounded corners, and woods and parkland biting into the outer blocks.
+
 ## What's new in v5.11
 - **Gridlock City is an island:** the countryside runs down to a natural coastline and open sea all round, with no invisible wall at the end of the hills.
 - **A bigger world**, with the whole island on the **map and radar**.
 - **Cars sink** when you drive into deep water; swim for the shore.
-
-## What's new in v5.10
-- **Brake and reverse lights**, **tire smoke** on burnouts and hard stops, **exhaust backfires**, **glass shards** on big hits.
-- **Cars get dirty** (rain and the spray shop clean them).
-- **Parachutes:** bail out of a high helicopter or jump off a tower, SPACE to open.
-- **Cop flashlights** at night, **low-sun glare** at dawn and dusk, **speed streaks** at high speed.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

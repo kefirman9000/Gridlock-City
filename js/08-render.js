@@ -201,6 +201,62 @@ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS,k=j*HN+i;
   if(h<0){TTYPE[k]=1;TCOL[k]=0;}
   else if(h<10){if(h0>170&&n>0.45){TTYPE[k]=5;TCOL[k]=packC(112+n*30,108+n*26,100+n*22);}else{TTYPE[k]=2;TCOL[k]=packC(212+n*12,194+n*10,148+n*8);}}
   else if(h<26&&TTYPE[k]!==9&&TTYPE[k]!==7){TTYPE[k]=3;TCOL[k]=packC(96+n*20,118+n*18,62+n*10);}}
+// v5.12: a ring road through the countryside: out of the city's south-west corner, up the west side, along the foot of the
+// northern hills and down the east side to the south-east corner, wandering with the land, with spurs into the city's street ends.
+// Graded (smoothed heights, gentle slopes) and cut into the terrain; drawn per pixel with its own markings (RD* below). No R().
+const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDP=[];
+(function ringRoad(){const n1=(s,k)=>{const i=Math.floor(s),f=s-i,u=f*f*(3-2*f),h=q=>(hash(q*131+k*7,k*977+11)&65535)/65535;return h(i)+(h(i+1)-h(i))*u;};
+  const node=(ix,iy)=>[(ix*P+2)*T,(iy*P+2)*T],D0=320,yEnd=node(0,NB-1)[1],xA=-D0,xB=WPX+D0,y0=-D0,Rr=760;
+  // the base loop: a rounded rectangle, then pushed in and out along its normal by noise, then smoothed
+  let pts=[];const add=(x,y)=>pts.push([x,y]);
+  add(node(0,NB-1)[0],yEnd);for(let x=node(0,NB-1)[0]-40;x>xA+260;x-=40)add(x,yEnd);
+  for(let y=yEnd-260;y>y0+Rr;y-=40)add(xA,y);
+  for(let a=PI;a<PI*1.5;a+=0.05)add(xA+Rr+Math.cos(a)*Rr,y0+Rr+Math.sin(a)*Rr);
+  for(let x=xA+Rr;x<xB-Rr;x+=40)add(x,y0);
+  for(let a=PI*1.5;a<PI*2;a+=0.05)add(xB-Rr+Math.cos(a)*Rr,y0+Rr+Math.sin(a)*Rr);
+  for(let y=y0+Rr;y<yEnd-260;y+=40)add(xB,y);
+  for(let x=xB-260;x>node(NB,NB-1)[0]+40;x-=40)add(x,yEnd);add(node(NB,NB-1)[0],yEnd);
+  const chaikin=p=>{const o=[p[0]];for(let i=0;i<p.length-1;i++){const a=p[i],b=p[i+1];o.push([a[0]*0.75+b[0]*0.25,a[1]*0.75+b[1]*0.25],[a[0]*0.25+b[0]*0.75,a[1]*0.25+b[1]*0.75]);}o.push(p[p.length-1]);return o;};
+  // wander: offset along the outward normal, fading out toward both ends so it meets the city square-on
+  {let s=0;const L=[0];for(let i=1;i<pts.length;i++){s+=hyp(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);L.push(s);}const tot=s;
+   pts=pts.map((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],tx=b[0]-a[0],ty=b[1]-a[1],tl=hyp(tx,ty)||1,nx=ty/tl,ny=-tx/tl;
+     const fade=smooth01(Math.min(L[i],tot-L[i])/900),o=(170*(n1(L[i]/1500,1)-0.5)*2+60*(n1(L[i]/520,2)-0.5)*2)*fade;
+     // outward: the loop runs clockwise round the city, so the left-hand normal points outward
+     return[p[0]-nx*o,p[1]-ny*o];});}
+  for(let k=0;k<3;k++)pts=chaikin(pts);
+  // resample evenly
+  const even=(p,step)=>{const o=[p[0]];let carry=0;for(let i=1;i<p.length;i++){let a=p[i-1],b=p[i],dl=hyp(b[0]-a[0],b[1]-a[1]),t=step-carry;while(t<=dl){o.push([a[0]+(b[0]-a[0])*t/dl,a[1]+(b[1]-a[1])*t/dl]);t+=step;}carry=dl-(t-step);}o.push(p[p.length-1]);return o;};
+  const mk=p=>{p=even(p,24);let s=0;const P2=p.map((q,i)=>{if(i)s+=hyp(q[0]-p[i-1][0],q[1]-p[i-1][1]);return{x:q[0],y:q[1],s,h:GH(q[0],q[1])};});
+    // grade it: smooth the heights, then limit the slope both ways
+    for(let r=0;r<4;r++){const h=P2.map(q=>q.h);for(let i=0;i<P2.length;i++){let a=0,n=0;for(let j=-10;j<=10;j++){const q=P2[Math.max(0,Math.min(P2.length-1,i+j))];a+=q.h;n++;}P2[i].h=a/n;}}
+    for(const q of P2)q.h=Math.max(q.h,3);
+    for(let i=1;i<P2.length;i++)P2[i].h=Math.min(P2[i].h,P2[i-1].h+24*0.09);for(let i=P2.length-2;i>=0;i--)P2[i].h=Math.min(P2[i].h,P2[i+1].h+24*0.09);
+    for(let i=0;i<P2.length;i++){const a=P2[Math.max(0,i-1)],b=P2[Math.min(P2.length-1,i+1)],l=hyp(b.x-a.x,b.y-a.y)||1;P2[i].ux=(b.x-a.x)/l;P2[i].uy=(b.y-a.y)/l;}
+    return P2;};
+  const ring=mk(pts);RING.paths.push(ring);
+  // spurs from the city's street ends out to the ring
+  for(const[jx,jy]of RINGJ){if(jy===NB-1)continue;const[nx,ny]=node(jx,jy),sx=jy===0?nx:jx===0?0:WPX,sy=jy===0?0:ny;let b=null,bd=1e18;for(const q of ring){const d=dist2(q.x,q.y,sx,sy);if(d<bd){bd=d;b=q;}}
+    const out=jy===0?[0,-1]:jx===0?[-1,0]:[1,0],mid=[sx+out[0]*Math.sqrt(bd)*0.55,sy+out[1]*Math.sqrt(bd)*0.55];let p=[[sx-out[0]*8,sy-out[1]*8],mid,[b.x,b.y]];for(let k=0;k<3;k++)p=chaikin(p);
+    const sp2=mk(p);sp2[0].h=GH(sx,sy);for(let r=0;r<3;r++)for(let i=1;i<sp2.length-1;i++)sp2[i].h=(sp2[i-1].h+sp2[i].h+sp2[i+1].h)/3;RING.paths.push(sp2);}
+  // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
+  const hw=RING.hw,bank=110;
+  for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);
+    const ci=Math.round((q.x+HM)/HS),cj=Math.round((q.y+HM)/HS);
+    for(let j=cj-r;j<=cj+r;j++)for(let ii=ci-r;ii<=ci+r;ii++){if(ii<1||j<1||ii>=HN-1||j>=HN-1)continue;const x=-HM+ii*HS,y=-HM+j*HS;
+      if(x>=-2&&y>=-2&&x<=WPX+2&&y<=WPX+2)continue;const k=j*HN+ii;if(TTYPE[k]===0&&HMAP[k]===0&&y>WPX)continue;
+      const lat=(x-q.x)*-q.uy+(y-q.y)*q.ux,lon=(x-q.x)*q.ux+(y-q.y)*q.uy;if(Math.abs(lon)>16)continue;const d=Math.abs(lat);
+      if(d<hw+HS){const prev=RDI[k];if(prev<0||Math.abs(RDP[prev].lat)>d){const e={x:q.x,y:q.y,ux:q.ux,uy:q.uy,s:q.s,lat,main:path===ring};if(prev<0){RDI[k]=RDP.length;RDP.push(e);}else RDP[prev]=e;}
+        HMAP[k]=q.h;TTYPE[k]=10;TCOL[k]=packC(70,70,74);}
+      else if(d<hw+bank&&TTYPE[k]!==10){const w=1-smooth01((d-hw-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
+  // nothing standing in the road; the guard rail opens where the spurs leave town and is gone where the edge has gone wild
+  const onRoad=(x,y,m)=>{const k=(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);if(TTYPE[k]===10)return true;if(!m)return false;for(const[dx,dy]of[[m,0],[-m,0],[0,m],[0,-m]]){const k2=(((y+dy+HM)/HS)|0)*HN+(((x+dx+HM)/HS)|0);if(TTYPE[k2]===10)return true;}return false;};
+  for(let i=trees.length-1;i>=0;i--){const t=trees[i];if((t.x<0||t.y<0||t.x>WPX||t.y>WPX)&&onRoad(t.x,t.y,26))trees.splice(i,1);}
+  for(let i=buildings.length-1;i>=0;i--){const b=buildings[i];if(b.outside&&(onRoad(b.x+b.w/2,b.y+b.h/2,Math.max(b.w,b.h)/2+20)))buildings.splice(i,1);}
+  const wildNear=(x,y)=>{const tx=clamp(Math.floor(x/T),0,W-1),ty=clamp(Math.floor(y/T),0,W-1);return WILD[ty*W+tx];};
+  for(let i=props.length-1;i>=0;i--){const o=props[i];if(o.k!=='rail')continue;if(onRoad(o.x,o.y,40)||wildNear(o.x,o.y))props.splice(i,1);}
+  // the dirt strip along the city limits turns to grass where the edge has gone wild
+  for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const k=j*HN+i;if(TTYPE[k]!==8)continue;const x=-HM+i*HS,y=-HM+j*HS;if(wildNear(x,y)){TTYPE[k]=3;TCOL[k]=packC(92,116,58);}}
+})();
 for(let j=1;j<HN-1;j++)for(let i=1;i<HN-1;i++){const k=j*HN+i,dx=(HMAP[k+1]-HMAP[k-1])/(2*HS),dy=(HMAP[k+HN]-HMAP[k-HN])/(2*HS);SHMAP[k]=clamp(1+(-dx*0.6+dy*0.8)*1.6,0.55,1.4);}
 {const wet=(x,y)=>{const t=TTYPE[(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0)];return t===1||t===2;};
  for(let i=trees.length-1;i>=0;i--){const t=trees[i];if((t.x<0||t.y<0||t.x>WPX||t.y>WPX)&&wet(t.x,t.y))trees.splice(i,1);}
@@ -413,6 +469,10 @@ function renderGround(heads){
     }else{
       const xi=wx|0,yi=wy|0,gi=(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0),tt=TTYPE[gi],nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
       if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
+      else if(tt===10){const e=RDP[RDI[gi]],sh=SHMAP[gi];r=64+nz;g=64+nz;b=68+nz;
+        if(e){const lat=(wx-e.x)*-e.uy+(wy-e.y)*e.ux,s=e.s+(wx-e.x)*e.ux+(wy-e.y)*e.uy,al=Math.abs(lat),hw=RING.hw;
+          if(al>hw){r=118+nz;g=110+nz;b=92+nz;}else if(al>hw-3.5){r=g=b=196;}else if(e.main&&al<1.6&&((s%64)+64)%64<34){r=214;g=176;b=40;}}
+        r*=sh;g*=sh;b*=sh;}
       else{const c=TCOL[gi]||0xff406a3a,sh=SHMAP[gi];r=((c&255)+nz*2-7)*sh;g=(((c>>8)&255)+nz*2-7)*sh;b=(((c>>16)&255)+nz-3)*sh;
         if(tt===7&&(xi&3)===0){r*=0.85;g*=0.85;b*=0.85;}if(snk>0.02){const k=snk*0.8;r+=(236-r)*k;g+=(240-g)*k;b+=(246-b)*k;}}
       r*=ar;g*=ag;b*=ab;

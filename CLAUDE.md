@@ -39,6 +39,10 @@ The terrain grid reaches `HM`=2200 beyond the city on every side (`HM0`=1400 is 
 `COAST` in 08-render shapes the coastline after the land types are set (no `R()`); the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`
 (08f, one pixel per tile, offset `ISLEO` tiles) under `mmc`; `bigMapGeom()` returns the island box (`gx`,`gy`,`gs`) and the city box (`ox`,`oy`,`s`).
 Note `ISLE` is already taken (the river island). Cars that drive into deep water sink (`sinkTick` in 08f).
+v5.12: `cityEdge` (01, after the street lights; hash noise, no `R()`) marks `WILD` tiles on the outer blocks (rounded NW/NE corners, uneven bites),
+closes street segments it touches (in `CUT`) and anything cut off from the middle, then grasses them over. `RINGJ` lists the edge nodes it must keep:
+the ring road (`RING.paths`, `ringRoad` in 08-render, after `COAST`) joins the city there. Ring road cells are `TTYPE` 10; `RDI`/`RDP` give each cell its
+centre-line point so the terrain raster draws lanes per pixel. Note `reachAll()` starts at node 0,0, which the rounded corner removes.
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).

@@ -53,7 +53,7 @@ function suspTick(dt){for(const c of cars){if(c.t.heli||c.t.boat||c.t.plane||c.t
     if(c.t.bike){const wt=c.wh?0.32+Math.sin(c.wh*3)*0.04:0;c.whP=lerp(c.whP||0,wt,Math.min(1,dt*(wt?5:9)));}}
   const c=player.car;if(!c||c.air>0||c.t.heli||c.t.boat||c.t.plane||(c.az||0)>4)return;
   const tx=Math.floor(c.x/T),ty=Math.floor(c.y/T),t=tileAt(tx,ty),sp=hyp(c.vx,c.vy);
-  if((t===GRASS||t===TREE)&&sp>60){const k=Math.exp(-dt*(c.t.bike?0.5:c.type==='truck'||c.type==='pickup'?0.35:0.85));c.vx*=k;c.vy*=k;c.va+=rr(-0.6,0.6)*dt*(sp/300);
+  if((t===GRASS||t===TREE)&&sp>60&&!(TTYPE[(((c.y+HM)/HS)|0)*HN+(((c.x+HM)/HS)|0)]===10)){const k=Math.exp(-dt*(c.t.bike?0.5:c.type==='truck'||c.type==='pickup'?0.35:0.85));c.vx*=k;c.vy*=k;c.va+=rr(-0.6,0.6)*dt*(sp/300);
     if(R()<dt*16)puff(c.x-Math.cos(c.a)*c.t.L*0.45+rr(-6,6),c.y-Math.sin(c.a)*c.t.L*0.45+rr(-6,6),-c.vx*0.1+rr(-20,20),-c.vy*0.1+rr(-20,20),rr(0.5,0.9),rr(4,7),rain>0.4?'#4a3a26':'#9a8a62','smoke');
     if(sp>200)shake=Math.max(shake,1.2);}}
 {const f=drawCar3;drawCar3=function(c,fg){const add=(c.susp||0)+(c.whP||0);if(!add)return f(c,fg);const p0=c.pitch||0,z0=ZOFF;
