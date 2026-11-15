@@ -26,7 +26,7 @@ const roomAt=(x,y)=>{for(const r of ROOMLIST)if(x>r.x0-40&&x<r.x1+40&&y>r.y0-40&
 function roomTile(tx,ty){for(const r of ROOMLIST)if(tx>=r.tx0&&tx<r.tx1&&ty>=r.ty0&&ty<r.ty1)return tx>r.tx0&&tx<r.tx1-1&&ty>r.ty0&&ty<r.ty1-1?WALK:BLD;return -1;}
 let ROOM=null,roomCool=0;
 // the club: open at night, a downtown door near Times Square
-const CLUB=(()=>{const l=nearestLot(LM.tsq.x+3*P*T*0.5,LM.tsq.y-P*T)||lotBlocks[0];const d={x:l.x,y:l.y+60};SIGNS.push({x:d.x,y:d.y-40,text:'THE NEON LOTUS',bg:'#3a0a4a',fg:'#ff4fa8',h:48,on:()=>true});return d;})();
+const CLUB=(()=>{const l=doorSpot(LM.tsq.x+3*P*T*0.5,LM.tsq.y-P*T,0,60);const d={x:l.x,y:l.y+60};SIGNS.push({x:d.x,y:d.y-40,text:'THE NEON LOTUS',bg:'#3a0a4a',fg:'#ff4fa8',h:48,on:()=>true});return d;})();
 const clubOpen=()=>darkness>0.3||clock<0.22||clock>0.8;
 function enterRoom(id,back){const r=ROOMS[id];ROOM={id,r,back};fadeIn=1;player.x=r.door.x;player.y=r.door.y-T*0.8;player.jz=0;player.jv=0;player.a=player.body=-PI/2;roomCool=1.5;
   showBig(r.name,id==='club'?'Dance floor, bar, and the DJ':id==='safe'?'Walk to the bed to save':'Walk to the counter','#ffd600',1.8);
@@ -147,8 +147,8 @@ for(const k of['store','bank']){const r=ROOMS[k];r.id=k;r.x0=r.tx0*T;r.y0=r.ty0*
 {const r=ROOMS.bank;r.vault={x:r.cx,y:r.y0+T*1.6};r.props.push({x:r.cx,y:r.y0+T*1.0,k:'rbox',hl:T*1.6,hw:T*0.4,z0:0,z1:50,c:[120,120,130],rad:60,ht:52},
   {x:r.cx-T*4.5,y:r.cy,k:'rbox',hl:T*0.5,hw:T*2.5,z0:0,z1:18,c:[110,70,40],rad:90,ht:20},{x:r.cx+T*4.5,y:r.cy,k:'rbox',hl:T*0.5,hw:T*2.5,z0:0,z1:18,c:[110,70,40],rad:90,ht:20},
   {x:r.cx,y:r.y0+T*2.2,k:'rsign',text:'VAULT',bg:'#202020',fg:'#ffd600',z:56,rad:30,ht:60});}
-const STORES=[[7,3],[12,15]].map(([bx,by])=>{const l=nearestLot((bx*P+9)*T,(by*P+9)*T)||lotBlocks[0];const s={x:l.x-40,y:l.y+60,robT:-1e9};SIGNS.push({x:s.x,y:s.y-30,text:'24/7',bg:'#d8382a',fg:'#ffffff',h:36,on:()=>true});return s;});
-const BANK=(()=>{const l=nearestLot(LM.tsq.x-2*P*T,LM.tsq.y+P*T)||lotBlocks[0];const s={x:l.x+40,y:l.y+60,robT:-1e9};SIGNS.push({x:s.x,y:s.y-40,text:'GRIDLOCK SAVINGS BANK',bg:'#1f3f6f',fg:'#ffd600',h:44,on:()=>true});return s;})();
+const STORES=[[7,3],[12,15]].map(([bx,by])=>{const l=doorSpot((bx*P+9)*T,(by*P+9)*T,-40,60);const s={x:l.x-40,y:l.y+60,robT:-1e9};SIGNS.push({x:s.x,y:s.y-30,text:'24/7',bg:'#d8382a',fg:'#ffffff',h:36,on:()=>true});return s;});
+const BANK=(()=>{const l=doorSpot(LM.tsq.x-2*P*T,LM.tsq.y+P*T,40,60);const s={x:l.x+40,y:l.y+60,robT:-1e9};SIGNS.push({x:s.x,y:s.y-40,text:'GRIDLOCK SAVINGS BANK',bg:'#1f3f6f',fg:'#ffd600',h:44,on:()=>true});return s;})();
 let drill=null,robCool=0;
 function updateRobbery(dt){robCool-=dt;if(game.state!=='play')return;
   if(!ROOM){if(roomCool>0||player.car||DLG.open)return;
@@ -666,7 +666,7 @@ for(const k of['diner','gym','pawn']){const r=ROOMS[k];r.id=k;r.x0=r.tx0*T;r.y0=
   for(const sx of[-1,1])r.props.push({x:r.cx+sx*T*3.4,y:r.y1-T*3,k:'rbox',hl:T*0.5,hw:T*1.4,z0:0,z1:26,c:[90,70,50],rad:50,ht:28});
   r.props.push({x:r.cx,y:r.y0+T*1.1,k:'rsign',text:'LUCKY PAWN',bg:'#d8a020',fg:'#202020',z:48,rad:30,ht:56});}
 const PLACES=[['diner',4,5,'BLUE PLATE DINER','#2a7a8a'],['gym',4,12,'IRON WORKS GYM','#202020'],['pawn',13,14,'LUCKY PAWN','#d8a020']].map(([id,bx,by,txt,bg])=>{
-  const l=nearestLot((bx*P+9)*T,(by*P+9)*T)||lotBlocks[0];const d={id,x:l.x-60,y:l.y-40};SIGNS.push({x:d.x,y:d.y-36,text:txt,bg,fg:'#ffffff',h:40,on:()=>true});return d;});
+  const l=doorSpot((bx*P+9)*T,(by*P+9)*T,-60,-40);const d={id,x:l.x-60,y:l.y-40};SIGNS.push({x:d.x,y:d.y-36,text:txt,bg,fg:'#ffffff',h:40,on:()=>true});return d;});
 // ---------- v5.1: an arcade and a bar ----------
 ROOMS.arcade={tx0:194,ty0:W+13,tx1:206,ty1:W+21,floor:[30,26,44],wall:[60,40,90],name:'PIXEL PALACE'};
 ROOMS.bar={tx0:210,ty0:W+13,tx1:220,ty1:W+20,floor:[92,64,44],wall:[120,90,64],name:'THE CORNER TAP'};
@@ -687,7 +687,11 @@ for(const k of['arcade','bar']){const r=ROOMS[k];r.id=k;r.x0=r.tx0*T;r.y0=r.ty0*
   for(const sx of[-1,1])r.props.push({x:r.cx+sx*T*2.8,y:r.y1-T*2.8,k:'rbox',hl:T*0.7,hw:T*0.7,z0:0,z1:11,c:[90,60,40],rad:30,ht:12});
   r.props.push({x:r.cx,y:r.y0+T*0.8,k:'rsign',text:'THE CORNER TAP',bg:'#3a2414',fg:'#ffcf6a',z:52,rad:30,ht:60});}
 for(const[id,bx,by,txt,bg]of[['arcade',3,8,'PIXEL PALACE','#2a1a4a'],['bar',6,4,'THE CORNER TAP','#3a2414']]){
-  const l=nearestLot((bx*P+9)*T,(by*P+9)*T)||lotBlocks[0];const d={id,x:l.x+60,y:l.y-40};SIGNS.push({x:d.x,y:d.y-36,text:txt,bg,fg:'#ffffff',h:40,on:()=>true});PLACES.push(d);}
+  const l=doorSpot((bx*P+9)*T,(by*P+9)*T,60,-40);const d={id,x:l.x+60,y:l.y-40};SIGNS.push({x:d.x,y:d.y-36,text:txt,bg,fg:'#ffffff',h:40,on:()=>true});PLACES.push(d);}
+// visible street doors for everything you walk into, so you can see where a shop is instead of stumbling into it
+{const hx=h=>{const n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255];};
+ const D=[...PLACES.map(d=>[d,({diner:'#2a7a8a',gym:'#303030',pawn:'#d8a020',arcade:'#5a2a9a',bar:'#6a4424'})[d.id]||'#a03030']),...STORES.map(s=>[s,'#d8382a']),[BANK,'#1f3f6f'],[CLUB,'#a0207a'],...GUNSHOPS.filter(g=>!g.real).map(g=>[g,'#b02020'])];
+ for(const[d,col]of D){const ty=Math.floor(d.y/T),tx=Math.floor(d.x/T);if(map[(ty-1)*W+tx]!==BLD)continue;props.push({x:d.x,y:ty*T+3,k:'sdoor',c:hx(col),rad:16,ht:40});}}
 let placeCool=0;
 function updatePlaces(dt){placeCool-=dt;if(placeCool>0||player.car||DLG.open||game.state!=='play')return;
   if(!ROOM){if(roomCool>0)return;for(const d of PLACES)if(dist2(d.x,d.y,player.x,player.y)<30*30){enterRoom(d.id,{x:d.x,y:d.y+40});return;}return;}

@@ -668,6 +668,9 @@ function drawProp3(o,fg){
       obox(o.x,o.y,0,6,5,44,96,[96,160,140],[110,176,156],fg);obox(o.x,o.y,0,3.5,3.5,96,106,[96,160,140],null,fg);for(let i=0;i<5;i++){const a2=i/5*TAU;obox(o.x+Math.cos(a2)*3,o.y+Math.sin(a2)*3,a2,2,0.6,106,112,[96,160,140],null,fg);}
       obox(o.x+4,o.y-2,0,1.2,1.2,78,122,[96,160,140],null,fg);obox(o.x+4,o.y-2,0,2.4,2.4,122,128,[220,180,60],null,fg,0,0,true);if(proj(o.x+4,o.y-2,130))glow(PX,PY,8*PK,'#ffcc55',0.5+0.5*LIGHTK);return;}
     case 'rwall':obox(o.x,o.y,0,o.hl,o.hw,0,68,o.c,[60,60,64],fg);return;
+    // a shop's street door (doorSpot in 05-story.js): a doorway in the wall with a coloured canopy and a lit mat in front
+    case 'sdoor':{const c=o.c||[200,60,50];obox(o.x,o.y,0,12,2.5,0,34,[44,34,28],[30,24,20],fg);obox(o.x,o.y+4,0,16,4,34,38,c,mixA(c,[255,255,255],0.15),fg);
+      flat(o.x,o.y+12,0,11,7,0.4,litH(LIGHTK>0.4?'#d8b860':'#8a6a4a',1,fg));return;}
     case 'rdoor':obox(o.x,o.y,0,14,2,0,40,[90,60,40],null,fg);sign3(o.x,o.y,48,'EXIT','#1d7a3a','#ffffff',8,fg);return;
     case 'rbox':obox(o.x,o.y,0,o.hl,o.hw,o.z0,o.z1,o.c,o.c,fg);return;
     case 'rsign':sign3(o.x,o.y,o.z,o.text,o.bg,o.fg,9,fg);return;

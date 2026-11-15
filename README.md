@@ -32,6 +32,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
 ## What's new in v5.4.2
+- *v5.4.6:* shops, safehouses, helipads and mission markers no longer pile up in one square; shop doors are visible on the street.
 - *v5.4.5:* trees and props behind your car no longer get drawn over it.
 - *v5.4.4:* a normal refresh now picks up a new version straight away.
 - *v5.4.3:* fixed a parked car beside a building sometimes being drawn on top of your car.

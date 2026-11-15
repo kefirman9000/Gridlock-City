@@ -4,7 +4,27 @@ const ixPt=(ix,iy)=>({x:(ix*P+2)*T,y:(iy*P+2)*T});
 const blockPt=(bx,by)=>({x:(bx*P+9)*T,y:(by*P+9)*T});
 function walkNear(x,y,r){for(let i=0;i<80;i++){const a=R()*TAU,d=R()*r,px=x+Math.cos(a)*d,py=y+Math.sin(a)*d,t=tileAt(Math.floor(px/T),Math.floor(py/T));if(walkable(t))return{x:px,y:py};}return{x,y};}
 function lotNear(x,y,minD,maxD){const c=lotBlocks.filter(l=>{const d=hyp(l.x-x,l.y-y);return d>=(minD||0)&&d<=(maxD||1e9);});return c.length?pick(c):pick(lotBlocks);}
-function nearestLot(x,y){let b=null,bd=1e18;for(const l of lotBlocks){const d=dist2(l.x,l.y,x,y);if(d<bd){bd=d;b=l;}}return b;}
+// Each landmark (shops, safehouses, helipads, the diner...) claims its own lot. Plain nearest-lot placement handed the
+// same lot to several of them, so a diner door, an arcade door, a bar door, a helipad, a safehouse and a boss marker could
+// all end up in one square where you couldn't cross without setting something off. A claimed lot keeps LOTGAP from
+// every other claim and from the boss markers; if none is that clear, the nearest unclaimed lot, then any lot.
+const LOTCLAIM=[],LOTGAP=260;
+function nearestLot(x,y){const busy=[...LOTCLAIM];try{for(const b of BOSSES)if(b.mk)busy.push(b.mk);}catch(_){}
+  let b=null,bd=1e18,b2=null,bd2=1e18,b3=null,bd3=1e18;
+  for(const l of lotBlocks){const d=dist2(l.x,l.y,x,y);if(d<bd3){bd3=d;b3=l;}if(LOTCLAIM.includes(l))continue;if(d<bd2){bd2=d;b2=l;}
+    if(d<bd&&!busy.some(q=>dist2(q.x,q.y,l.x,l.y)<LOTGAP*LOTGAP))if(d<2200*2200){bd=d;b=l;}}
+  const r=b||b2||b3;if(r&&!LOTCLAIM.includes(r))LOTCLAIM.push(r);return r;}
+// a shop door: a sidewalk tile with the building right behind it (north) and open ground in front, near (x,y) and LOTGAP
+// clear of every other claimed place and boss marker. Returns a stand-in 'lot' placed so the caller's own offset (dx,dy)
+// lands exactly on the door, so call sites keep their code. Falls back to nearestLot if nothing fits.
+function doorSpot(x,y,dx,dy){const tx0=Math.floor(x/T),ty0=Math.floor(y/T),busy=[...LOTCLAIM];try{for(const b of BOSSES)if(b.mk)busy.push(b.mk);}catch(_){}
+  const okT=(tx,ty)=>tx>=1&&ty>=1&&tx<W-1&&ty<W-1;
+  for(let r=0;r<=24;r++){let best=null,bd=1e18;
+    for(let ty=ty0-r;ty<=ty0+r;ty++)for(let tx=tx0-r;tx<=tx0+r;tx++){if(Math.max(Math.abs(tx-tx0),Math.abs(ty-ty0))!==r||!okT(tx,ty))continue;const ti=ty*W+tx;
+      if(map[ti]!==WALK||DIAGT[ti]||map[ti-W]!==BLD)continue;const f=map[ti+W];if(f!==WALK&&f!==ROAD)continue;
+      const px=(tx+0.5)*T,py=(ty+0.5)*T;if(busy.some(q=>dist2(q.x,q.y,px,py)<LOTGAP*LOTGAP))continue;const d=dist2(px,py,x,y);if(d<bd){bd=d;best={x:px,y:py};}}
+    if(best){LOTCLAIM.push(best);return{x:best.x-dx,y:best.y-dy};}}
+  return nearestLot(x,y)||lotBlocks[0];}
 const waterZ=(x,y)=>{const tx=Math.floor(x/T);return tx>=RIVX0&&tx<RIVX1?RIVL:GH(x,y);};
 const vib=ms=>{try{if(touchMode&&navigator.vibrate)navigator.vibrate(ms);}catch(_){}};
 const SIGNS=[];// {x,y,text,bg,fg,on()}
@@ -67,7 +87,7 @@ function bossBlip(cx,x,y,b,sz){const av=storyAvail(b.g),s=Math.round(sz*(av?1:0.
   cx.restore();}
 {const zc=[[NB/4,NB/4],[NB*3/4,NB/4],[NB/4,NB*3/4]];
  BOSSES.forEach((b,i)=>{let best=null,bd=1e18;for(const l of lotBlocks){if(zoneOf(l.x,l.y)!==i)continue;const tx=Math.floor(l.x/T);if(tx>=RIVX0-4&&tx<RIVX1+4)continue;const d=dist2(l.x,l.y,(zc[i][0]*P+9)*T,(zc[i][1]*P+9)*T);if(d<bd){bd=d;best=l;}}
-   b.pt=best?{x:best.x,y:best.y}:blockPt(zc[i][0],zc[i][1]);
+   b.pt=best?{x:best.x,y:best.y}:blockPt(zc[i][0],zc[i][1]);if(best)LOTCLAIM.push(best); // the boss's lot is theirs
    SIGNS.push({x:b.pt.x,y:b.pt.y-46,text:GANGS[i].name.toUpperCase(),bg:GANGS[i].car,fg:'#f5f1e2',h:44,on:()=>true});});}
 // GTA III-style mission markers: a glowing circle on the ground beside each boss; step into it to start the job
 for(const b of BOSSES){let mk=null;for(const r of[58,72,46])for(let k=0;k<8&&!mk;k++){const a=PI/2+k*PI/4,x=b.pt.x+Math.cos(a)*r,y=b.pt.y+Math.sin(a)*r;if(walkable(tileAt(Math.floor(x/T),Math.floor(y/T)))&&!solidPx(x,y))mk={x,y};}b.mk=mk||{x:b.pt.x,y:b.pt.y+50};b.mk.g=b.g;}
@@ -497,8 +517,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&game.star
 
 // ---------- per-frame hook ----------
 function extTick(dt){extTick5(dt);transitTick(dt);extTick2(dt);extTick3(dt);extTick4(dt);updateBosses();updateSafehouses(dt);updateBoats(dt);updateShop();updateNitro(dt);updateHorn(dt);updateFire(dt);updateRaces(dt);updateLife(dt);mobileTick(dt);}
-function extSave(){return{gym:GYM,gold:GOLDGOT,tags:{seed:SAVE_SEED,d:TAGS.map(t=>t.done?1:0)},runs:RUNBEST,secret:secretFound,crewup:CREWUP,roof:{seed:SAVE_SEED,got:STASH.map(k=>k.got?1:0)},trash:trashLevel,taco:tacoLevel,story:STORY,sh:SAFEHOUSES.map(s=>({o:s.owned,g:s.garage})),best:BEST,fire:fireLevel,stats:STATS,golds:GOLDS,exp:EXPORTED,pizza:pizzaLevel,armor:player.armor,turf:TURF,stunt:stuntLevel};}
-function extLoad(e){if(!e)return;GYM=e.gym||0;for(const k in GOLDGOT)delete GOLDGOT[k];Object.assign(GOLDGOT,e.gold||{});applyGold();for(const t of TAGS)t.done=false;if(e.tags&&e.tags.seed===SAVE_SEED)(e.tags.d||[]).forEach((d,i)=>{if(TAGS[i])TAGS[i].done=!!d;});for(const k in RUNBEST)delete RUNBEST[k];Object.assign(RUNBEST,e.runs||{});secretFound=!!e.secret;Object.assign(CREWUP,{guns:0,armor:0,slot:0,guard:0},e.crewup||{});for(const k of STASH)k.got=false;if(e.roof&&e.roof.seed===SAVE_SEED)(e.roof.got||[]).forEach((g,i)=>{if(STASH[i])STASH[i].got=!!g;});trashLevel=e.trash||0;tacoLevel=e.taco||0;if(e.story){STORY.prog=e.story.prog||[0,0,0];STORY.fin=e.story.fin||0;}(e.sh||[]).forEach((q,i)=>{const s=SAFEHOUSES[i];if(s){s.owned=!!q.o;s.garage=q.g||null;if(s.gcar){const k=cars.indexOf(s.gcar);if(k>=0&&s.gcar!==player.car)cars.splice(k,1);s.gcar=null;}}});
+function extSave(){return{gym:GYM,gold:GOLDGOT,tags:{seed:SAVE_SEED,d:TAGS.map(t=>t.done?1:0)},runs:RUNBEST,secret:secretFound,crewup:CREWUP,roof:{seed:SAVE_SEED,got:STASH.map(k=>k.got?1:0)},trash:trashLevel,taco:tacoLevel,story:STORY,sh:SAFEHOUSES.map(s=>({n:s.name,o:s.owned,g:s.garage})),best:BEST,fire:fireLevel,stats:STATS,golds:GOLDS,exp:EXPORTED,pizza:pizzaLevel,armor:player.armor,turf:TURF,stunt:stuntLevel};}
+function extLoad(e){if(!e)return;GYM=e.gym||0;for(const k in GOLDGOT)delete GOLDGOT[k];Object.assign(GOLDGOT,e.gold||{});applyGold();for(const t of TAGS)t.done=false;if(e.tags&&e.tags.seed===SAVE_SEED)(e.tags.d||[]).forEach((d,i)=>{if(TAGS[i])TAGS[i].done=!!d;});for(const k in RUNBEST)delete RUNBEST[k];Object.assign(RUNBEST,e.runs||{});secretFound=!!e.secret;Object.assign(CREWUP,{guns:0,armor:0,slot:0,guard:0},e.crewup||{});for(const k of STASH)k.got=false;if(e.roof&&e.roof.seed===SAVE_SEED)(e.roof.got||[]).forEach((g,i)=>{if(STASH[i])STASH[i].got=!!g;});trashLevel=e.trash||0;tacoLevel=e.taco||0;if(e.story){STORY.prog=e.story.prog||[0,0,0];STORY.fin=e.story.fin||0;}(e.sh||[]).forEach((q,i)=>{const s=(q.n&&SAFEHOUSES.find(h=>h.name===q.n))||SAFEHOUSES[i];if(s){s.owned=!!q.o;s.garage=q.g||null;if(s.gcar){const k=cars.indexOf(s.gcar);if(k>=0&&s.gcar!==player.car)cars.splice(k,1);s.gcar=null;}}});
   for(const k in BEST)delete BEST[k];Object.assign(BEST,e.best||{});fireLevel=e.fire||0;for(const k of['usj','rcBest','offBest','offWins','flightBest','rank'])delete STATS[k];Object.assign(STATS,e.stats||{});for(const k in GOLDS)delete GOLDS[k];Object.assign(GOLDS,e.golds||{});for(const k in EXPORTED)delete EXPORTED[k];Object.assign(EXPORTED,e.exp||{});pizzaLevel=e.pizza||0;player.armor=e.armor||0;for(const k in TURF)delete TURF[k];Object.assign(TURF,e.turf||{});stuntLevel=e.stunt||0;}
 
 // ---------- traffic on the diagonal avenues ----------
@@ -555,7 +575,7 @@ function extTick2(dt){updateShowroom(dt);if(player.car){STATS.dist+=hyp(player.c
 // ---------- Ammu-Nation, body armor, export docks, pizza runs ----------
 player.armor=0;
 const BATIDX=()=>WEAPONS.findIndex(w=>w.kind==='x');
-const GUNSHOPS=[[3,9],[14,12]].map(([bx,by])=>{const l=nearestLot((bx*P+9)*T,(by*P+9)*T)||lotBlocks[0];const s={x:l.x+50,y:l.y-50};SIGNS.push({x:s.x,y:s.y,text:'AMMU-NATION',bg:'#2a2a2a',fg:'#ff4040',h:42,on:()=>true});return s;});
+const GUNSHOPS=[[3,9],[14,12]].map(([bx,by])=>{const l=doorSpot((bx*P+9)*T,(by*P+9)*T,50,-50);const s={x:l.x+50,y:l.y-50};SIGNS.push({x:s.x,y:s.y,text:'AMMU-NATION',bg:'#2a2a2a',fg:'#ff4040',h:42,on:()=>true});return s;});
 const GUNSTOCK=[['Baseball bat',100,'bat',Infinity],['SMG + 200',800,1,200],['Shotgun + 40',1200,2,40],['Flamethrower + 300',1500,3,300],['Molotovs + 10',600,4,10],['Rockets + 8',3000,5,8],['Grenades + 8',900,'gren',8],['Assault rifle + 120',2500,'rifle',120],['Sniper rifle + 20',3500,'sniper',20],['Body armor',500,-1,100]];
 let gunCool=0;
 function updateGunShops(dt){}
@@ -574,7 +594,7 @@ function updateExport(dt){expCool-=dt;const c=player.car;if(expCool>0||!c||c.t.b
   EXPORTED[c.type]=1;const pay=Math.round(e[1]*(0.5+0.5*clamp(c.hp/c.t.hp,0,1)));exitCar(true);cars.splice(cars.indexOf(c),1);addMoney(pay);sfx('pass');
   const n=Object.keys(EXPORTED).length;showBig('EXPORTED',CT[e[0]].name+'  +$'+pay.toLocaleString()+'  ·  '+n+'/'+EXPORTS.length,'#6ab8ff',2.6);if(n===EXPORTS.length){addMoney(20000);note('Export list complete! +$20,000');}}
 // pizza runs: three deliveries against the clock, from any car
-const PIZZA=(()=>{const l=nearestLot((11*P+9)*T,(8*P+9)*T)||lotBlocks[0];const s={x:l.x-50,y:l.y+50};SIGNS.push({x:s.x,y:s.y,text:'PIZZA',bg:'#d8382a',fg:'#ffe25a',h:36,on:()=>true});return s;})();
+const PIZZA=(()=>{const l=doorSpot((11*P+9)*T,(8*P+9)*T,-50,50);const s={x:l.x-50,y:l.y+50};SIGNS.push({x:s.x,y:s.y,text:'PIZZA',bg:'#d8382a',fg:'#ffe25a',h:36,on:()=>true});return s;})();
 let pizzaCool=0,pizzaLevel=0;
 function resSpot(nearX,nearY){const c=walkTiles.filter(([tx,ty])=>{const k=BLOCKK[Math.floor(ty/P)*NB+Math.floor(tx/P)];const d=hyp((tx+.5)*T-nearX,(ty+.5)*T-nearY);return k==='res'&&d>700&&d<1800;});const q=c.length?pick(c):pick(walkTiles);return{x:(q[0]+.5)*T,y:(q[1]+.5)*T};}
 function updatePizza(dt){pizzaCool-=dt;const c=player.car;if(pizzaCool>0||!c||mission||DLG.open||game.state!=='play'||dist2(PIZZA.x,PIZZA.y,c.x,c.y)>70*70||hyp(c.vx,c.vy)>60)return;pizzaCool=6;

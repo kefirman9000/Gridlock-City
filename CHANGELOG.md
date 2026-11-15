@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.4.6
+- Landmarks no longer pile up in one square: shops, safehouses, helipads and boss markers each get their own spot, and shop entrances are visible doorways on the street. (Every place used to take 'the nearest parking lot', and cities only have 12 to 19 lots, so up to six things could share one.)
+
 ## v5.4.5
 - Fix: trees, lamps and other props behind your car could be drawn on top of it.
 

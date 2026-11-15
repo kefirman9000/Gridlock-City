@@ -1,4 +1,4 @@
 {
-  "version": "5.4.5",
-  "notes": "Fix: trees, lamps and other props behind your car could be drawn on top of it."
+  "version": "5.4.6",
+  "notes": "Landmarks no longer pile up in one square: shops, safehouses, helipads and boss markers each get their own spot, and shop entrances are visible doorways on the street."
 }
