@@ -146,6 +146,7 @@ function drawHUD(){
     const col=mission&&mission.type==='hit'?'#ff3b3b':'#ffd600';ctx.beginPath();let [x0,y0]=toMM(player.x,player.y);ctx.moveTo(x0,y0);for(const q of gp){const [x,y]=toMM(q.x,q.y);ctx.lineTo(x,y);}
     ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=6;ctx.stroke();ctx.strokeStyle=col;ctx.lineWidth=3.2;ctx.stroke();ctx.restore();}}
   for(const b of BOSSES){const av=storyAvail(b.g);const [x,y]=edge(...toMM(b.pt.x,b.pt.y));bossBlip(ctx,x,y,b,15);}
+  if(typeof CONTACTS!=='undefined')for(const c of CONTACTS)if(c.unlock()){const [x,y]=edge(...toMM(c.pt.x,c.pt.y));contactBlip(ctx,x,y,c,13);}
   for(const sh of SAFEHOUSES){const [x,y]=toMM(sh.x,sh.y);if(x<mpx||x>mpx+ms||y<mpy||y>mpy+ms)continue;ctx.fillStyle=sh.owned?'#3ee07a':'#8a8a8a';ctx.fillRect(x-4,y-4,8,8);ctx.fillStyle='#000';ctx.font='bold 7px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('H',x,y+.5);}
   for(const r of RACES){const [x,y]=toMM(r.start.x,r.start.y);if(x<mpx||x>mpx+ms||y<mpy||y>mpy+ms)continue;ctx.fillStyle='#ffd600';ctx.fillRect(x-4,y-4,8,8);ctx.fillStyle='#000';ctx.font='bold 7px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('R',x,y+.5);}
   for(const c of cars)if(c.driver==='copboat'){const [x,y]=toMM(c.x,c.y);ctx.fillStyle=Math.floor(game.t*6)%2?'#ff3030':'#3a7bff';ctx.beginPath();ctx.arc(x,y,3,0,TAU);ctx.fill();}

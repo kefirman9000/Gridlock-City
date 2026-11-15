@@ -424,3 +424,135 @@ let CRUP=-99;
 {const f=cityTick;cityTick=function(dt){f(dt);if(!STATS.intro&&game.t>5&&STORY&&STORY.prog.every(p=>p===0)&&!STORY.fin&&!mission){STATS.intro=1;
   textMsg('Nico','Welcome to Gridlock, cuz. Vince runs Old Town for the Red Sabres and he owes me one. Go see him, he\'s the red marker on your map.');
   setTimeout(()=>textMsg('Nico','And stay clear of the cops. Half of Police HQ is on somebody\'s payroll.'),6000);}}}
+
+// ================= v5.18: story contacts, new kinds of jobs, and a choice at the end =================
+// Three people around town have their own short job chains that fill in the main story (Dex pays Captain Marlowe):
+// Maya Cruz, a reporter digging into Marlowe; Paulie, Vince's nephew; and your cousin Nico, who works the island.
+// They stand by a marker like the bosses, show as a letter on the radar once they have work, and text you when they do.
+const MAYA='Maya Cruz',PAULIE='Paulie',NICO='Nico';
+function tailStep(desc,need,mk){return{k:'until',desc,start:()=>{const m=mission;let sp=null;const o=mk();for(let i=0;i<40&&!sp;i++)sp=laneSpotNear(o.x+Math.cos(i)*(300+i*20),o.y+Math.sin(i)*(300+i*20));
+    if(!sp){storyFail('He took another way');return;}const c=makeCar('fbi',sp.x,sp.y,sp.dir*PI/2,'#2e3238');c.driver='ai';c.ai=newAI('lane',sp.dir,sp.k,190);c.vip=true;c.crim=true;
+    m.tail={c,ok:0,close:0,t:game.t};m.tgt=c;},
+  fail:()=>{const m=mission,T0=m.tail;if(!T0)return false;const c=T0.c,dt=Math.min(0.1,game.t-T0.t);T0.t=game.t;if(c.wreck||c.hp<=0||cars.indexOf(c)<0){m.failMsg='You were supposed to follow him, not wreck him';return true;}
+    if(c.ai)c.ai.cruise=Math.min(c.ai.cruise,200);const o=player.car||player,d=hyp(c.x-o.x,c.y-o.y);m.tgt=c;
+    if(d<130)T0.close+=dt;else T0.close=Math.max(0,T0.close-dt*0.5);if(T0.close>2.5){m.failMsg='He spotted you';return true;}
+    if(d>1000){m.failMsg='You lost him';return true;}if(d<700)T0.ok+=dt;
+    m.desc=(d<170?'Too close! Back off. ':d>560?'Don\'t lose him. ':'')+'Tail the car without being seen ('+Math.max(0,Math.ceil(need-T0.ok))+' s)';return false;},
+  get failMsg(){return mission&&mission.failMsg||'';},
+  cond:()=>{const m=mission;if(m.tail&&m.tail.ok>=need){m.tail.c.vip=false;m.tail.c.crim=false;m.tail=null;return true;}return false;}};}
+const doNow=f=>({k:'until',desc:'',start:f,cond:()=>true});
+const contactPt=id=>{const c=CONTACTS.find(q=>q.id===id);return{x:c.pt.x,y:c.pt.y};};
+const lookPt=(id,fb)=>{const l=LOOKS.find(q=>q.id===id);return l?{x:l.x,y:l.y}:fb;};
+const CONTACTS=[
+ {id:'maya',name:MAYA,ini:'R',col:'#f2f2ee',near:()=>({x:LM.tsq.x+420,y:LM.tsq.y+260}),unlock:()=>STORY.prog[0]>=4,
+  lock:'Maya Cruz, Gridlock Ledger. I\'m working on a story about the police. Come back when you\'ve made the news.',
+  intro:'Maya Cruz: I write for the Gridlock Ledger. That prison van on the news was you, wasn\'t it? I want to talk about Captain Marlowe. Times Square, look for the R.',
+  jobs:[
+  {title:'Off the Record',contact:'maya',pay:2500,after:'Maya Cruz: the man in that photo is Dex Calloway\'s bagman. I need Marlowe\'s own records to prove it. Come see me.',steps:[
+    {k:'talk',lines:[[MAYA,'Maya Cruz, Gridlock Ledger. Nobody else in this town will print a word about Captain Marlowe. I will, if I can prove it.'],[MAYA,'Every Friday he drives his own car to meet somebody. Follow him. Not too close: if he sees you, it\'s over.']]},
+    tailStep('Tail Captain Marlowe\'s car without being seen',45,()=>policeSpawn),
+    {k:'talk',lines:[[MAYA,'(on the phone) You got the meeting? A man in a Chrome Saints jacket handing him an envelope. That\'s Dex\'s bagman.'],[MAYA,'A photo isn\'t proof. Marlowe keeps a ledger. I need it.']]}]},
+  {title:'Paper Trail',contact:'maya',pay:3500,after:'Maya Cruz: the ledger is real, and Dex knows it\'s gone. He\'ll come for the paper. Come by the office.',steps:[
+    {k:'talk',lines:[[MAYA,'Marlowe keeps his ledger in the glovebox of his car, parked behind Police HQ.'],[MAYA,'Take the whole car. Lose anybody who follows, then bring it to me.']]},
+    {k:'steal',type:'fbi',col:'#2e3238',where:()=>({x:policeSpawn.x+5*T,y:policeSpawn.y+2*T}),desc:'Take Marlowe\'s car from behind Police HQ'},
+    {k:'heat',stars:1,why:'A desk officer saw you drive off in the captain\'s car'},
+    {k:'lose',desc:'Lose the cops'},
+    {k:'drive',to:()=>contactPt('maya'),car:'stolen',r:110,desc:'Bring Marlowe\'s car to Maya'},
+    {k:'talk',lines:[[MAYA,'Names, dates, amounts. Dex Calloway, every month, for a year. This is it.']]}]},
+  {title:'Front Page',contact:'maya',pay:6000,after:'Maya Cruz: it\'s on every newsstand. Internal Affairs just opened a file on Marlowe. You did this. Be careful, Dex is cornered now.',steps:[
+    {k:'talk',lines:[[MAYA,'Dex\'s people are outside the office. They want the ledger back, and me quiet.'],[MAYA,'Deal with them, then get the proofs to the printing plant at the docks before his lawyers stop the presses.']]},
+    {k:'kill',gang:1,n:5,around:()=>contactPt('maya'),spread:280,timer:180,desc:'Stop Dex\'s men outside the Ledger office'},
+    {k:'drive',to:()=>EXPORT||LM.dockS,car:'any',r:130,timer:150,desc:'Rush the proofs to the printing plant at the docks'},
+    doNow(()=>radioMsg('NEWS: The Ledger reports Captain Marlowe took payments from Dex Calloway. Internal Affairs is investigating.')),
+    {k:'talk',lines:[[MAYA,'(on the phone) The presses are running. Tomorrow the whole city reads it.']]}]}]},
+ {id:'paulie',name:PAULIE,ini:'P',col:'#e04040',near:()=>({x:BOSSES[0].pt.x+520,y:BOSSES[0].pt.y+180}),unlock:()=>STORY.prog[0]>=4,
+  lock:'Uncle Vince says I can\'t hang around with you yet.',
+  intro:'Paulie: I owe you for the jailbreak. Got some driving work if you want it. I\'m by Uncle Vince\'s, look for the P.',
+  jobs:[
+  {title:'Wheelman',contact:'paulie',pay:2200,after:'Paulie: the Saints are running Dex\'s books up the Pali road tonight. Want in?',steps:[
+    {k:'talk',lines:[[PAULIE,'My driver quit after the jailbreak. Says I\'m bad luck.'],[PAULIE,'Three pickups across town, and every one\'s on a clock. Take the muscle car out front.']]},
+    {k:'steal',type:'muscle',col:'#c0281c',where:()=>lotNear(player.x,player.y,150,600),desc:'Get in Paulie\'s Bruiser'},
+    {k:'drive',to:()=>lotNear(player.x,player.y,900,1700),car:'stolen',timer:60,desc:'First pickup'},
+    {k:'drive',to:()=>lotNear(player.x,player.y,900,1700),car:'stolen',timer:55,desc:'Second pickup'},
+    {k:'drive',to:()=>lotNear(player.x,player.y,900,1700),car:'stolen',timer:50,desc:'Third pickup'},
+    {k:'talk',lines:[[PAULIE,'(on the phone) All three! You\'re not bad luck. You\'re good luck with a lead foot.']]}]},
+  {title:'Pali Road',contact:'paulie',pay:4000,after:'Paulie: Uncle Vince heard about the Pali road. He\'s proud. Don\'t tell him I said that.',steps:[
+    {k:'talk',lines:[[PAULIE,'A Saints courier is taking Dex\'s account books up to the Pali lookout to sell to an out-of-town buyer.'],[PAULIE,'Beat him there. Mountain road, so keep it on the tarmac.']]},
+    {k:'drive',to:()=>lookPt('pali',{x:WPX*0.3,y:-500}),car:'any',r:130,timer:170,desc:'Race up to the Pali lookout before the courier'},
+    {k:'kill',gang:1,n:4,around:()=>lookPt('pali',{x:WPX*0.3,y:-500}),spread:150,timer:120,desc:'The courier brought friends. Deal with them'},
+    {k:'talk',lines:[[PAULIE,'(on the phone) The books! Uncle Vince is going to frame them.']]}]}]},
+ {id:'nico',name:NICO,ini:'N',col:'#3ad0a0',near:()=>({x:(LM.dockS.x+LM.dockW.x)/2,y:LM.dockS.y-120}),unlock:()=>STORY.prog[0]>=2,
+  lock:'Go and see Vince first, cuz. Then come back to me.',
+  intro:'Nico: got some work out on the island for you, cuz. Boats, planes, the whole deal. I\'m by the river docks, look for the N.',
+  jobs:[
+  {title:'North Shore Run',contact:'nico',pay:4000,after:'Nico: next one flies. Ever been in a Dodo? Doesn\'t matter. Come by.',steps:[
+    {k:'talk',lines:[[NICO,'I run a charter boat. Mostly tourists, sometimes cargo nobody asks about.'],[NICO,'A boat\'s waiting at the marina. Take this crate round to the surf beach on the North Shore. The harbor patrol sleeps on Sundays.']]},
+    {k:'drive',to:()=>MARINA?{x:MARINA.shore.x+20,y:MARINA.shore.y+120}:LM.dockS,r:110,desc:'Go to the marina'},
+    {k:'boat'},
+    {k:'drive',to:()=>SURFB?{x:SURFB.x,y:SURFB.y-40}:LM.beach,car:'boat',r:200,timer:330,desc:'Take the boat round to the North Shore surf beach'},
+    {k:'talk',lines:[[NICO,'(on the phone) Got it. The surfers didn\'t even look up. Easiest money in the islands.']]}]},
+  {title:'Cargo Flight',contact:'nico',pay:6500,after:'Nico: that was Dex\'s cash on that plane, cuz. Somebody in this town is getting very nervous.',steps:[
+    {k:'talk',lines:[[NICO,'Dex is flying a crate of cash out on tonight\'s cargo plane. Except tonight, you\'re the pilot.'],[NICO,'Take the Dodo at the airport and fly it over the North Shore. My guys will be waiting on the beach.']]},
+    {k:'drive',to:()=>STRIP?{x:STRIP.x0+40,y:STRIP.y}:BOSSES[0].pt,r:140,desc:'Go to the airport'},
+    {k:'until',desc:'Get in the Dodo',start:()=>{const d=spawnDodo();if(d){d.vip=true;mission.tgt=d;}},cond:()=>!!(player.car&&player.car.t.plane)},
+    {k:'heat',stars:1,why:'Airport security called it in'},
+    {k:'until',desc:'Fly over the drop zone on the North Shore',start:()=>{const p=SURFB?{x:SURFB.x,y:SURFB.y+60}:lookPt('ns',{x:WPX*0.4,y:-1800});mission.tgt=p;mission.ring=true;mission.x=p.x;mission.y=p.y;},
+      cond:()=>{const c=player.car,p=mission.tgt;return !!(c&&c.t.plane&&p&&hyp(c.x-p.x,c.y-p.y)<300);}},
+    {k:'talk',lines:[[NICO,'(on the phone) Crate\'s down! Now land that thing somewhere. Or don\'t. Your call.']]}]}]},
+];
+// contacts stand on a sidewalk near their spot (the lots are nearly all taken), with their marker one tile along it
+function sideSpot(x,y){const tx0=Math.floor(x/T),ty0=Math.floor(y/T),ok=(tx,ty)=>tx>1&&ty>1&&tx<W-2&&ty<W-2&&map[ty*W+tx]===WALK&&!DIAGT[ty*W+tx];
+  for(let r=0;r<40;r++)for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(Math.max(Math.abs(i),Math.abs(j))!==r)continue;const tx=tx0+i,ty=ty0+j;if(!ok(tx,ty))continue;
+    for(const[dx,dy]of[[1,0],[0,1],[-1,0],[0,-1]])if(ok(tx+dx,ty+dy)&&ok(tx+2*dx,ty+2*dy))return{pt:{x:(tx+.5)*T,y:(ty+.5)*T},mk:{x:(tx+1.5*dx+.5)*T,y:(ty+1.5*dy+.5)*T}};}
+  return{pt:{x,y},mk:{x:x+40,y}};}
+for(const c of CONTACTS){const n=c.near(),sp=sideSpot(n.x,n.y);c.pt=sp.pt;c.mk=Object.assign(sp.mk,{col:c.col});c.cool=false;c.ped=null;
+  SIGNS.push({x:c.pt.x,y:c.pt.y-46,text:c.name.toUpperCase(),bg:'#2a2a30',fg:c.col,h:44,on:()=>c.unlock()});}
+SGRID=null;
+function contactJob(c){if(!c.unlock())return null;const n=(STATS.ct&&STATS.ct[c.id])||0;return c.jobs[n]||null;}
+function contactBlip(cx,x,y,c,sz){const av=!!contactJob(c),s=Math.round(sz*(av?1:0.72));cx.save();cx.font=`900 ${s}px "Arial Black",Impact,system-ui`;cx.textAlign='center';cx.textBaseline='middle';
+  cx.globalAlpha=av?1:0.55;cx.lineJoin='round';cx.lineWidth=Math.max(2.5,s*0.24);cx.strokeStyle='#000';cx.strokeText(c.ini,x,y+1);cx.fillStyle=c.col;cx.fillText(c.ini,x,y+1);cx.restore();}
+function contactsTick(){const S=STATS.ctx||(STATS.ctx={});
+  for(const c of CONTACTS){if(c.unlock()&&!S[c.id]&&!mission&&stars()===0){S[c.id]=1;textMsg(c.name,c.intro.slice(c.intro.indexOf(': ')+2),c.mk);}
+    if(dist2(c.pt.x,c.pt.y,player.x,player.y)>1100*1100)continue;let p=c.ped;
+    if(!p||p.gone||peds.indexOf(p)<0){p=makePed(c.pt.x,c.pt.y,false);p.boss=true;p.target=true;p.hp=9999;p.col=c.col==='#f2f2ee'?'#6a4a8a':c.col;c.ped=p;}
+    p.x=c.pt.x;p.y=c.pt.y;p.vx=p.vy=0;p.a=Math.atan2(player.y-p.y,player.x-p.x);
+    const job=contactJob(c),onMk=dist2(c.mk.x,c.mk.y,player.x,player.y)<24*24;
+    if(!mission&&!DLG.open&&!player.car&&game.state==='play'&&(job?onMk:dist2(p.x,p.y,player.x,player.y)<44*44)&&!c.cool){c.cool=true;
+      if(!c.unlock())say([[c.name,c.lock]]);else if(!job)say([[c.name,'Nothing right now. I\'ll text you.']]);
+      else{runMission(job,{sub:c.name,boss:p});mission.contact=c.id;mission.gang=-1;}}
+    if(dist2(p.x,p.y,player.x,player.y)>90*90&&dist2(c.mk.x,c.mk.y,player.x,player.y)>60*60)c.cool=false;}}
+{const sp=storyPass;storyPass=function(){const m=mission;
+  if(m&&m.def&&m.def.contact&&!(m.opts&&m.opts.replay)){mission=null;ringT=6;const d=m.def,ct=STATS.ct||(STATS.ct={});ct[d.contact]=(ct[d.contact]||0)+1;addMoney(d.pay);sfx('pass');vib([60,40,60]);
+    showBig('JOB DONE',d.title+'  ·  +$'+d.pay.toLocaleString(),'#3ee07a',3);
+    if(d.after){const i=d.after.indexOf(': ');setTimeout(()=>textMsg(d.after.slice(0,i),d.after.slice(i+2)),3500);}
+    if(OPT.autosave&&stars()===0)writeSave('auto');return;}
+  if(m&&m.def===FINALE&&m.fin){STATS.ending=m.fin;if(m.fin==='alone')addMoney(10000);if(m.fin==='vince')addRespect(0,4);if(m.fin==='lin')addRespect(2,4);}
+  sp();};}
+{const f=cityTick;cityTick=function(dt){f(dt);contactsTick();}}
+
+// ---- the finale: after the ambush you choose who to call. Each call plays out differently. ----
+const FIN_END=[[VINCE,'(on the phone) Heard Dex took a swim. And Marlowe\'s been suspended. Funny how that works.']];
+const FIN_BR={
+ vince:[{k:'talk',lines:[[YOU,'(on the phone) Vince. Dex is running for the Gridlock Bridge.'],[VINCE,'(on the phone) My boys are parking trucks across the far end right now. Push him into them.']]},
+  {k:'drive',to:()=>LM.bridgeMid,r:120,timer:170,desc:'Get to the Gridlock Bridge'},
+  {k:'wreck',at:()=>({x:LM.bridgeMid.x+260,y:LM.bridgeMid.y+20}),type:'fbi',col:'#c0c0c8',hp:360,cruise:230,timer:140,desc:'Wreck Dex\'s car. The Sabres have the far end blocked'},
+  doNow(()=>{if(stars()>1){heat=TH[1];}radioMsg('DISPATCH: Units are tied up at an Old Town truck pile-up. Low priority on the bridge.');}),
+  {k:'lose',timer:240,desc:'Lose the last cop'},
+  {k:'talk',lines:[FIN_END[0],[VINCE,'(on the phone) Old Town is yours as much as mine now, kid. Paulie wants a desk next to yours.'],[YOU,'Gridlock City is ours.']]}],
+ lin:[{k:'talk',lines:[[YOU,'(on the phone) Mother Lin. Dex is making a run for it.'],[LIN,'(on the phone) Then end it, and come to the river. My boats will close the water behind you.']]},
+  {k:'drive',to:()=>LM.bridgeMid,r:120,timer:170,desc:'Get to the Gridlock Bridge'},
+  {k:'wreck',at:()=>({x:LM.bridgeMid.x+260,y:LM.bridgeMid.y+20}),type:'fbi',col:'#c0c0c8',hp:420,cruise:300,timer:130,desc:'Wreck Dex\'s car'},
+  {k:'drive',to:()=>LM.dockE,r:100,timer:150,desc:'Get to Lin\'s boat at the east dock'},
+  {k:'boat'},
+  doNow(()=>{clearHeat();radioMsg('DISPATCH: Harbor patrol reports fishing boats blocking the river. We lost the suspect.');}),
+  {k:'drive',to:()=>LM.dockS,car:'boat',r:110,timer:160,desc:'Take the boat down to the south dock'},
+  {k:'talk',lines:[[LIN,'(on the phone) The river keeps its secrets. Dex is one of them now.'],[LIN,'(on the phone) Marlowe was suspended this morning. The city has a new name for you.'],[YOU,'Gridlock City is ours.']]}],
+ alone:[{k:'talk',lines:[[YOU,'Nobody else gets a piece of this.']]},
+  {k:'drive',to:()=>LM.bridgeMid,r:120,timer:160,desc:'Dex is fleeing over the Gridlock Bridge. Get there!'},
+  {k:'wreck',at:()=>({x:LM.bridgeMid.x+260,y:LM.bridgeMid.y+20}),type:'fbi',col:'#c0c0c8',hp:420,cruise:300,timer:120,desc:'Wreck Dex\'s car'},
+  {k:'lose',timer:240,desc:'Lose the cops'},
+  {k:'talk',lines:[FIN_END[0],[LIN,'(on the phone) You did it alone. People will remember that.'],[YOU,'Gridlock City is mine.']]}]};
+{const ki=FINALE.steps.findIndex(s=>s.k==='kill');if(ki>=0){FINALE.steps.length=ki+1;
+  FINALE.steps.push({k:'until',desc:'Decide who to call',start:()=>{say([[YOU,'Dex is getting away, and every cop Marlowe owns is on my tail. I can\'t do this alone. Or can I?']],null,
+    [['CALL VINCE',()=>finBranch('vince')],['CALL MOTHER LIN',()=>finBranch('lin')],['GO ALONE (+$10,000)',()=>finBranch('alone')]]);},cond:()=>!!(mission&&mission.fin)});}}
+function finBranch(k){const m=mission;if(!m)return;m.fin=k;m.steps=m.steps.slice(0,m.si+1).concat(FIN_BR[k]);}

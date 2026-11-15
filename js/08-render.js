@@ -1241,7 +1241,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   for(const g of GOLDG)if(!GOLDGOT[g.w])add(27,g,g.x,g.y,10,null,14,g.z);
   if(roofRun){const c=roofRun.cps[roofRun.i];add(26,c,c.x,c.y,30,null,60,c.z);}
   if(ACT&&ACT.kind==='off'){const c=ACT.cps[ACT.i];add(26,c,c.x,c.y,30,null,60,0);}
-  if(!mission&&game.state==='play'&&!SCENE.on)for(const b of BOSSES)if(storyAvail(b.g))add(28,b.mk,b.mk.x,b.mk.y,26,null,70);
+  if(!mission&&game.state==='play'&&!SCENE.on){for(const b of BOSSES)if(storyAvail(b.g))add(28,b.mk,b.mk.x,b.mk.y,26,null,70);if(typeof CONTACTS!=='undefined')for(const c of CONTACTS)if(contactJob(c))add(28,c.mk,c.mk.x,c.mk.y,26,null,70);}
   phones.forEach((ph,i)=>add(5,ph,ph.x,ph.y,8,null,27));
   if(mission&&mission.items)for(const it of mission.items)if(!it.got)add(6,it,it.x,it.y,8);
   for(const sg of SIGNS){if(sg.sh)sg.text=sg.sh.owned?'SAFEHOUSE':'FOR SALE $'+sg.sh.price.toLocaleString();add(20,sg,sg.x,sg.y,40,null,sg.h+12);}
@@ -1327,7 +1327,7 @@ function drawItem2(it){const o=it.o,fg=fogAt(it.f);{const ox=it.kind===9?o.b.x:o
     case 4:drawPickup3(o,fg);break;
     case 5:drawPhone3(o,phones.indexOf(o)===ringing&&!mission,fg);break;
     case 6:drawCase3(o,fg);break;
-    case 28:{const m=o,col=GANGS[o.g].col,pulse=0.5+0.5*Math.sin(game.t*3.2),rgb=rgbOf('#ffd24a');ZOFF=GH(m.x,m.y);
+    case 28:{const m=o,col=o.col||GANGS[o.g].col,pulse=0.5+0.5*Math.sin(game.t*3.2),rgb=rgbOf('#ffd24a');ZOFF=GH(m.x,m.y);
       // a pool of light on the ground, a ring that breathes, and a soft beam rising out of it
       if(proj(m.x,m.y,0.5)){const gx=PX,gy=PY,k=PK;L3.globalCompositeOperation='lighter';
         L3.globalAlpha=0.32+0.18*pulse;L3.fillStyle='#ffd24a';L3.beginPath();L3.ellipse(gx,gy,20*k,20*k*Math.max(0.18,Math.abs((CZ-ZOFF)/Math.max(30,PF))*0.9),0,0,TAU);L3.fill();

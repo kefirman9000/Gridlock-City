@@ -49,6 +49,9 @@ In 08-render, `drawPed3` scales non-player, non-cop people by `HS`/`WS` (height/
 v5.17: stars fade when unseen (`fadeT` in the wanted block of 07; no cop spawns while `seenT>=3`); the outermost `crime` wrapper (end of 08g) caps a single incident at +1 star and
 small crimes at one new star per 8 s (`CRUP`). Story missions take `after` (a 'Name: text' sent with `textMsg` when the job passes) and `heat` steps take `why` (shown with the WANTED banner).
 The storyline: Dex pays Captain Marlowe (Police HQ) to break Vince and Lin; keep new missions consistent with it.
+v5.18 (end of 08g): `CONTACTS` (Maya, Paulie, Nico): each has `unlock()`, `jobs` (story-style defs with `contact:id`), a sidewalk spot (`sideSpot`) and marker `mk`; progress in `STATS.ct`, intro texts in `STATS.ctx`.
+`contactsTick` (from `cityTick`) spawns them and starts jobs; a `storyPass` wrapper pays them. `tailStep()` builds an `until` step for tailing a car; `doNow(f)` is an `until` step that runs `f` and moves on.
+The finale ends at a choice step: `finBranch(k)` replaces the rest of `mission.steps` with `FIN_BR[k]` (vince / lin / alone), recorded in `STATS.ending`.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

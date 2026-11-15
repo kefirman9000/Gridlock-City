@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.18.0
+- Story contacts: Maya Cruz (reporter, Times Square, after Jailbreak), Paulie (by Vince's, after Jailbreak) and Nico (river docks, once the city opens). Each stands on a sidewalk with a marker and a name sign, shows as a letter on the radar, texts you when they unlock, and has their own chain of jobs that fills in the main story.
+- Maya, "The Marlowe Files": Off the Record (tail Marlowe's car for 45 s; too close for long and he spots you, too far and you lose him), Paper Trail (take Marlowe's car and ledger from behind Police HQ, lose the cops, bring it to her), Front Page (fight off Dex's men, then rush the proofs to the printing plant at the docks against the clock).
+- Paulie: Wheelman (three timed pickups in his muscle car), Pali Road (race the Saints courier up to the Pali lookout, then deal with his friends).
+- Nico: North Shore Run (boat from the marina round to the North Shore surf beach), Cargo Flight (steal the Dodo at the airport and fly over the drop zone on the North Shore).
+- The finale now asks who to call after the ambush: Vince (the Sabres block the bridge and tie up the cops; Red Sabres respect), Mother Lin (escape down the river in her boat; Jade Lotus respect) or nobody (the hard version, +$10,000). Each has its own ending.
+
 ## v5.17.0
 - Storyline: the game opens with texts from your cousin Nico pointing you to Vince. The thread through all three bosses: Dex Calloway is paying Captain Marlowe at Police HQ to break Vince and Mother Lin. Vince's jobs find the payoffs, Dex's jobs show you Marlowe from the inside, Lin's jobs prove it, and the finale is Dex and Marlowe framing you.
 - Every job ends with a text from the boss (in the phone's messages) saying what's next and why.
