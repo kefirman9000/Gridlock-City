@@ -1,3 +1,5 @@
+// v5.14: three more music stations (slotted in before RADIO OFF)
+RADIO.splice(RADIO.length-1,0,{name:'JUNGLE 99.9',tag:'drum & bass',bpm:174,kind:'dnb'},{name:'IRIE 92.7',tag:'reggae & dub',bpm:76,kind:'reggae'},{name:'PULSE 105.9',tag:'house & disco',bpm:124,kind:'house'});
 // ================= RADIO: the stations' content and their live clock (music itself is synthesized in 04-audio-actions.js) =================
 // ---- radio content: the talk show, the DJs, the ads and the song names (all made up for Gridlock City; satire, not advice) ----
 const TALKSEGS=[
@@ -73,7 +75,7 @@ const stClock=i=>RCLK[i]+performance.now()/1000;
 const TALKSEQ=(()=>{const out=[];TALKSEGS.forEach((sg,i)=>{out.push(...sg);if(i%2===1)out.push(ADS[(i*5)%ADS.length],ADS[(i*5+3)%ADS.length]);});return out;})();
 // each line gets as long as it takes to say (about 0.4 s a word), so long jokes aren't cut off
 const TALKT=(()=>{const o=[0];TALKSEQ.forEach(l=>o.push(o[o.length-1]+Math.max(4.5,l.split(' ').length*0.4+1.4)));return o;})();
-function songTitle(st,seg){const W=SONGW[st%SONGW.length],h=hash(seg,st*31+9);return '"'+W[0][h%W[0].length]+' '+W[1][(h>>>5)%W[1].length]+'" by '+W[2][(h>>>10)%W[2].length];}
+function songTitle(st,seg){const W=SONGW[st]||SONGW[0],h=hash(seg,st*31+9);return '"'+W[0][h%W[0].length]+' '+W[1][(h>>>5)%W[1].length]+'" by '+W[2][(h>>>10)%W[2].length];}
 function radioNow(st){const S=RADIO[st];if(!S||S.kind==='off')return null;const T=stClock(st);
   if(S.kind==='talk'){const L=TALKT[TALKT.length-1],t=T%L;let lo=0,hi=TALKT.length-1;while(lo<hi){const m=(lo+hi)>>1;if(TALKT[m+1]<=t)lo=m+1;else hi=m;}
     const k=Math.floor(T/L)*TALKSEQ.length+lo;return{key:'t'+k,line:TALKSEQ[lo],speak:true};}
@@ -105,8 +107,112 @@ function talkSay(line){try{const ss=window.speechSynthesis;if(!ss||muted)return;
   if(list.length)u.voice=list[(seed>>>5)%list.length];ss.speak(u);}catch(_){}}
 function talkStop(){try{if(window.speechSynthesis)window.speechSynthesis.cancel();}catch(_){}}
 let RLAST='';
-function updateRadioText(dt){const st=RADIO[radio.st],on=!!(player.car&&game.state==='play'&&!game.paused&&st&&st.kind!=='off');
+function updateRadioTextV1(dt){const st=RADIO[radio.st],on=!!(player.car&&game.state==='play'&&!game.paused&&st&&st.kind!=='off');
   if(!on){if(RLAST)talkStop();RLAST='';return;}
   const now=radioNow(radio.st);if(!now){if(RLAST&&RLAST[0]!=='s')talkStop();RLAST='';return;}
   if(now.key===RLAST)return;const first=!RLAST;RLAST=now.key;
   radioBanner={text:st.name,sub:now.line,t:now.speak?7:4};if(now.speak&&!first)talkSay(now.line);else if(now.speak&&first&&st.kind!=='talk')talkSay(now.line);}
+
+// ================= v5.14: new stations' DJs and songs, more talk, and a radio without dead air =================
+DJS[3]=null; // the talk station has no DJ; its show is TALKSEQ
+DJS.push(
+ {name:'MC FLUX',pitch:0.85,rate:1.22,lines:["MC FLUX: JUNGLE 99.9, one seven four beats a minute, which is also my resting heart rate. Big tunes, small rent.",
+  "MC FLUX: That bassline just set off four car alarms on Delancey. Those are my backing vocals now.","MC FLUX: If you're doing the speed limit to this you're breaking a different law. The law of the dance.",
+  "MC FLUX: Shout-out to the bike couriers threading through traffic like a drum fill. Respect. Please stop riding through my kitchen.",
+  "MC FLUX: Got a text from the police helicopter. It says nice tune. It also says pull over.","MC FLUX: Rewind! No, we can't actually rewind, it's live radio. Imagine I rewound it. Beautiful.",
+  "MC FLUX: My producer made this beat out of a subway door and a man arguing with a pigeon. Genius.","MC FLUX: JUNGLE 99.9. Fast cars, faster music, slowest pension plan in the city.",
+  "MC FLUX: Big up the night shift at the docks. Lift those boxes on the snare. Nobody check what's in them.","MC FLUX: The sub-bass on this one is rated for bridges. Don't play it on the Gridlock Bridge. We lost a lane last time.",
+  "MC FLUX: Request from Kenny in the back of a squad car. Kenny, they let you have the radio? Legend.","MC FLUX: If your windscreen just cracked, that was the drop. Claim it on insurance as an act of bass."],
+  intros:["MC FLUX: Coming in hot, here's {song}. Hold on to something.","MC FLUX: Fresh dubplate, nobody's got this yet: {song}.","MC FLUX: Gridlock, this is {song}, and it does not slow down."]},
+ {name:'AUNTIE ROSE',pitch:1.05,rate:0.9,lines:["AUNTIE ROSE: Irie 92.7, reggae and dub all night long. Slow down, child. The city will still be here. Probably.",
+  "AUNTIE ROSE: Somebody called me cryin' about their car getting stolen. I said, darlin', the car was never yours. We are all just borrowin'. Then I called the police.",
+  "AUNTIE ROSE: This one goes out to the fishermen on the pier. Catch something nice. Not the shopping trolley again.","AUNTIE ROSE: Too much rush in this city. Everybody honkin'. Honkin' never moved a single car. Breathin' does.",
+  "AUNTIE ROSE: Irie 92.7. If the bass is shaking your mirror, leave it. It's tellin' you somethin'.","AUNTIE ROSE: My grandson asked me what dub is. I said it's the song with the problems taken out. Like a holiday.",
+  "AUNTIE ROSE: Big love to the Jade Lotus aunties playing dominoes in the park. I see you cheatin', Margaret.","AUNTIE ROSE: Rain coming in off the bay tonight. Good. The city needs a wash. So do some of you.",
+  "AUNTIE ROSE: Somebody keeps jumping the river in a taxi. Baby, the ferry is right there. It's cheaper and it floats.","AUNTIE ROSE: Lay back in the seat, put one hand out the window. Not that hand. The one without the gun.",
+  "AUNTIE ROSE: I've been on this station thirty years. Seen eleven mayors, nine bridges and one honest cop. Lovely man. Moved away.","AUNTIE ROSE: Echo, echo, echo... that's the dub, and also the inside of my car since the stereo broke."],
+  intros:["AUNTIE ROSE: Easy now. Here's {song}.","AUNTIE ROSE: This one's a sweet one. {song}. Turn it up, mind the speed.","AUNTIE ROSE: Bring it down low. {song}, for all the night drivers."]},
+ {name:'DJ KIKI',pitch:1.35,rate:1.12,lines:["DJ KIKI: PULSE 105.9, house and disco, four on the floor and two wheels on the curb! Kiki's in the booth!",
+  "DJ KIKI: The club on the waterfront is packed, the line goes round the block, and the bouncer is my mum. Good luck.","DJ KIKI: If you can see the disco ball from your car, you are parked inside the club. Please leave.",
+  "DJ KIKI: Hands up if you're driving! No! Put them down! Put them down! Oh no.","DJ KIKI: PULSE 105.9. We don't stop. Our licence says we have to stop at four. We don't stop.",
+  "DJ KIKI: This next one was made by a guy in a garage. A real garage. He works there. He fixed my brakes and then he dropped this.","DJ KIKI: Shout-out to everyone stuck in rush hour. Make it a party. Honk on the beat. Not that beat. The other one.",
+  "DJ KIKI: Glitter is not a lifestyle. It's a commitment. You will be finding it in your car for years.","DJ KIKI: Someone requested a slow song. We don't have one. Drive slower and it'll feel slower.",
+  "DJ KIKI: The DJ booth smells like fog machine and broken dreams. I love it here.","DJ KIKI: Gridlock City, you are beautiful tonight. Except for you. You know who you are. You cut me off on Fourth."],
+  intros:["DJ KIKI: Oh this one's a banger! {song}!","DJ KIKI: Let's go! It's {song}, get your shoulders moving!","DJ KIKI: Brand new and absolutely filthy, {song}!"]});
+DJS[0].intros=["SKIDS: Here's {song}. It's loud. Deal with it.","SKIDS: Next one, {song}. Recorded in one take. The drummer was in handcuffs.","SKIDS: {song}. Turn it up until the knob breaks off."];
+DJS[1].intros=["LUCINDA: Mmm. Here's {song}. For the long way home.","LUCINDA: Slide into this one, darling. {song}.","LUCINDA: Lights low, wipers slow. {song}."];
+DJS[2].intros=["LOW TIDE: This one's crazy. {song}. Let it rattle.","LOW TIDE: Bassline exclusive, {song}. Don't tell nobody.","LOW TIDE: Run it! {song}!"];
+DJS[0].lines.push("SKIDS: Fan mail says play something slower. Here's the same song at the same speed, but sad.","SKIDS: KRUD's new studio is the back of a bread van. Smells great. Sounds terrible. Perfect.",
+  "SKIDS: Shout-out to the guy surfing on top of the El train. You're not punk, you're just wrong. Love you though.","SKIDS: That was ninety seconds long and had four key changes. Our bassist knows two notes and both were wrong.");
+DJS[1].lines.push("LUCINDA: Somewhere out there someone's driving to the beach at four a.m. with no plan. Baby, that's the plan.","LUCINDA: Rain on the windshield, neon on the rain. You can't buy that. You can steal the car, though.",
+  "LUCINDA: A listener asked if synth music is coming back. Darling, it never left. It was hiding in your dad's car.","LUCINDA: NEON 101. Brought to you by the colour pink, and regrets you'll make look good.");
+DJS[2].lines.push("LOW TIDE: If you're bumping this in the Village, the neighbours are bumping it too. Through the wall. Involuntarily.","LOW TIDE: Shout-out the corner store uncle. Ten years, never asked me for ID, always asked me for rent.",
+  "LOW TIDE: Studio's in a parking garage now. Acoustics are crazy. Security guard's doing backups.","LOW TIDE: Real talk: this city's tough. But so are you. You stole that car with one hand and ate a sandwich with the other.");
+SONGW[3]=null;
+SONGW.push(
+ [['Rolling','Liquid','Hard','Deep','Midnight','Concrete','Ghost','Sub','Rapid','Broken'],['Amen','Signal','Pressure','Tunnel','Circuit','Rinse','Overpass','Junction','Halo','Kinetic'],['Flux & Ferrel','Junction Six','Tidal Unit','Bassface Collective','Nine Volt','Mira Kade','The Overground']],
+ [['Sunday','Island','Roots','Harbour','Easy','Sweet','Rising','Kingston','Lazy','Golden'],['Morning','Riddim','Breeze','Rockers','Version','Skank','Sunset','Dub','Bubble','Lion'],['Auntie Rose & the Tide','Lee Marlowe','The Harbour Kings','Sister Iolanthe','Roots Federation','Dubwise Dez']],
+ [['Saturday','Disco','Pure','Higher','Golden','Midnight','Funky','Velvet','Space','Mirror'],['Feeling','Love','Groove','Fever','Lights','Floor','Rhythm','Heaven','Strut','Ball'],['Kiki Supreme','The Waterfront Sound','Lady Marcelle','Ten Floor Cartel','Loveboat Orchestra','Casa Nova']]);
+ADS.push("AD: Gridlock Gas. Now with forty percent more gas! Ask about our other percent.","AD: Shiny Rims. Your car is worth less than its wheels. Ask us how.",
+ "AD: The Harbour Ferry. Cross the river in comfort. Stay on the boat. Please stay on the boat. Sir.","AD: Dr. Smiles Teeth Whitening. Brighter than headlights. Do not look directly at your own mouth.",
+ "AD: Breeze Air Fresheners. Hides the smell of anything. Anything. We don't judge, we just deodorise.","AD: Gridlock Gym. Get fit enough to outrun the cops. Members say it works about half the time.",
+ "AD: The Lucky Lotus Casino. The house always wins, but sometimes it lets you hold the money first.","AD: Kar Kare Car Wash. We get the mud out. We don't ask what the rest of it is.",
+ "AD: Vacation in Gridlock City! See the sights! Stay alive! Two out of two not guaranteed!","AD: Mega Burger. Seven patties. One heart attack. Free fries.",
+ "AD: Sunset Funeral Homes. Driving like that? We'll see you soon. Pre-plan today.","AD: Gridlock City Library. Free books, free air conditioning, free place to hide. Late fees apply to people too.");
+TALKSEGS.push(
+ ["MARTY: Welcome back to Chatter 96.1. Tonight's topic: is it still jaywalking if the cars are on the sidewalk too? Lines are open.","CALLER: Marty, I've been walking in the road my whole life.","MARTY: Why?","CALLER: The sidewalk's where the cars park.","MARTY: That's a fair point and a terrible city. Next caller."],
+ ["CALLER: Marty, my neighbour keeps a helicopter on his roof.","MARTY: That's not illegal, is it?","CALLER: He lands it on MY roof.","MARTY: Have you talked to him?","CALLER: I tried. He just said 'lift off' and flew away. Every time.","MARTY: Honestly that's a great exit line. Next."],
+ ["DR: Dr. Fennick here, sitting in for the medical minute. A listener asks: is it bad to be hit by a car? Yes. Next question: is it worse to be hit by two? Also yes. That's medicine, folks.","MARTY: Thank you, doctor.","DR: My fee is in the mail. Unlike my licence."],
+ ["CALLER: Marty, I think the ice cream truck is following me.","MARTY: Everybody thinks that.","CALLER: It's been three days. It doesn't sell ice cream. It just plays the song.","MARTY: Ma'am, I think that's just the city. Lock your doors. Hum along. Next."],
+ ["MARTY: Traffic update. Everything is red. The bridge is red. The tunnel is red. My face is red, I just read last month's ratings.","MARTY: Back to the phones.","CALLER: Marty, I've been on hold for two hours.","MARTY: And now you're on the air! What's your question?","CALLER: I forgot.","MARTY: Beautiful. Next."],
+ ["REVEREND: Reverend Pike here with your evening blessing. Bless the drivers, bless the walkers, and bless the folks who do both at the same time at sixty miles an hour.","MARTY: Amen, Reverend.","REVEREND: Collection plate's on the pier. If it's not there, someone took it. Bless them too, I suppose."],
+ ["CALLER: Marty, why does every taxi in this city smell like oranges?","MARTY: It's to cover the smell.","CALLER: Of what?","MARTY: Of the other oranges. Next."],
+ ["CALLER: Marty, I saw a man parachute out of a helicopter and land on a hot dog stand.","MARTY: Was he alright?","CALLER: He bought a hot dog.","MARTY: Customer service. Next."],
+ ["GARY: Gary Pratt with sports. The Gridlock Gulls lost again tonight. Final score: nothing to a lot. Fans rioted, but politely, which is a first.","MARTY: Any bright spots, Gary?","GARY: The stadium parking lot set a record for stolen cars. Our city leads the league in something."],
+ ["CALLER: Marty, are the bridges ever going to open all the way?","MARTY: They're open, they're just angry.","CALLER: Mine raised itself while I was on it.","MARTY: That one's a drawbridge. You have to be nice to it. Next."]);
+
+// The radio, without dead air and without repeats:
+// - a line starts as soon as the one before it finishes (a short breath between), not on a fixed clock;
+// - nothing you've already heard is said again: tune away and back, or get out and back in, and it moves on to the next line;
+// - while you're away a station keeps going (the talk show moves on about one line every six seconds, songs keep their clock);
+// - music keeps playing under the DJs and ads, ducked while anyone talks; voices are a little quieter.
+let RTALK=false,RSAY=null,RSAYT=0,RGAP=0,RLAST2=-1;
+const RST=RADIO.map((S,i)=>({pos:Math.floor(((RCLK[i]||0)*7)%Math.max(1,TALKSEQ.length)),said:new Set(),seg:-1,q:[]}));
+// rebuild the talk show now it has the new segments, with ads between every couple of calls
+TALKSEQ.length=0;TALKSEGS.forEach((sg,i)=>{TALKSEQ.push(...sg);if(i%2===1)TALKSEQ.push(ADS[(i*5)%ADS.length],ADS[(i*5+3)%ADS.length]);});
+RST.forEach(r=>{r.pos=r.pos%TALKSEQ.length;});
+function talkSay2(line,done){try{const ss=window.speechSynthesis;RTALK=true;RSAY=done;
+    // fallback for browsers that never fire onend (or have no voices): about as long as it takes to say
+    RSAYT=Math.max(2.2,line.split(' ').length*0.36+0.8);
+    if(!ss||muted)return;ss.cancel();const i=line.indexOf(': '),who=line.slice(0,i),txt=line.slice(i+2);
+    const u=new SpeechSynthesisUtterance(txt),key=who.split(' ')[0],dj=DJS.find(d=>d&&d.name===who),anon=key==='CALLER'||key==='AD';
+    const seed=anon?vhash(txt):vhash(who),g=VGENDER[key]||(seed&1?'f':'m');
+    let pitch,rate;if(dj){pitch=dj.pitch;rate=dj.rate;}else if(VOICE[key]&&!anon){pitch=VOICE[key][0];rate=VOICE[key][1];}
+    else{pitch=0.55+((seed>>>3)%100)/100*1.05;rate=0.85+((seed>>>11)%100)/100*0.45;}
+    if(key==='AD'&&(seed>>>17)%3===0)rate*=1.18;
+    u.pitch=pitch;u.rate=rate;u.volume=0.6;const P=voicePool(ss),list=P[g]&&P[g].length?P[g]:P.all;if(list.length)u.voice=list[(seed>>>5)%list.length];
+    u.onend=()=>{if(RSAY===done){RSAYT=0;}};u.onerror=u.onend;RSAYT+=1.2; // onend usually arrives first; the timer is only a backstop
+    ss.speak(u);}catch(_){RSAYT=2;}}
+VGENDER.MC='m';VGENDER.AUNTIE='f';VGENDER.DJ='f';VGENDER.GARY='m';
+// what a music station says between songs: the DJ, or an ad break, then sometimes a station ident; and a DJ intro over some songs' first bars
+function breakLines(st,seg){const dj=DJS[st];if(!dj)return[];const h=hash(seg,st*41+3),L=dj.lines,A=ADS;
+  if(seg%3===1)return[A[(h)%A.length],A[(h>>>7)%A.length],L[(h>>>13)%L.length]];
+  return[L[(h)%L.length],L[(h>>>9)%L.length]];}
+function introLine(st,seg){const dj=DJS[st];if(!dj||!dj.intros||(hash(seg,st*13+7)&1))return null;return dj.intros[(seg>>>1)%dj.intros.length].replace('{song}',songTitle(st,seg));}
+function updateRadioText(dt){const S=RADIO[radio.st],on=!!((player.car||(ROOM&&ROOM.id==='club'))&&game.state==='play'&&!game.paused&&S&&S.kind!=='off');
+  // stations you're not listening to keep moving: the talk show at about a line every six seconds
+  for(let i=0;i<RST.length;i++)if(!(on&&i===radio.st)&&RADIO[i].kind==='talk')RST[i].pos+=dt/6;
+  if(!on||radio.st!==RLAST2){if(RTALK)talkStop();RTALK=false;RSAY=null;RSAYT=0;RGAP=0.35;RLAST2=on?radio.st:-1;if(!on)return;}
+  const r=RST[radio.st];
+  if(RTALK){RSAYT-=dt;if(RSAYT>0)return;RTALK=false;RSAY=null;RGAP=0.3;} // finished: a short breath, then the next thing
+  if(RGAP>0){RGAP-=dt;return;}
+  if(S.kind==='talk'){const k=Math.floor(r.pos)%TALKSEQ.length,line=TALKSEQ[k];r.pos=Math.floor(r.pos)+1;radioBanner={text:S.name,sub:line,t:7};talkSay2(line,k);return;}
+  // music station: what part of the song cycle are we in
+  const T=stClock(radio.st),seg=Math.floor(T/RCYC),ph=T-seg*RCYC;
+  if(r.seg!==seg){r.seg=seg;r.q=[];const it=introLine(radio.st,seg);if(it)r.q.push(['i'+seg,it]);r.brk=false;}
+  if(ph<4&&!r.said.has('n'+seg)){r.said.add('n'+seg);radioBanner={text:S.name,sub:'NOW PLAYING: '+songTitle(radio.st,seg),t:4};}
+  if(ph>=RSONG-1&&!r.brk){r.brk=true;breakLines(radio.st,seg).forEach((l,j)=>r.q.push(['b'+seg+'_'+j,l]));}
+  // intros only while the intro is still playing; break lines until the next song has properly started
+  while(r.q.length){const[key,line]=r.q[0];if(r.said.has(key)||(key[0]==='i'&&ph>14)){r.q.shift();continue;}
+    r.q.shift();r.said.add(key);if(r.said.size>400)r.said=new Set([...r.said].slice(-200));radioBanner={text:S.name,sub:line,t:7};talkSay2(line,key);return;}}
+RADIOREACT.dnb=['This tune is mental!','Junglist!','Too fast for me.'];RADIOREACT.reggae=['Irie!','Love this one.','So chill.'];RADIOREACT.house=['Tune!','Let\'s dance!','Is that the club?'];

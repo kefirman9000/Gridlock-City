@@ -24,32 +24,60 @@ const snare=(t,v)=>{rn(t,0.16,1900,'bandpass',v||0.6);rv(t,0.08,190,'triangle',0
 const hat=(t,v)=>rn(t,0.035,8000,'highpass',v||0.22);
 const nfq=semi=>110*Math.pow(2,semi/12);
 const PROG=[[0,-4,3,-2],[0,-2,-4,-5],[0,3,-2,5]];
+// v5.14: songs keep playing right through the DJ and ad breaks (the voices duck them), every song has its own hook,
+// and songs build: a sparse intro, verses, a chorus with the hook, a breakdown, and a fill into each new section.
+const chord=(minor)=>minor?[0,3,7]:[0,4,7];
 function radioTick(){
   try{
   const S=RADIO[radio.st];if(S.kind==='talk'||S.kind==='off')return;
-  // the station's own clock decides where in which song we are (see RCLK in 06-city-life.js)
+  // the station's own clock decides where in which song we are (see RCLK in 06r-radio.js)
   const sd=60/S.bpm/4,off=RCLK[radio.st]+performance.now()/1000-AC.currentTime;
   if(radio.next<AC.currentTime||radio.lastSt!==radio.st){radio.lastSt=radio.st;radio.next=Math.ceil((off+AC.currentTime+0.05)/sd)*sd-off;}
   while(radio.next<AC.currentTime+0.15){
     const t=radio.next,T=off+t,seg=Math.floor(T/RCYC),ph=T-seg*RCYC;radio.next+=sd;
-    if(ph>=RSONG-0.05)continue; // between songs: the DJ or the ads have the air
-    const step=Math.floor(ph/sd+1e-6),s=step%16,bar=Math.floor(step/16),v=hash(seg,radio.st*7+1),alt=(v>>>4)&1,end=ph>RSONG-3;
-    if(end&&s!==0)continue;
+    const step=Math.floor(ph/sd+1e-6),s=step%16,bar=Math.floor(step/16),v=hash(seg,radio.st*7+1),alt=(v>>>4)&1;
+    // song sections, in bars: intro 0-3, verse, chorus (bars 8-15 of every 16), a breakdown now and then; a fill on the last beat before each
+    const sec=bar<4?0:(bar%16)<8?1:2,brk=((v>>>9)&3)===0&&(bar%32)>=28,fill=(bar%8)===7&&s>=12,intro=sec===0;
     const tr=[0,2,-3,5,-2,3][v%6],root=PROG[(radio.st+v)%PROG.length][Math.floor(bar/2)%4]+tr;
+    const hook=k=>[0,3,5,7,10,12,15][(hash(seg*17+k,radio.st*31+5)>>>3)%7],hk=s%8;
     if(S.kind==='punk'){
-      if(s===0||s===8||s===10||(alt&&s===14))kick(t);if(s===4||s===12)snare(t);if(s%2===0)hat(t,0.15);
-      if(s%2===0){rv(t,sd*1.8,nfq(root+12),'sawtooth',0.07,0,1600);rv(t,sd*1.8,nfq(root+(alt?17:19)),'sawtooth',0.05,0,1600);}
+      if(!brk){if(s===0||s===8||s===10||(alt&&s===14))kick(t);if(s===4||s===12||(fill&&s%2===1))snare(t);if(s%2===0&&!intro)hat(t,0.15);}
+      if(s%2===0&&!intro){rv(t,sd*1.8,nfq(root+12),'sawtooth',0.07,0,1600);rv(t,sd*1.8,nfq(root+(alt?17:19)),'sawtooth',0.05,0,1600);}
       if(s%4===0)rv(t,sd*3.5,nfq(root-12),'square',0.12,0,500);
+      if(sec===2&&s%2===0)rv(t,sd*1.7,nfq(root+24+hook(hk>>1)),'square',0.045,0,2200);
     }else if(S.kind==='synth'){
-      if(s%4===0)kick(t);if(s===4||s===12)snare(t,0.45);if(s%4===2)hat(t,0.25);
+      if(!brk){if(s%4===0)kick(t);if(s===4||s===12)snare(t,0.45);if(s%4===2&&!intro)hat(t,0.25);if(fill&&s%2===1)snare(t,0.3);}
       const ch=alt?[0,7,12,15,19,15,12,7]:[0,3,7,12,15,12,7,3];rv(t,sd*0.9,nfq(root+12+ch[s%8]),'square',0.045,0,2400);
-      if(s%2===0)rv(t,sd*1.6,nfq(root-12),'sawtooth',0.1,0,380);
+      if(s%2===0&&!brk)rv(t,sd*1.6,nfq(root-12),'sawtooth',0.1,0,380);
       if(s===0)rv(t,sd*15,nfq(root+24),'triangle',0.04);
+      if(sec===2&&(s%4===0||s===6||s===14))rv(t,sd*2.6,nfq(root+24+hook(hk)),'triangle',0.06,0,3200);
     }else if(S.kind==='hiphop'){
       const sw=(s%2===1)?sd*0.25:0;
-      if(s===0||s===7||s===10||(alt&&s===3))kick(t,1);if(s===4||s===12)snare(t,0.7);if(s%2===0||s===15)hat(t+sw,s%4===2?0.3:0.16);
+      if(!brk){if(s===0||s===7||s===10||(alt&&s===3))kick(t,1);if(s===4||s===12)snare(t,0.7);}if((s%2===0||s===15)&&!intro)hat(t+sw,s%4===2?0.3:0.16);
       if(s===0||s===10)rv(t,sd*5,nfq(root-24),'sine',0.3);
       const pent=[0,3,5,7,10,12];if((s===0||s===6||s===8||s===14)&&((bar*7+s)%3!==0))rv(t,sd*3,nfq(root+12+pent[(bar*3+s+v)%6]),'triangle',0.08);
+      if(sec===2&&(s===2||s===11))rv(t,sd*2,nfq(root+24+hook(s)),'sine',0.07);
+    }else if(S.kind==='dnb'){
+      // drum & bass: a chopped two-step break at 174, a rolling reese bass, a pad, a hook in the drop
+      if(!brk&&!intro){if(s===0||s===10||(alt&&s===13))kick(t,0.95);if(s===4||s===12)snare(t,0.75);if(s===7||s===15||(fill&&s>=12))snare(t,0.22);}
+      hat(t+(s%2?sd*0.12:0),s%2===0?0.12:0.07);if(s%4===2)rn(t,0.09,9000,'highpass',0.05);
+      if(s%8===0&&!brk){rv(t,sd*7.6,nfq(root-24),'sawtooth',0.1,0,260+((bar%4)*90));rv(t,sd*7.6,nfq(root-24)*1.008,'sawtooth',0.08,0,260);rv(t,sd*7.6,nfq(root-24),'sine',0.22);}
+      if(s===0&&bar%2===0)for(const n of chord(true))rv(t,sd*30,nfq(root+12+n),'triangle',0.022,0,1800);
+      if(sec===2&&(s===0||s===3||s===6||s===10))rv(t,sd*2.4,nfq(root+24+hook(s)),'square',0.04,0,2600);
+    }else if(S.kind==='reggae'){
+      // reggae: a one-drop (kick and rim together on beat three), the guitar skank on the offbeats, a round melodic bass, an organ bubble
+      if(s===8&&!brk){kick(t,0.8);rn(t,0.05,3200,'bandpass',0.32);}if(s%2===0&&!intro)hat(t,s%4===2?0.12:0.07);if(fill&&s===14)snare(t,0.35);
+      if(s===4||s===12)for(const n of chord(false))rv(t,sd*0.7,nfq(root+12+n),'square',0.035,0,1400);
+      if(s%4===2&&!intro)for(const n of chord(false))rv(t+sd*0.1,sd*0.45,nfq(root+24+n),'triangle',0.02,0,2400);
+      const bl=[0,0,7,0,5,0,3,0],bs=[0,3,6,10,11,14];if(bs.includes(s)&&!brk)rv(t,sd*(s===0?2.6:1.4),nfq(root-12+bl[(bs.indexOf(s)+bar)%8]),'sine',0.26);
+      if(sec===2&&(s===0||s===5||s===10))rv(t,sd*3,nfq(root+24+[0,4,7,9,12,14,16][(hash(seg*17+s,radio.st*31+5)>>>3)%7]),'triangle',0.05);
+    }else if(S.kind==='house'){
+      // house: four on the floor, claps on two and four, open hats on the offbeats, an offbeat bass, piano stabs, a disco string line
+      if(!brk&&s%4===0)kick(t,0.95);if(s===4||s===12){rn(t,0.12,1500,'bandpass',0.4);rn(t+0.012,0.1,1700,'bandpass',0.25);}
+      if(s%4===2)rn(t,0.14,7000,'highpass',intro?0.08:0.16);else if(!intro)hat(t,0.07);
+      if(s%4===2&&!brk)rv(t,sd*1.6,nfq(root-12),'sawtooth',0.11,0,420);
+      if(!intro&&(s===0||s===3||s===6||s===10)&&bar%2===(alt?1:0))for(const n of chord(!alt))rv(t,sd*0.9,nfq(root+12+n),'square',0.03,0,2000);
+      if(sec===2&&s%2===0)rv(t,sd*1.8,nfq(root+24+hook(hk>>1)),'sawtooth',0.03,0,2800);
     }
   }
   }catch(e){}
@@ -93,7 +121,7 @@ function updateAudio(){
    siren.o.frequency.setTargetAtTime((720+260*Math.sin(game.t*4.2))*dop,t,0.02);}
   squeal.g.gain.setTargetAtTime(player.car&&player.car.skid&&!player.car.t.boat&&!muted&&game.state==='play'?0.045:0,t,0.05);
   const ron=(!!player.car||(ROOM&&ROOM.id==='club'))&&game.state==='play'&&RADIO[radio.st].kind!=='off'&&!muted&&!game.paused;
-  radioG.gain.setTargetAtTime(ron?0.3:0,t,0.15);if(ron)radioTick();
+  radioG.gain.setTargetAtTime(ron?(typeof RTALK!=='undefined'&&RTALK?0.15:0.3):0,t,0.2);if(ron)radioTick();
 }
 
 // ================= GAME ACTIONS =================

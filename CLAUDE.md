@@ -73,7 +73,10 @@ seeded stream (see `livedIn()` after `genMap()`).
 
 ## Radio
 Each station runs on its own clock (`stClock(i)`, random start per page load), so tuning away and back picks up where it would be. `radioNow(st)` says what is on at that moment;
-`radioTick()` in 04 synthesizes the song for the current 100 s segment (75 s song, then a DJ or ad break). Spoken lines go through `talkSay` (speechSynthesis).
+`radioTick()` in 04 synthesizes the song for the current 100 s segment; since v5.14 the song plays the whole 100 s (the DJ or ad break talks over its end) and is ducked while `RTALK` is set.
+Speech is event-driven since v5.14 (`updateRadioText` and `talkSay2` at the end of 06r): a line starts when the last one ends (`onend`, with a timer backstop), `RST[i]`
+keeps each station's talk position and the set of lines already said, so nothing repeats. New stations are spliced into `RADIO` at the top of 06r (before `RCLK`); `DJS[i]`/`SONGW[i]`
+are indexed by station (talk is `null`); DJs can have `intros` with `{song}`.
 
 ## Story jobs
 Mission steps live in the chapters in `js/05-story.js`. A `drive` step can take `minZ` (the car must be at least that high, e.g. the garage roof).
