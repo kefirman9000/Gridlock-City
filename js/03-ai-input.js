@@ -99,6 +99,10 @@ function aiChase(c,dt){
 function updatePed(p,dt){
   p.moving=false;
   if(p.flash>0)p.flash-=dt;
+  // thrown off a bike: fly in an arc, slide to a stop, then get up
+  if(p.thrown>0){p.thrown-=dt;const nx=p.x+p.vx*dt,ny=p.y+p.vy*dt;if(!solidPx(nx,ny)){p.x=nx;p.y=ny;}else{p.vx*=-0.3;p.vy*=-0.3;}
+    const k=Math.exp(-((p.jz||0)>0?1.2:5)*dt);p.vx*=k;p.vy*=k;p.jv=(p.jv||0)-720*dt;p.jz=Math.max(0,(p.jz||0)+p.jv*dt);if(p.jz<=0)p.jv=0;
+    if(p.thrown<=0){p.jz=0;p.stagger=1.0;}return;}
   if(p.stagger>0){p.stagger-=dt;return;}
   if(p.rope){p.vx=p.vy=0;p.moving=false;p.jz=Math.max(0,(p.jz||0)-75*dt);if(heli){p.x+=(heli.x-p.x)*0;}if(p.jz<=0){p.rope=false;p.jz=0;}return;}
   if(p.state==='cop'){updateCop(p,dt);return;}
@@ -226,7 +230,7 @@ function updateBullets(dt){
           if(b.kind==='m'){b.life=0;break outer;}
           // a rider on a motorbike takes the bullet, not the bike: they're knocked off (or killed) and the bike skids on riderless
           if(c.t.bike&&c.driver&&c.driver!=='player'&&b.kind==='b'){const own=b.own==='player'?'player':null,vx=c.vx,vy=c.vy,rp=ejectDriver(c,true);if(rp){rp.x=c.x;rp.y=c.y;rp.hp-=b.dmg*1.5;
-              if(own==='player')hitMarks.push({x:rp.x,y:rp.y,t:0.18,kill:rp.hp<=0});if(rp.hp<=0)killPed(rp,own,vx*0.5,vy*0.5);else{rp.stagger=0.8;rp.vx=vx*0.3;rp.vy=vy*0.3;}}
+              if(own==='player')hitMarks.push({x:rp.x,y:rp.y,t:0.18,kill:rp.hp<=0});if(rp.hp<=0)killPed(rp,own,vx*0.5,vy*0.5);else{rp.thrown=0.6;rp.vx=vx*0.45;rp.vy=vy*0.45;rp.jz=3;rp.jv=120;rp.noHit=[c];}}c.down=true;
             c.va+=(R()-0.5)*4;if(nearPlayer(b.x,b.y,500))sfx('hit');b.life=0;break outer;}
           if(c.t.bike&&c===player.car&&b.own!=='player'&&b.own!=='crew'&&b.kind==='b'&&game.state==='play'){exitCar(true);hurtPlayer(b.dmg);note('Shot off your bike!');b.life=0;break outer;}
           if(!(c.up&&c.up.bp))damageCar(c,b.cdmg,b.own==='player'?'player':null);

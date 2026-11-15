@@ -212,9 +212,17 @@ function updateStunt(dt){stuntCool-=dt;const c=player.car;if(stuntCool>0||!c||c.
 function extTick7(dt){updateTurf(dt);updateStunt(dt);}
 
 // ---------- motorcycles ----------
-CT.bike={name:'Shredder',L:30,Wd:11,max:640,acc:600,grip:9.5,turn:3.5,hp:60,mass:0.45,cols:['#d8382a','#151515','#2a7ae0','#f0c020','#e0e0e0'],bike:true};
+CT.bike={name:'Shredder',L:30,Wd:11,max:640,acc:600,grip:9.5,turn:3.5,hp:60,mass:0.22,cols:['#d8382a','#151515','#2a7ae0','#f0c020','#e0e0e0'],bike:true};
 // thrown off on a hard crash
-function bikeCrash(c,imp){if(c!==player.car||!c.t.bike||imp<230||game.state!=='play')return;const vx=c.vx,vy=c.vy;exitCar(true);player.vx=vx*0.4;player.vy=vy*0.4;player.jz=6;player.jv=140;hurtPlayer(12);showBig('BAILED!','','#ff9a2e',1);}
+// a car hits a bike (or the bike hits a car): the rider is thrown clear in the direction of the hit, the bike falls over and skids
+function bikeThrow(c,other,imp,dx,dy){if(!c.driver||game.state!=='play')return;
+  const v=Math.min(460,imp*0.75),vx=c.vx*0.45+other.vx*0.35+dx*v*0.6,vy=c.vy*0.45+other.vy*0.35+dy*v*0.6;
+  c.down=true;c.va+=(R()-0.5)*7;c.vx+=dx*v*0.35;c.vy+=dy*v*0.35; // a bike is light: it gets shoved clear
+  if(c===player.car){if(imp<150)return;exitCar(true);player.vx=vx;player.vy=vy;player.jz=6;player.jv=190;hurtPlayer(Math.min(30,Math.round(imp*0.05)));showBig('BAILED!','','#ff9a2e',1);return;}
+  const by=other.driver==='player'?'player':null,rp=ejectDriver(c,true);if(!rp)return;rp.x=c.x;rp.y=c.y;rp.hp-=imp*0.03;
+  if(rp.hp<=0||imp>480)killPed(rp,by,vx,vy);else{rp.thrown=0.85;rp.vx=vx;rp.vy=vy;rp.jz=6;rp.jv=230;rp.noHit=[c,other];}
+  if(nearPlayer(c.x,c.y,600))sfx('hit');}
+function bikeCrash(c,imp){if(c!==player.car&&c.t.bike&&c.driver&&imp>280){const s=hyp(c.vx,c.vy)||1;bikeThrow(c,{vx:0,vy:0,driver:null},imp,-c.vx/s,-c.vy/s);return;}if(c!==player.car||!c.t.bike||imp<230||game.state!=='play')return;const vx=c.vx,vy=c.vy;exitCar(true);player.vx=vx*0.4;player.vy=vy*0.4;player.jz=6;player.jv=140;hurtPlayer(12);showBig('BAILED!','','#ff9a2e',1);}
 // ---------- melee: a baseball bat ----------
 WEAPONS.push({name:'Baseball Bat',rate:.55,dmg:0,spd:0,spread:0,kind:'x',cdmg:0,kick:0});
 // grenades (GTA III): thrown like a Molotov, but they blow up where they land

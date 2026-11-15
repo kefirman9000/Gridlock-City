@@ -248,6 +248,9 @@ function circleTiles(o,r,sw,z){
 }
 // ---- vehicle collisions: oriented boxes (they match what you see in 3D) with spin and scraping friction ----
 const CAR_E=0.18,CAR_MU=0.35,SPINK=0.42;
+// car-on-car hits (GTA III feel): bouncier, cars slide off each other, and an off-centre hit spins the car that's struck
+// (a T-bone sends it round, a nudge on the rear quarter kicks the tail out). Parked cars aren't extra heavy, so you can shove them.
+const CC_E=0.34,CC_MU=0.2,CC_SPIN=0.8;
 const CARPTS=[[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1],[0.5,1],[0.5,-1],[-0.5,1],[-0.5,-1]];
 function crashFx(c,x,y,nx,ny,imp,other){
   if(imp<90)return;
@@ -304,23 +307,27 @@ function carPair(a,b){
   // contact point: the other box's corner that digs in deepest
   let cx=0,cy=0;{const src=own===0?b:a,sx=own===0?bx:ax,sh=own===0?hb:ha,dir=own===0?-1:1;let bv=-1e9;
     for(const s1 of[-1,1])for(const s2 of[-1,1]){const vx=src.x+sx[0][0]*sh[0]*s1+sx[1][0]*sh[1]*s2,vy=src.y+sx[0][1]*sh[0]*s1+sx[1][1]*sh[1]*s2,p=(vx*nx+vy*ny)*dir;if(p>bv){bv=p;cx=vx;cy=vy;}}}
-  const ma=a.t.mass*(a.driver?1:1.5)*(a.wreck?2:1),mb=b.t.mass*(b.driver?1:1.5)*(b.wreck?2:1),tm=ma+mb;
+  const ma=a.t.mass*(a.wreck?2:1),mb=b.t.mass*(b.wreck?2:1),tm=ma+mb;
   a.x-=nx*best*mb/tm;a.y-=ny*best*mb/tm;b.x+=nx*best*ma/tm;b.y+=ny*best*ma/tm;
   const Ia=ma*(a.t.L*a.t.L+a.t.Wd*a.t.Wd)/12,Ib=mb*(b.t.L*b.t.L+b.t.Wd*b.t.Wd)/12;
   const rax=cx-a.x,ray=cy-a.y,rbx=cx-b.x,rby=cy-b.y;
   const vax=a.vx-a.va*ray,vay=a.vy+a.va*rax,vbx=b.vx-b.va*rby,vby=b.vy+b.va*rbx,rv=(vbx-vax)*nx+(vby-vay)*ny;
   if(rv>=0)return;
-  const rna=rax*ny-ray*nx,rnb=rbx*ny-rby*nx,j=-(1+CAR_E)*rv/(1/ma+1/mb+(rna*rna/Ia+rnb*rnb/Ib)*SPINK);
-  a.vx-=nx*j/ma;a.vy-=ny*j/ma;a.va-=rna*j/Ia*SPINK;b.vx+=nx*j/mb;b.vy+=ny*j/mb;b.va+=rnb*j/Ib*SPINK;
+  const rna=rax*ny-ray*nx,rnb=rbx*ny-rby*nx,j=-(1+CC_E)*rv/(1/ma+1/mb+(rna*rna/Ia+rnb*rnb/Ib)*CC_SPIN);
+  a.vx-=nx*j/ma;a.vy-=ny*j/ma;a.va-=rna*j/Ia*CC_SPIN;b.vx+=nx*j/mb;b.vy+=ny*j/mb;b.va+=rnb*j/Ib*CC_SPIN;
   const tX=-ny,tY=nx,vt=(vbx-vax)*tX+(vby-vay)*tY,rta=rax*tY-ray*tX,rtb=rbx*tY-rby*tX;
-  let jt=-vt/(1/ma+1/mb+(rta*rta/Ia+rtb*rtb/Ib)*SPINK);const mx=CAR_MU*j;jt=clamp(jt,-mx,mx);
-  a.vx-=tX*jt/ma;a.vy-=tY*jt/ma;a.va-=rta*jt/Ia*SPINK;b.vx+=tX*jt/mb;b.vy+=tY*jt/mb;b.va+=rtb*jt/Ib*SPINK;
+  let jt=-vt/(1/ma+1/mb+(rta*rta/Ia+rtb*rtb/Ib)*CC_SPIN);const mx=CC_MU*j;jt=clamp(jt,-mx,mx);
+  a.vx-=tX*jt/ma;a.vy-=tY*jt/ma;a.va-=rta*jt/Ia*CC_SPIN;b.vx+=tX*jt/mb;b.vy+=tY*jt/mb;b.va+=rtb*jt/Ib*CC_SPIN;
   const imp=-rv;
+  // a bike that gets hit (or hits something hard) throws its rider and goes down
+  if(imp>110&&(a.t.bike||b.t.bike)){if(a.t.bike&&!(b.t.bike&&imp<200))bikeThrow(a,b,imp,-nx,-ny);if(b.t.bike&&!(a.t.bike&&imp<200))bikeThrow(b,a,imp,nx,ny);}
   // you only get the blame when you drove into them (not when a cop rams you)
   const appA=a.vx*nx+a.vy*ny,appB=-(b.vx*nx+b.vy*ny),pl=a.driver==='player'?appA:b.driver==='player'?appB:-1,ot=a.driver==='player'?appB:appA;
   if(imp>90){const by2=pl>60&&pl>=ot*0.8?'player':null;
     const ka=(a===player.car&&b.driver==='cop')?0.5:1,kb=(b===player.car&&a.driver==='cop')?0.5:1;
-    damageCar(a,(imp-90)*0.06*mb/ma*ka,by2);damageCar(b,(imp-90)*0.06*ma/mb*kb,by2);
+    // the mass ratio scales the damage, but a light bike doesn't make every tap fatal
+    const fa=Math.min(2.5,mb/ma)*(a.t.bike?0.45:1),fb=Math.min(2.5,ma/mb)*(b.t.bike?0.45:1);
+    damageCar(a,(imp-90)*0.06*fa*ka,by2);damageCar(b,(imp-90)*0.06*fb*kb,by2);
     crashFx(a,cx,cy,nx,ny,imp,b);
     if(by2&&imp>200){if(a.driver==='ai'&&a.ai)a.ai.cruise=290;if(b.driver==='ai'&&b.ai)b.ai.cruise=290;}}
 }

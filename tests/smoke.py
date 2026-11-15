@@ -59,6 +59,10 @@ CHECKS = {
         const ok=(c.az||0)>40;cars.splice(cars.indexOf(c),1);return ok||'car fell through the decks (az '+Math.round(c.az||0)+')'}""",
     'walk-in gun shops exist': """()=>SHOPS.length>0||'no Ammu-Nation stores'""",
     'the cathedral is placed': """()=>(!!CATH)||'no cathedral'""",
+    'a car knocks a rider off a bike': """()=>{let sp=null;for(let k=0;!sp&&k<50;k++)sp=laneSpotNear(hospitalSpawn.x+k*40,hospitalSpawn.y+k*25);const a0=(sp.dir||0)*PI/2,ca=Math.cos(a0),sa=Math.sin(a0);
+        const bk=makeCar('bike',sp.x,sp.y,a0+PI/2,'#d8382a');bk.driver='ai';bk.vx=bk.vy=0;const c=makeCar('sports',sp.x-ca*24,sp.y-sa*24,a0,'#f00');c.driver='ai';c.vx=ca*380;c.vy=sa*380;
+        const n0=peds.length;carPair(c,bk);const rider=peds.slice(n0).find(q=>q.thrown>0)||flyers.length;const ok=!bk.driver&&bk.down&&hyp(bk.vx,bk.vy)>120&&!!rider&&bk.burn<0;
+        for(const v of[bk,c]){const i=cars.indexOf(v);if(i>=0)cars.splice(i,1);}return ok||('driver '+bk.driver+', down '+bk.down+', v '+Math.round(hyp(bk.vx,bk.vy))+', burn '+bk.burn)}""",
     'floaty car jump hangs in the air': """()=>{OPT.floaty=true;const r=RAMPS.find(r=>r.h>8);if(!r)return true;const ca=Math.cos(r.a),sa=Math.sin(r.a);
         const c=makeCar('sports',r.x-ca*(r.hl+120),r.y-sa*(r.hl+120),r.a);player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;c.vx=ca*520;c.vy=sa*520;
         for(let i=cars.length-1;i>=0;i--)if(cars[i]!==c&&hyp(cars[i].x-r.x,cars[i].y-r.y)<r.hl+260)cars.splice(i,1);peds.length=0; // nothing in the run-up

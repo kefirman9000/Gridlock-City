@@ -1,4 +1,4 @@
 {
-  "version": "5.4.1",
-  "notes": "Wilder radio: Chatter 96.1, the DJs and the ads are rewritten to be louder, ruder and stranger, with lines timed to their length. Graphics fixes: the radio text wraps instead of running off screen, notes no longer pile up over the car, the police searchlight is a proper cone with a pool of light, smoke puffs are little clouds instead of pale boxes."
+  "version": "5.4.2",
+  "notes": "GTA III-style car crashes: bouncier hits, cars slide off each other, off-centre hits spin the car you hit, parked cars can be shoved. Bikes are much lighter: hit one and the rider is thrown over your hood, the bike falls over and skids away."
 }

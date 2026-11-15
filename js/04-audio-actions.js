@@ -108,7 +108,7 @@ function tryEnterCar(){
   }
   if(best.t.police)crime(best.t.army?1000:0,1);
   if(!best.bought){STATS.stolen++;carAlarm(best);}best.bought=true;
-  carSwapEscape(best);player.car=best;best.driver='player';best.ai=null;best.traffic=false;best.lastBy='player';
+  carSwapEscape(best);player.car=best;best.driver='player';best.down=false;best.ai=null;best.traffic=false;best.lastBy='player';
   sfx('door');note(best.t.name+(hadDriver?' (jacked)':''));
   if(best.radio==null)best.radio=stationFor(best);setStation(best.radio);
   if(FOLLOW.length)seatCrew(best);

@@ -31,15 +31,13 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.4.2
+- **GTA III-style crashes.** Car-on-car hits are bouncier, cars glance and slide off each other instead of sticking, and an off-centre hit spins the car you hit (T-bone a car and it goes round). Parked cars are no heavier than moving ones, so you can shove them out of the way. Damage still follows weight, but a light vehicle no longer bursts into flames from a tap.
+- **Lighter bikes.** Hit a motorbike and its rider is thrown over your hood, lands, and gets back up (or doesn't, at high speed); the bike falls on its side and skids away. The same happens to you if something big hits you on a bike. Shooting a rider off also leaves the bike lying down.
+
 ## What's new in v5.4.1
 - **Wilder radio.** Chatter 96.1 has been rewritten with more outlandish calls (a hitman opening a bakery, a man who lives in the claw machine, the Reverend with a baseball bat, Dr. Fennick the occasional surgeon), the DJs are ruder and stranger, and there are more ads. Each line now stays on air for as long as it takes to say.
 - **Graphics fixes from a screenshot sweep:** the radio text wraps beside the minimap instead of running off the screen and no longer collides with the notes; repeated notes (the heli warning, job hints) fade out instead of sitting over your car for minutes; the police helicopter's searchlight is a cone with a pool of light around you instead of a hard line across the screen; tyre and exhaust smoke is drawn as small clouds instead of pale boxes.
-
-## What's new in v5.4
-- **Live radio.** Every station keeps running while you're away: it starts at a random point and when you tune back in you pick up wherever it has got to. Songs have names, the music stations have spoken DJ breaks (SKIDS on KRUD, LUCINDA on NEON, LOW TIDE on BASSLINE) and ad breaks, and the talk station has a much longer show with Marty Vance and his callers, all read out loud.
-- **Four new jobs:** Vince's *Top Floor* (garage roof), Dex's *Pier Pressure* and *Container Job* (pier and docks), Lin's *Sanctuary* (cathedral).
-- **Heavier landings:** the car squats, throws sparks on a hard hit and the camera dips.
-- Parked cars sleep when nobody is near them, so busy streets run faster; loading a save made with an older city layout says that collectibles start over.
 
 Older release notes are in [CHANGELOG.md](CHANGELOG.md).
 

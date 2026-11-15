@@ -195,6 +195,7 @@ function update(dt){
     updatePed(p,dt);
     for(const c of active){
       if(c.air>0||(c.t.heli&&c.alt>8)||dist2(c.x,c.y,p.x,p.y)>(c.t.L/2+12)**2)continue;
+      if(p.thrown>0&&(p.noHit&&p.noHit.includes(c)||(p.jz||0)>12))continue; // a rider thrown off a bike flies over the car that hit them
       for(const cc of c.cc){
         const dx=p.x-cc[0],dy=p.y-cc[1],d2=dx*dx+dy*dy,rs=c.t.Wd/2+7;
         if(d2<rs*rs){const d=Math.sqrt(d2)||1,nx=dx/d,ny=dy/d;

@@ -27,6 +27,9 @@ function drawHeliP(c,fg,t,a){const ca=Math.cos(a),sa=Math.sin(a),col=rgbOf(c.col
   for(const sd of[-1,1])obox(c.x-sa*6*sd,c.y+ca*6*sd,a,12,0.9,0,2,[50,50,54],null,fg);
   const r=c.rot||0;for(let i=0;i<2;i++){const ra=r+i*PI/2,rc=Math.cos(ra),rs=Math.sin(ra);if(proj(c.x+rc*28,c.y+rs*28,18)){const x1=PX,y1=PY;if(proj(c.x-rc*28,c.y-rs*28,18)){L3.strokeStyle='rgba(20,20,24,.75)';L3.lineWidth=1;L3.beginPath();L3.moveTo(x1,y1);L3.lineTo(PX,PY);L3.stroke();}}}}
 function drawBike3(c,fg,t,hl,hw,a){const ca=Math.cos(a),sa=Math.sin(a),col=rgbOf(c.col);
+  if(c.down&&!c.driver){ // knocked over: lying on its side
+    for(const s of[-1,1])obox(c.x+ca*hl*0.7*s,c.y+sa*hl*0.7*s,a,5,4.5,0,1.8,[20,20,22],null,fg);
+    obox(c.x,c.y,a,hl*0.55,6,0.8,3.6,col,mixA(col,[255,255,255],0.2),fg);obox(c.x+ca*hl*0.55-sa*5,c.y+sa*hl*0.55+ca*5,a,1.5,4,0.5,2.5,[60,60,64],null,fg);return;}
   for(const s of[-1,1])obox(c.x+ca*hl*0.7*s,c.y+sa*hl*0.7*s,a,5,1.6,0,9,[20,20,22],null,fg);
   obox(c.x,c.y,a,hl*0.55,2.6,6,12,col,mixA(col,[255,255,255],0.2),fg);obox(c.x+ca*hl*0.55,c.y+sa*hl*0.55,a,1.5,4,11,15,[60,60,64],null,fg);
   if(c.driver){const sh=c.driver==='player'?[217,115,31]:c.driver==='cop'?[43,76,155]:[120,90,70];obox(c.x-ca*3,c.y-sa*3,a,3.5,4,12,24,sh,null,fg);obox(c.x-ca*2,c.y-sa*2,a,2.6,2.6,24,30,[30,30,34],[40,40,44],fg);}}
