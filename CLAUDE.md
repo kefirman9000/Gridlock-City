@@ -46,6 +46,9 @@ v5.16 (end of 08g): `VIPN` (nearest special cars, set in `v516Tick`; 08v draws t
 turn arrows (`ARRL` list, `ARRT` per-tile index, painted in the road branch of the ground raster), facade extras in a `walls` wrapper (balconies, air-con, awnings; within 420 px),
 the runway (`STRIPR`, its own branch in the terrain raster) and airport props. In 08v, cars within 330 px get tyres/rims/arches/mirrors (`near`), far ones the old slab.
 In 08-render, `drawPed3` scales non-player, non-cop people by `HS`/`WS` (height/build from their id) inside `P()`.
+v5.17: stars fade when unseen (`fadeT` in the wanted block of 07; no cop spawns while `seenT>=3`); the outermost `crime` wrapper (end of 08g) caps a single incident at +1 star and
+small crimes at one new star per 8 s (`CRUP`). Story missions take `after` (a 'Name: text' sent with `textMsg` when the job passes) and `heat` steps take `why` (shown with the WANTED banner).
+The storyline: Dex pays Captain Marlowe (Police HQ) to break Vince and Lin; keep new missions consistent with it.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

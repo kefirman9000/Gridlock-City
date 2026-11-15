@@ -608,7 +608,7 @@ function startMission(g){
       const p=makePed(x,y,false);makeGang(p,rv);p.target=true;p.hp=50;pedPickNext(p);targets.push(p);}
     mission={type,title:'Turf War',desc:'Take out 6 '+GANGS[rv].name+' on their turf',targets,left:targets.length,timer:180};
   }else{
-    mission={type,title:'Hot Potato',desc:'You\'re carrying stolen goods. Lose a 3-star wanted level: spray shops or cop bribes.',timer:150,elapsed:0};
+    mission={type,title:'Hot Potato',desc:'You\'re carrying stolen goods. Lose a 3-star wanted level: stay out of sight until the stars fade, or use a spray shop.',timer:150,elapsed:0};
     heat=Math.max(heat,TH[3]);evadeT=0;
   }
   mission.max=mission.timer;mission.gang=g;

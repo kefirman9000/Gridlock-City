@@ -107,48 +107,51 @@ const VINCE=BOSSES[0].name,DEX=BOSSES[1].name,LIN=BOSSES[2].name,YOU='You';
 // step kinds: talk, steal, drive, wreck, kill, collect, heat, lose, boat
 const CHAPTERS=[
  [ // Red Sabres
-  {title:'Welcome to the Family',pay:2000,steps:[
-    {k:'talk',lines:[[VINCE,'So you\'re the new face everybody\'s talking about. Talk is cheap. Wheels aren\'t.'],[VINCE,'There\'s a red Viper sitting in a lot across town. Bring it here without a scratch on it and we\'ll talk business.']]},
+  {title:'Welcome to the Family',pay:2000,after:'Vince: Paulie says thanks for the Viper. Come by, the Saints are moving money over my bridge.',steps:[
+    {k:'talk',lines:[[VINCE,'So you\'re Nico\'s cousin. Fresh off the ferry, no record, no friends. Good. Stay that way.'],[VINCE,'Old Town has been Red Sabre turf for thirty years. Lately the Chrome Saints uptown have been buying it out from under me, a cop at a time.'],[VINCE,'First, a test. The Saints took my nephew Paulie\'s red Viper. It\'s sitting in a lot across town. Bring it here without a scratch.']]},
     {k:'steal',type:'sports',col:'#a8101c',where:()=>lotNear(player.x,player.y,1400,2600),desc:'Steal the red Viper'},
     {k:'drive',to:()=>BOSSES[0].pt,car:'stolen',minHp:0.5,desc:'Bring the Viper back to Vince in one piece'},
     {k:'talk',lines:[[VINCE,'Not bad. Not bad at all. Come back when you want real work.']]}]},
-  {title:'Bridge Run',pay:3000,steps:[
-    {k:'talk',lines:[[VINCE,'A Chrome Saints courier is carrying our money over the Gridlock Bridge right now.'],[VINCE,'Stop him before he reaches the other side. I don\'t care how.']]},
+  {title:'Bridge Run',pay:3000,after:'Vince: that courier was carrying payoff money for Police HQ. Somebody uptown is paying the cops. Three of my shops are behind on their envelopes, go remind them.',steps:[
+    {k:'talk',lines:[[VINCE,'A Chrome Saints courier is crossing the Gridlock Bridge right now with an envelope full of my money.'],[VINCE,'Word is it\'s going to somebody at Police HQ. Stop him before he reaches the other side.']]},
     {k:'wreck',at:()=>({x:(RIVX0-14)*T,y:(BIGB*P+2.5)*T}),type:'sedan',col:'#2a2c31',hp:200,cruise:250,timer:120,desc:'Wreck the Saints courier on the Gridlock Bridge'}]},
-  {title:'Collections',pay:3000,steps:[
+  {title:'Collections',pay:3000,after:'Vince: bad news. The cops raided my garage last night and took Paulie. They\'re moving him out of Police HQ. Come see me, now.',steps:[
     {k:'talk',lines:[[VINCE,'Three shop owners on the west side forgot to pay. Their envelopes are waiting. Pick them up before the cops do.']]},
     {k:'collect',n:3,around:()=>({x:3*P*T,y:5*P*T}),spread:1500,timer:150,desc:'Pick up the 3 envelopes'}]},
-  {title:'Heat Wave',pay:4500,steps:[
-    {k:'talk',lines:[[VINCE,'The cops raided my garage. Time to remind them who runs Old Town.'],[VINCE,'Go kick up some noise outside Police HQ, then lose them. Don\'t lead them back here.']]},
-    {k:'drive',to:()=>policeSpawn,r:160,desc:'Drive to Police HQ'},
-    {k:'heat',stars:3},
-    {k:'lose',timer:180,desc:'Lose the 3-star wanted level'},
-    {k:'talk',lines:[[VINCE,'Ha! The whole radio was screaming about you. You\'re one of us now.'],[VINCE,'Watch yourself around Dex. That man smiles too much.']]}]},
-  {title:'Jump the Gap',pay:3500,steps:[
+  {title:'Jailbreak',pay:4500,after:'Vince: Paulie\'s home and he won\'t shut up about you. Now he says nobody can make a real jump in this town. Prove him wrong.',steps:[
+    {k:'talk',lines:[[VINCE,'The raid on my garage was a setup. Somebody paid Captain Marlowe to hit us, and they took Paulie.'],[VINCE,'They\'re moving him from Police HQ to the county lockup in a prison van. Stop that van before it gets out of the city.'],[VINCE,'The escort will call it in, so after you get him out, shake the cops. A spray shop, a dark alley, whatever. Don\'t lead them here.']]},
+    {k:'drive',to:()=>policeSpawn,r:220,desc:'Get near Police HQ and wait for the prison van'},
+    {k:'wreck',at:()=>policeSpawn,far:260,type:'van',col:'#e6e6e2',hp:260,cruise:190,timer:150,desc:'Stop the prison van (ram it until it breaks down)'},
+    {k:'talk',lines:[['Paulie','You came for me? Ha! Uncle Vince said you were crazy.'],['Paulie','The driver radioed it in. Every cop in Gridlock is coming. Drive!']]},
+    {k:'heat',stars:2,why:'The escort radioed in the breakout'},
+    {k:'lose',timer:180,desc:'Lose the cops: stay out of their sight until the stars fade, or use a spray shop'},
+    {k:'drive',to:()=>BOSSES[0].pt,car:'any',r:110,desc:'Take Paulie home to Vince'},
+    {k:'talk',lines:[[VINCE,'Paulie! Get inside, your mother\'s been crying all night.'],[VINCE,'Marlowe doesn\'t move without being paid. Somebody uptown is buying the police. I\'m going to find out who.']]}]},
+  {title:'Jump the Gap',pay:3500,after:'Vince: the Jade Lotus are unloading on the riverside like they own it. Go break it up.',steps:[
     {k:'talk',lines:[[VINCE,'My nephew says nobody can make a real jump in this town anymore. Prove him wrong.'],[VINCE,'Find a ramp: an alley, a lot, the construction site. Stay in the air for a full second and a half.']]},
     {k:'jump',air:1.5,timer:240,desc:'Hit a ramp and stay airborne for 1.5 s'}]},
-  {title:'Riverside Rumble',pay:5500,steps:[
+  {title:'Riverside Rumble',pay:5500,after:'Vince: one of their boat crew talked. The Saints are meeting Marlowe\'s people on the roof of the new parking garage. Crash the party.',steps:[
     {k:'talk',lines:[[VINCE,'Jade Lotus boys are unloading on the riverside like they own it.'],[VINCE,'Break up the party, then take one of their boats down to the south dock. They hate that.']]},
     {k:'kill',gang:2,n:6,around:()=>({x:RIVX0*T-60,y:(11*P+9)*T}),spread:260,timer:180,desc:'Take out the 6 Jade Lotus on the riverside'},
     {k:'boat'},
     {k:'drive',to:()=>LM.dockS,car:'boat',r:110,timer:120,desc:'Take the boat to the south dock'}]},
-  {title:'Top Floor',pay:6500,steps:[
-    {k:'talk',lines:[[VINCE,'The Saints think the new parking garage is neutral ground. Nothing in this town is neutral.'],[VINCE,'Drive to the roof, then use that ramp up there to make an exit they\'ll talk about for years.']]},
+  {title:'Top Floor',pay:6500,after:'Vince: that limo you landed on belonged to Dex Calloway. He wants to meet you. Go, but keep your eyes open.',steps:[
+    {k:'talk',lines:[[VINCE,'The Saints are paying off Marlowe\'s people on the roof of the new parking garage. Tonight.'],[VINCE,'Drive up to the roof, then take that ramp up there off the edge. Land on whatever\'s below. They\'ll get the message.']]},
     {k:'drive',to:()=>GARAGE?{x:GARAGE.cx,y:GARAGE.cy}:BOSSES[0].pt,car:'any',r:120,minZ:60,desc:'Drive up the ramps to the garage roof'},
-    {k:'heat',stars:2},
     {k:'jump',air:0.9,desc:'Jump off the rooftop ramp (at least 0.9 s of air)'},
+    {k:'heat',stars:2,why:'The garage guards called the police'},
     {k:'lose',desc:'Lose the cops'},
     {k:'talk',lines:[[VINCE,'(on the phone) A car came off the top of the garage and landed on a Saints limo. You wouldn\'t know anything about that.'],[YOU,'Never heard of it.']]}]},
  ],
  [ // Chrome Saints
-  {title:'Times Square Handoff',pay:2500,steps:[
-    {k:'talk',lines:[[DEX,'Ah, the freelancer. I like freelancers. They don\'t ask for health insurance.'],[DEX,'A friend of mine is waiting in Times Square with a package. Collect it and bring it to the drop. Quickly.']]},
+  {title:'Times Square Handoff',pay:2500,after:'Dex: lovely work. Now, the Red Sabres are dealing in Central Park. My park.',steps:[
+    {k:'talk',lines:[[DEX,'Ah, the freelancer who dropped a car on my limo. No hard feelings. I admire initiative.'],[DEX,'Vince thinks small. I own half of uptown and I\'m buying the rest. Work for me and you\'ll never have to steal a Viper again.'],[DEX,'A friend of mine is waiting in Times Square with a package. Collect it and bring it to the drop. Quickly.']]},
     {k:'drive',to:()=>LM.tsq,r:110,desc:'Meet the contact in Times Square'},
     {k:'drive',to:()=>lotNear(LM.tsq.x,LM.tsq.y,1800,3200),car:'any',timer:100,desc:'Deliver the package to the drop'}]},
-  {title:'Park Life',pay:3500,steps:[
+  {title:'Park Life',pay:3500,after:'Dex: an accountant of mine needs a quiet exit by water. Speedboat on the west bank.',steps:[
     {k:'talk',lines:[[DEX,'The Red Sabres are dealing in Central Park. My park. Where I jog.'],[DEX,'Clear them out.']]},
     {k:'kill',gang:0,n:6,around:()=>LM.park,spread:300,timer:180,desc:'Take out the 6 Red Sabres in Central Park'}]},
-  {title:'Off the Books',pay:4000,steps:[
+  {title:'Off the Books',pay:4000,after:'Dex: a bank truck owes me money. Technically. Bring something with a kick.',steps:[
     {k:'talk',lines:[[DEX,'An accountant of mine needs to vanish. There\'s a speedboat on the west bank of the East River.'],[DEX,'Take it, and get to the dock on the far side. Boats don\'t get stuck in traffic.']]},
     {k:'drive',to:()=>LM.dockW,r:90,desc:'Get to the speedboat on the west bank'},
     {k:'boat'},
@@ -156,80 +159,81 @@ const CHAPTERS=[
   {title:'Armored Interest',pay:5000,steps:[
     {k:'talk',lines:[[DEX,'A bank truck is making its rounds. It owes me money. Technically.'],[DEX,'Crack it open. It\'s armored, so bring something with a kick.']]},
     {k:'wreck',at:()=>({x:player.x,y:player.y}),far:900,type:'truck',col:'#3a4a3a',hp:600,cruise:180,timer:180,desc:'Wreck the armored truck'},
-    {k:'talk',lines:[[DEX,'Wonderful. You and I are going to do great things together.'],[DEX,'Mother Lin, though... she\'s old-fashioned. Be careful who you trust.']]}]},
-  {title:'Hostile Takeover',pay:5000,steps:[
-    {k:'talk',lines:[[DEX,'I want a SWAT van for a little... corporate event. They park them at Police HQ.'],[DEX,'Bring it to me. Expect some disagreement from the owners.']]},
+    {k:'talk',lines:[[DEX,'Wonderful. You and I are going to do great things together.'],[DEX,'Mother Lin, though... she\'s old-fashioned. Be careful who you trust.']]}],after:'Dex: I need a SWAT van for a little corporate event. A friend at Police HQ left the keys in one. Come see me.'},
+  {title:'Hostile Takeover',pay:5000,after:'Dex: my caterers vanished with the champagne. Times Square, ninety seconds.',steps:[
+    {k:'talk',lines:[[DEX,'I want a SWAT van for a little... corporate event. They park them behind Police HQ.'],[DEX,'My friend Captain Marlowe left the keys in one, but the officers on the desk aren\'t in on it. They\'ll chase you.'],[DEX,'Lose them first. Don\'t bring the parade to my door.']]},
     {k:'steal',type:'swat',col:'#1c1e24',where:()=>({x:policeSpawn.x+3*T,y:policeSpawn.y+2*T}),desc:'Steal the SWAT van at Police HQ'},
-    {k:'heat',stars:3},
+    {k:'heat',stars:2,why:'The desk officers saw you take the van'},
+    {k:'lose',timer:200,desc:'Lose the cops before you go to Dex'},
     {k:'drive',to:()=>BOSSES[1].pt,car:'stolen',desc:'Bring the SWAT van to Dex'},
-    {k:'lose',timer:200,desc:'Now lose the cops'}]},
-  {title:'Penthouse Party',pay:4500,steps:[
+    {k:'talk',lines:[[DEX,'Marlowe and I go way back. Every city needs a captain who knows the price of things.'],[YOU,'(Marlowe. The one who raided Vince\'s garage.)']]}]},
+  {title:'Penthouse Party',pay:4500,after:'Dex: a courier with my ledger just got on the El. That ledger has names in it. Get it back.',steps:[
     {k:'talk',lines:[[DEX,'I\'m throwing a party and the caterers have gone missing. With my champagne.'],[DEX,'Four crates, scattered around Times Square. Ninety seconds. Go.']]},
     {k:'collect',n:4,around:()=>LM.tsq,spread:700,timer:90,desc:'Grab the 4 champagne crates around Times Square'}]},
-  {title:'Rush Hour',pay:6000,steps:[
+  {title:'Rush Hour',pay:6000,after:'Dex: a buyer is waiting on the South Beach pier with my money. The Jade Lotus may be watching.',steps:[
     {k:'talk',lines:[[DEX,'A courier with my ledger just got on the El. He thinks trains are safe.'],[DEX,'Follow the train. When he gets off, he\'s yours.']]},
     {k:'eltrain',timer:150,desc:'Follow the El train. The courier gets off at the next stop'},
     {k:'kill',gang:-1,n:0,timer:90,desc:'Take out the courier before he gets away'}]},
-  {title:'Pier Pressure',pay:6500,steps:[
+  {title:'Pier Pressure',pay:6500,after:'Dex: one last thing. A truck full of merchandise under the cranes at the docks. It\'s Vince\'s, which makes it mine.',steps:[
     {k:'talk',lines:[[DEX,'A buyer is waiting at the end of the South Beach pier with my money. Go and get it.'],[DEX,'The Jade Lotus will be watching the beach. Don\'t let them follow you back.']]},
     {k:'drive',to:()=>PIER?{x:PIER.x,y:PIER.yj}:LM.beach,r:44,desc:'Meet the buyer out on the pier'},
     {k:'talk',lines:[['Buyer','You\'re Dex\'s runner? Here. Count it later. And look behind you.']]},
     {k:'kill',around:()=>PIER?{x:PIER.x,y:PIER.ys-40}:LM.beach,n:4,spread:220,gang:2,desc:'The Lotus came to collect. Deal with them'},
-    {k:'heat',stars:2},
+    {k:'heat',stars:2,why:'The gunfight on the pier brought the police'},
     {k:'lose',desc:'Lose the cops'}]},
-  {title:'Container Job',pay:7000,steps:[
+  {title:'Container Job',pay:7000,after:'Dex: perfect. Vince will never know it was his truck. Neither will you, if anyone asks.',steps:[
     {k:'talk',lines:[[DEX,'A truck full of Saints merchandise is parked under the cranes at the docks. Except it isn\'t ours, it\'s Vince\'s.'],[DEX,'Take it, bring it to the export crane, and nobody needs to know where it came from.']]},
     {k:'steal',type:'truck',col:'#2a2c31',where:()=>CRANES.length?walkNear(CRANES[1%CRANES.length].x+70,CRANES[1%CRANES.length].y,40):lotNear(player.x,player.y,800,1800),desc:'Steal the truck at the docks'},
     {k:'drive',to:()=>EXPORT,car:'stolen',minHp:0.4,desc:'Take the truck to the export crane'}]},
  ],
  [ // Jade Lotus
-  {title:'Beach Pickup',pay:2500,steps:[
-    {k:'talk',lines:[[LIN,'Sit. Drink your tea. Good. Now listen.'],[LIN,'A boat dropped three packages on South Beach last night. Find them before the tourists do.']]},
+  {title:'Beach Pickup',pay:2500,after:'Lin: there is a Hauler at the construction site. Bring it to me gently.',steps:[
+    {k:'talk',lines:[[LIN,'Sit. Drink your tea. Good. Now listen.'],[LIN,'Vince fights with his fists, Dex with his wallet. I fight with patience. Somebody is selling this city to the police, and patience will tell me who.'],[LIN,'A boat dropped three packages on South Beach last night. Find them before the tourists do.']]},
     {k:'collect',n:3,around:()=>cityOpen()?LM.beach:LM.beachW,spread:600,sand:true,timer:150,desc:'Find the 3 packages on the beach'}]},
-  {title:'Fragile Cargo',pay:3500,steps:[
+  {title:'Fragile Cargo',pay:3500,after:'Lin: the Chrome Saints insulted my family at the festival. Come.',steps:[
     {k:'talk',lines:[[LIN,'There\'s a Hauler at the construction site. What\'s inside is worth more than you.'],[LIN,'Bring it to me gently. If the truck is wrecked, do not come back.']]},
     {k:'steal',type:'truck',col:'#7a4824',where:()=>LM.site,desc:'Take the Hauler from the construction site'},
     {k:'drive',to:()=>BOSSES[2].pt,car:'stolen',minHp:0.6,desc:'Drive the Hauler back to Mother Lin gently'}]},
-  {title:'Lantern Festival',pay:4000,steps:[
+  {title:'Lantern Festival',pay:4000,after:'Lin: the roads are watched tonight. We take the river. Meet the boat at the east dock.',steps:[
     {k:'talk',lines:[[LIN,'The Chrome Saints insulted my family at the festival. Remind them of their manners.']]},
     {k:'kill',gang:1,n:7,around:()=>({x:(NB*3/4*P+9)*T,y:(NB/4*P+9)*T}),spread:600,timer:200,desc:'Take out the 7 Chrome Saints on their turf'}]},
-  {title:'Night Ferry',pay:5000,steps:[
-    {k:'talk',lines:[[LIN,'The police are watching the roads tonight. So we take the river.'],[LIN,'Get on the water, make them chase you, and lose them. A ghost leaves no tracks.']]},
+  {title:'Night Ferry',pay:5000,after:'Lin: three of my people need quiet rides tonight. Nobody looks twice at a taxi.',steps:[
+    {k:'talk',lines:[[LIN,'Captain Marlowe\'s men are watching the roads tonight. So we take the river.'],[LIN,'Take the boat out. If the harbor patrol sees you, lose them on the water. A ghost leaves no tracks.']]},
     {k:'drive',to:()=>LM.dockE,r:90,desc:'Get to the boat at the east dock'},
     {k:'boat'},
-    {k:'heat',stars:2},
-    {k:'lose',timer:180,needBoat:true,desc:'Lose the cops on the water'},
+    {k:'heat',stars:2,why:'Harbor patrol spotted the boat'},
+    {k:'lose',timer:180,needBoat:true,desc:'Lose the harbor patrol on the water'},
     {k:'talk',lines:[[LIN,'You did well. Now hear an old woman\'s warning.'],[LIN,'Dex Calloway has been buying everyone\'s secrets. Soon he will try to buy yours.']]}]},
-  {title:'Ghost Cab',pay:4000,steps:[
+  {title:'Ghost Cab',pay:4000,after:'Lin: the Red Sabres burned my cousin\'s restaurant. Tonight we answer.',steps:[
     {k:'talk',lines:[[LIN,'Three of my people need rides tonight, and nobody notices a taxi.'],[LIN,'Take a cab and visit each of them. Don\'t keep them waiting.']]},
     {k:'steal',type:'taxi',where:()=>lotNear(player.x,player.y,300,1200),desc:'Get the taxi waiting nearby'},
     {k:'drive',to:()=>lotNear(player.x,player.y,900,1800),car:'stolen',timer:70,desc:'First pickup'},
     {k:'drive',to:()=>lotNear(player.x,player.y,900,1800),car:'stolen',timer:70,desc:'Second pickup'},
     {k:'drive',to:()=>lotNear(player.x,player.y,900,1800),car:'stolen',timer:70,desc:'Third pickup'}]},
-  {title:'Fireworks',pay:6000,steps:[
+  {title:'Fireworks',pay:6000,after:'Lin: my people found envelopes in the cathedral square. Payoff money. Go and see whose.',steps:[
     {k:'talk',lines:[[LIN,'The Red Sabres burned my cousin\'s restaurant. Tonight we answer with fireworks.'],[LIN,'Three of their cars are cruising the old town. None of them gets home.']]},
     {k:'wreck',at:()=>({x:4*P*T,y:4*P*T}),far:500,type:'sedan',col:'#4f1418',hp:160,cruise:230,timer:120,desc:'Wreck the first Red Sabres car'},
     {k:'wreck',at:()=>({x:player.x,y:player.y}),far:900,type:'sports',col:'#4f1418',hp:160,cruise:260,timer:120,desc:'Wreck the second Red Sabres car'},
     {k:'wreck',at:()=>({x:player.x,y:player.y}),far:900,type:'sedan',col:'#4f1418',hp:200,cruise:240,timer:120,desc:'Wreck the last Red Sabres car'}]},
-  {title:'Sanctuary',pay:6000,steps:[
+  {title:'Sanctuary',pay:6000,after:'Lin: tell Vince what we found. And watch your phone.',steps:[
     {k:'talk',lines:[[LIN,'The cathedral keeps its doors open to everyone. Even to men who owe me money.'],[LIN,'Three of Vince\'s collectors left envelopes in the cathedral square. Gather them before the priest does.']]},
     {k:'drive',to:()=>CATH?CATH.door:BOSSES[2].pt,r:60,desc:'Go to the Old Town cathedral'},
     {k:'collect',n:3,around:()=>CATH?{x:CATH.door.x+80,y:CATH.door.y}:BOSSES[2].pt,spread:260,timer:120,desc:'Find the 3 envelopes around the cathedral'},
-    {k:'heat',stars:2},
+    {k:'heat',stars:2,why:'The priest called the police'},
     {k:'lose',desc:'Lose the cops'},
-    {k:'talk',lines:[[LIN,'(on the phone) The priest called me. He says you stole from the Lord.'],[LIN,'I told him the Lord can send an invoice.']]}]},
+    {k:'talk',lines:[[LIN,'(on the phone) The priest called me. He says you stole from the Lord.'],[LIN,'The envelopes were stamped with Dex Calloway\'s bank. He has been paying Captain Marlowe for months. Paying him to break Vince, and me.'],[LIN,'Be careful. A man who buys the police will sooner or later try to sell you to them.']]}]},
  ],
 ];
 const FINALE={title:'Gridlock',pay:25000,steps:[
   {k:'talk',lines:[[YOU,'Dex called. He wants to meet at the construction site.'],[DEX,'(on the phone) Come alone, friend. It\'s time we talked about your future.']]},
   {k:'drive',to:()=>LM.site,r:140,desc:'Meet Dex at the construction site'},
-  {k:'talk',lines:[[DEX,'Nothing personal. Vince, Lin and I all paid the cops to make you the fall guy.'],[DEX,'Well. I paid them. The other two don\'t know yet. Goodbye, freelancer.']]},
-  {k:'heat',stars:4},
+  {k:'talk',lines:[[DEX,'You\'ve been asking questions about Marlowe. That\'s bad for business.'],[DEX,'Every crime in this city for a month goes on your name. The captain is on his way to arrest you. Goodbye, freelancer.']]},
+  {k:'heat',stars:3,why:'Marlowe put out a warrant in your name'},
   {k:'kill',gang:1,n:8,around:()=>LM.site,spread:260,timer:200,desc:'Survive the ambush: take out the 8 Saints'},
   {k:'drive',to:()=>LM.bridgeMid,r:120,timer:160,desc:'Dex is fleeing over the Gridlock Bridge. Get there!'},
   {k:'wreck',at:()=>({x:LM.bridgeMid.x+260,y:LM.bridgeMid.y+20}),type:'fbi',col:'#c0c0c8',hp:420,cruise:300,timer:120,desc:'Wreck Dex\'s car'},
   {k:'lose',timer:240,desc:'Lose the cops'},
-  {k:'talk',lines:[[VINCE,'(on the phone) Heard Dex took a swim. Shame.'],[LIN,'(on the phone) The city has a new name for you now.'],[YOU,'Gridlock City is mine.']]}]};
+  {k:'talk',lines:[[VINCE,'(on the phone) Heard Dex took a swim. And Marlowe\'s been suspended. Funny how that works.'],[LIN,'(on the phone) The city has a new name for you now.'],[YOU,'Gridlock City is mine.']]}]};
 function storyAvail(g){if(!cityOpen()&&g!==0&&!(g===2&&STORY.prog[2]===0))return null;if(STORY.prog[g]<CHAPTERS[g].length)return CHAPTERS[g][STORY.prog[g]];if(!STORY.fin&&STORY.prog.every((p,i)=>p>=CHAPTERS[i].length)&&g===0)return FINALE;return null;}
 // ---- the mission runner (story missions and races use it) ----
 function runMission(def,opts){
@@ -272,7 +276,7 @@ function stepNext(){const m=mission;if(!m||m.type!=='story')return;m.si++;m.ring
       while(items.length<s.n&&tries<4000){tries++;const q=walkNear(p.x,p.y,s.spread),tx=Math.floor(q.x/T),ty=Math.floor(q.y/T);if(s.sand&&PARKT[ty*W+tx]!==6)continue;if(farApart(items,q.x,q.y,T*6))items.push({x:q.x,y:q.y,got:false});}
       while(items.length<s.n){const q=walkNear(p.x,p.y,s.spread);items.push({x:q.x,y:q.y,got:false});}
       m.items=items;break;}
-    case 'heat':crime(0,s.stars);setTimeout(stepNext,0);break;
+    case 'heat':crime(0,s.stars);if(s.why)showBig('WANTED',s.why,'#5aa2ff',2.4);setTimeout(stepNext,0);break;
     case 'lose':break;
     case 'until':if(s.start)s.start();break;
     case 'eltrain':st.spawned=false;st.after=-1;st.start=train.at;break;
@@ -316,7 +320,7 @@ function storyPass(){const m=mission;mission=null;ringT=6;
   const d=m.def;addMoney(d.pay);sfx('pass');vib([60,40,60]);
   if(d===FINALE){STORY.fin=1;showBig('GRIDLOCK CITY IS YOURS','+$'+d.pay.toLocaleString()+'  ·  story complete','#ffd600',5);}
   else{STORY.prog[m.g]++;addRespect(m.g,1.5);showBig('MISSION PASSED!','+$'+d.pay.toLocaleString(),'#3ee07a',3);
-    const next=storyAvail(m.g);note(next?GANGS[m.g].name+': see the boss for the next job':'Every gang trusts you now... maybe too much. Visit Vince.');}
+    const next=storyAvail(m.g);note(next?GANGS[m.g].name+': see the boss for the next job':'Every gang trusts you now... maybe too much. Visit Vince.');if(d.after){const i=d.after.indexOf(': ');setTimeout(()=>{if(typeof textMsg==='function')textMsg(d.after.slice(0,i),d.after.slice(i+2));else pager(d.after);},3500);}}
   if(OPT.autosave&&stars()===0)writeSave('auto');}
 function storyFail(msg){const m=mission;if(!m)return;if(!(m.def&&m.def.pizza))offerRetry(m);for(const c of m.rivals||[]){c.driver=null;c.vip=false;c.traffic=true;c.race=null;}for(const s of m.steps){if(s.st&&s.st.c&&s.st.c!==player.car)s.st.c.vip=false;if(s.st&&s.st.list)for(const p of s.st.list)p.target=false;}
   mission=null;ringT=8;dlgClose();if(msg!==false){showBig(m.opts.race?'RACE FAILED':'MISSION FAILED!',msg||'','#ff4040',2.6);sfx('fail');}}

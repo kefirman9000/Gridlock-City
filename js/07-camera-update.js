@@ -246,9 +246,10 @@ function update(dt){
     if(!seen&&heliSees())seen=true;if(!seen&&boatSeesPlayer(tg))seen=true;
     if(seen){seenT=0;lastSeenX=tg.x;lastSeenY=tg.y;}else seenT+=dt;
     evadeT=seenT;
-    // GTA III rules: one star fades if they lose you; two or more stay until a spray shop, a bribe or getting busted/wasted
-    if(s<=1&&seenT>5){clearHeat();note('You lost the cops');}
-    else if(s>=2&&seenT>8&&!stickyNote){stickyNote=true;note('They lost sight of you, but your stars stay. Find a spray shop or a cop bribe');}
+    // v5.17: stars fade once they lose you, one at a time; the higher the level, the longer they search. A spray shop or a bribe still clears them at once.
+    const fadeT=4+s*2.5;
+    if(seenT>fadeT){if(s<=1){clearHeat();note('You lost the cops');}else{heat=TH[s-1]+(TH[s]-TH[s-1])*0.25;seenT=fadeT*0.45;radioMsg('DISPATCH: No sign of the suspect. Scaling back the search.');note(s===2?'Down to one star. Stay out of sight':'They\'re losing you. Stay out of sight');}}
+    else if(seenT>2.5&&!stickyNote){stickyNote=true;note('Out of sight: stay hidden and your stars fade');}
     if(seenT<1)stickyNote=false;
     ffT-=dt;if(ffT<=0){ffT=0.35;buildFF(seen||seenT<1?tg.x:lastSeenX,seen||seenT<1?tg.y:lastSeenY);}
     // dispatch crews for this level, dismiss ones that don't belong
@@ -256,7 +257,7 @@ function update(dt){
     for(const c of cars)if(c.driver==='cop'&&c.ai&&c.ai.mode==='chase'&&!c.wreck){const k=COPKIND(c);have[k]=(have[k]||0)+1;
       if((have[k])>(want[k]||0)){acquireLane(c);c.traffic=true;have[k]--;}}
     copSpawnT-=dt;
-    if(copSpawnT<=0)for(const k in want)if((have[k]||0)<want[k]){if(spawnTraffic(KIND_TYPE[k],true))copSpawnT=s>=4?2.4:s>=3?3.8:7;break;}
+    if(copSpawnT<=0&&seenT<3)for(const k in want)if((have[k]||0)<want[k]){if(spawnTraffic(KIND_TYPE[k],true))copSpawnT=s>=4?3.4:s>=3?5:8;break;} // no new units while they've lost you
     // roadblocks from 3 stars
     roadblockT-=dt;
     if(s>=3&&roadblockT<=0&&player.car&&hyp(player.car.vx,player.car.vy)>150){

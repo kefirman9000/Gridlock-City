@@ -2,6 +2,14 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.17.0
+- Storyline: the game opens with texts from your cousin Nico pointing you to Vince. The thread through all three bosses: Dex Calloway is paying Captain Marlowe at Police HQ to break Vince and Mother Lin. Vince's jobs find the payoffs, Dex's jobs show you Marlowe from the inside, Lin's jobs prove it, and the finale is Dex and Marlowe framing you.
+- Every job ends with a text from the boss (in the phone's messages) saying what's next and why.
+- "Heat Wave" (drive to Police HQ, get 3 stars, lose them) is now "Jailbreak": wait near Police HQ for the prison van carrying Vince's nephew Paulie, ram it until it breaks down, lose the 2 stars the escort calls in, and drive Paulie home.
+- Missions that make you wanted say why ("The desk officers saw you take the van"). Hostile Takeover now asks you to lose the cops before you deliver the van, Top Floor makes you wanted after the jump instead of before it, and the finale starts at 3 stars instead of 4.
+- Police: stars fade one at a time once the cops lose sight of you (4 s + 2.5 s per star; three stars take about 20 s of hiding). Spray shops and bribes still clear them at once. No new units are sent while they've lost you, and spawns are slower (8 / 5 / 3.4 s).
+- One incident raises the wanted level by one star at most; small crimes can add a new star only every 8 s, and once you're wanted, small crimes the cops don't see count for a third. The helicopter can't see you under a bridge, indoors or underground, and its sight radius is 320 (was 380).
+
 ## v5.16.0
 - Cars: four tyres poking out under the body with rims on the side you can see, dark wheel arches, door lines and a trim line, side mirrors. Each type has its own shape: sports cars and roadsters sit low with the cabin set back and a front splitter, compacts are tall hatchbacks, limos have a long cabin. Close cars get the detail; far ones keep the old single wheel slab.
 - At night, parked cars get a warm street-light lift and their tail lights glint, so they don't disappear. The yellow marker over special cars only shows on the nearest one or two when you're on foot.

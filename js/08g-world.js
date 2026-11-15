@@ -410,3 +410,17 @@ const AWNC=[[176,52,44],[40,96,150],[46,120,70],[200,150,40],[120,60,120],[60,60
     B(3,0,4,20,9,10.2,c,mixA(c,[255,255,255],0.2));B(-14,0,2.5,7,8,9,c);B(-14.5,0,2.5,0.6,9,15,c);B(16.5,0,0.6,0.6,6,8,[30,30,30]);return;}
   case 'rwylight':{obox(o.x,o.y,0,1,1,0,2.5,[60,60,64],null,fg);if(proj(o.x,o.y,3))glow(PX,PY,2.4*PK,Math.floor(game.t*1.5+o.y)%2?'#40ff60':'#1a6a2a',0.6);return;}}
   return f(o,fg);}}
+
+// ================= v5.17: police that you can get away from =================
+// One incident raises the wanted level by one star at most, and small crimes the cops don't see barely count once you're
+// already wanted. Small crimes can only add a new star every 8 s, so a scuffle doesn't snowball into the army.
+let CRUP=-99;
+{const cr=crime;crime=function(points,minStars){const s0=stars(),force=(minStars||0)>s0;
+  if(s0>0&&!force&&points>0&&points<700&&seenT>2)points*=0.35;
+  cr(points,minStars);const s1=stars();
+  if(!force&&s1>s0){const cap=game.t-CRUP<8?s0:s0+1;if(s1>cap&&cap<6)heat=Math.min(heat,TH[cap+1]-1);}
+  if(stars()>s0)CRUP=game.t;}}
+// the story's opening text: who you are and where to go
+{const f=cityTick;cityTick=function(dt){f(dt);if(!STATS.intro&&game.t>5&&STORY&&STORY.prog.every(p=>p===0)&&!STORY.fin&&!mission){STATS.intro=1;
+  textMsg('Nico','Welcome to Gridlock, cuz. Vince runs Old Town for the Red Sabres and he owes me one. Go see him, he\'s the red marker on your map.');
+  setTimeout(()=>textMsg('Nico','And stay clear of the cops. Half of Police HQ is on somebody\'s payroll.'),6000);}}}

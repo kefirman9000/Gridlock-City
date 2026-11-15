@@ -292,7 +292,7 @@ function updateHeli(dt){
   for(const b of bullets){if(b.own!=='player'||b.life<=0)continue;if(dist2(b.x,b.y,h.x,h.y)<(b.dz!=null?54:44)**2&&(b.dz==null||Math.abs(b.z-(h.z+7))<(b.kind==='r'?60:42))){h.hp-=b.kind==='r'?220:b.kind==='f'?3:(b.dmg||20);b.life=0;puff(h.x,h.y,0,0,0.08,14,'#fff2a8','flash');hitMarks.push({x:h.x,y:h.y,t:0.12,kill:h.hp<=0});
     if(h.hp<=0){h.fall=1.6;crime(1500,0);showBig('CHOPPER DOWN','','#ff9a2e',2);chaos();slowT=Math.max(slowT,1.4);shake=Math.max(shake,10);break;}}}
 }
-function heliSees(){if(!heli||heli.fall>0)return false;const tg=player.car||player;return hyp(tg.x-heli.x,tg.y-heli.y)<380;}
+function heliSees(){if(!heli||heli.fall>0)return false;const tg=player.car||player;if(ROOM||inHall(tg.x,tg.y)||BRT[Math.floor(tg.y/T)*W+Math.floor(tg.x/T)]&&!(tg.az>20))return false;return hyp(tg.x-heli.x,tg.y-heli.y)<320;} // under a bridge, indoors or underground the chopper can't see you
 // ---- taxi fares: drive a cab and passengers hail you ----
 let fare=null,fareStreak=0,fareCool=3;
 function endFare(msg){if(fare&&fare.ped)fare.ped.fare=false;if(msg){showBig('FARE FAILED',msg,'#ff4040',2);fareStreak=0;}fare=null;fareCool=4;}
