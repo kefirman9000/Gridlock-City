@@ -198,7 +198,7 @@ function drawRC(c,fg,t,a){const ca=Math.cos(a),sa=Math.sin(a),col=rgbOf(c.col),h
   if(proj(c.x-ca*hl*0.7,c.y-sa*hl*0.7,15.5)&&Math.floor(game.t*5)%2)glow(PX,PY,2*PK,'#ff3030',0.9);}
 
 // ---------- the Dodo: a stubby-winged plane that needs a run-up and never really wants to fly ----------
-CT.dodo={name:'Dodo',L:40,Wd:44,max:640,acc:300,grip:10,turn:2,hp:140,mass:0.9,cols:['#e8e4d8','#d8382a','#2a6ad8'],heli:true,plane:true};
+CT.dodo={name:'Dodo',L:40,Wd:44,max:430,acc:220,grip:10,turn:2,hp:140,mass:0.9,cols:['#e8e4d8','#d8382a','#2a6ad8'],heli:true,plane:true};
 const STRIP=(()=>{let best=null,bs=1e9;for(let y=500;y<WPX-500;y+=70)for(const x0 of[WPX+230,WPX+330]){const x1=x0+760;let lo=1e9,hi=-1e9,bad=false;
     for(let x=x0-60;x<=x1+60&&!bad;x+=20){const g=GH(x,y);lo=Math.min(lo,g);hi=Math.max(hi,g);for(let o=-80;o<=80;o+=20)if(solidPx(x,y+o)||tileAt(Math.floor(x/T),Math.floor((y+o)/T))!==GRASS){bad=true;break;}}
     if(RAMPS.some(r=>r.x>x0-80&&r.x<x1+80&&Math.abs(r.y-y)<110))bad=true;
@@ -213,13 +213,13 @@ function planeDrive(c,thr,steer,hb,dt){c.alt=c.alt||0;const pl=c===player.car,ca
   if(c.alt<=0.5){c.alt=0; // on the ground: a slow, wide-turning taxi and a long take-off run
     if(c.driver){vf+=(thr>0?c.t.acc*(1-vf/c.t.max):thr<0?(vf>20?-420:-90):0)*dt;vf=Math.max(-70,vf);}
     vf*=Math.exp(-(c.driver&&thr>0?0.05:0.9)*dt);c.a+=steer*1.5*dt*clamp(Math.abs(vf)/160,0,1)*(vf<0?-1:1);c.va=0;
-    if(up&&vf>330){c.alt=1;c.sink=-40;if(pl)sfx('rocket',0.2);}else c.sink=0;}
+    if(up&&vf>250){c.alt=1;c.sink=-40;if(pl)sfx('rocket',0.2);}else c.sink=0;}
   else{ // in the air: it sinks unless you hold the nose up, and falls out of the sky below stall speed
     if(!c.driver){c.alt=Math.max(0,c.alt-140*dt);vf*=Math.exp(-0.6*dt);}
-    else{const want=thr>0?c.t.max:thr<0?250:400;vf=lerp(vf,want,Math.min(1,dt*(thr?0.55:0.3)));c.a+=steer*1.15*dt;c.va=0;c.bank=lerp(c.bank||0,steer*0.5,Math.min(1,dt*4));
-      let rate=up?74:dn?-120:-9;rate+=Math.sin(game.t*2.1+c.id)*12;if(vf<300)rate=-70-180*(1-vf/300);if(c.hp<c.t.hp*0.4)rate-=40;
-      c.sink=-rate;c.alt=clamp(c.alt+rate*dt,0,250);
-      if(c.alt<=0.5){c.alt=0;const hard=c.sink>105||vf>560;if(hard){damageCar(c,c.sink>105?(c.sink-70)*1.2:25,pl?'player':null);shake=Math.max(shake,8);sfx('crash',0.7);vf*=0.6;if(pl)note('Hard landing!');}else if(pl)sfx('door',0.3);}}
+    else{const want=thr>0?c.t.max:thr<0?190:310;vf=lerp(vf,want,Math.min(1,dt*(thr?0.55:0.3)));c.a+=steer*1.15*dt;c.va=0;c.bank=lerp(c.bank||0,steer*0.5,Math.min(1,dt*4));
+      let rate=up?74:dn?-120:-9;rate+=Math.sin(game.t*2.1+c.id)*12;if(vf<210)rate=-70-180*(1-vf/210);if(c.hp<c.t.hp*0.4)rate-=40;
+      c.sink=-rate;c.alt=clamp(c.alt+rate*dt,0,Math.max(250,c.alt)); // the ceiling stops a climb; it never pulls you down when the ground falls away
+      if(c.alt<=0.5){c.alt=0;const hard=c.sink>105||vf>400;if(hard){damageCar(c,c.sink>105?(c.sink-70)*1.2:25,pl?'player':null);shake=Math.max(shake,8);sfx('crash',0.7);vf*=0.6;if(pl)note('Hard landing!');}else if(pl)sfx('door',0.3);}}
     for(const b of buildings){if(c.x<b.x-14||c.x>b.x+b.w+14||c.y<b.y-14||c.y>b.y+b.h+14)continue;const top=(b.tier?b.tier.hg2:b.hg)*BH+8;if(c.alt>top)continue;
       const dl=c.x-(b.x-14),dr=b.x+b.w+14-c.x,du=c.y-(b.y-14),dd=b.y+b.h+14-c.y,m=Math.min(dl,dr,du,dd);if(m===dl)c.x-=dl;else if(m===dr)c.x+=dr;else if(m===du)c.y-=du;else c.y+=dd;
       damageCar(c,60+Math.abs(vf)*0.12,pl?'player':null);shake=Math.max(shake,9);vf*=-0.25;}}

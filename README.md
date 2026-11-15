@@ -31,13 +31,12 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.32
+- **Aircraft fly properly over hills**: the Dodo and the helicopter hold their height above sea level instead of rising and falling with the land under them, so valleys drop away beneath you and a hill you're too low for comes up to meet you. Flying into a hillside is a crash.
+- **Slower aircraft**: the Dodo's top speed is about a third lower (it cruises slower, takes off and stalls at lower speeds), and the helicopter's about 30% lower.
+
 ## What's new in v5.31
 - **On foot is much slower now**: you jog at about half your old pace and sprint well under city traffic speed (a full push of the touch stick is a sprint). Cops on foot and fleeing people were slowed to match, so a sprint still just gets away from a cop. Legs now stride in step with your speed instead of at a fixed rate.
-
-## What's new in v5.30
-- **Menus fit on phones, with no scrolling**: on a landscape phone the menu runs in two columns, and panels like Options fill the screen in side-by-side columns (text shrinks a little only if it must). Phones hide the mouse and keyboard settings (controller ones too unless a pad is plugged in) and the long explanations in brackets.
-- **Slower on foot**: the normal pace and the sprint are both about 30% slower than before v5.29.
-- Smoke has soft edges and fades out right in front of the camera instead of covering your car.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

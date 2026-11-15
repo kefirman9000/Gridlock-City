@@ -295,3 +295,11 @@ function etunTick(dt){etCool-=dt;const E=ETUN,o=player.car||player,inCar=!!playe
 {const f=g3Tick;g3Tick=function(dt){f(dt);etunTick(dt);};}
 {const f=districtAt;districtAt=function(x,y){if(Math.abs(y-ETUN.TY)<200&&x>ETUN.TX0-100&&x<ETUN.TX1+100)return 'EAST RIVER TUNNEL';return f(x,y);};}
 {const f=extrasMap;extrasMap=function(P2,icon0){const E=ETUN,[a,b]=P2((E.W0.x0)*T,(E.ty+2)*T),[c,d]=P2((E.E0.x1+1)*T,(E.ty+2)*T);ctx.save();ctx.strokeStyle='rgba(255,210,60,.8)';ctx.lineWidth=2.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();ctx.restore();f(P2,icon0);};}
+
+// ---------- v5.31: aircraft hold their height above sea level, not above the ground under them ----------
+// (the Dodo and helicopters used to rise and fall with every hill, as if glued to the land). c.alt stays the height above the ground,
+// as everything else reads it, but it's recomputed each step from an absolute height c.pz; flying into a hillside at speed is a crash.
+{const wrap=f=>function(c,thr,steer,hb,dt){const flying=c.alt>0.5&&c.pz!=null&&!c.wreck;
+    if(flying){const g=GH(c.x,c.y),a=c.pz-g;if(a<=0.5&&c.t.plane&&hyp(c.vx,c.vy)>150){const pl=c===player.car;damageCar(c,70+hyp(c.vx,c.vy)*0.25,pl?'player':null);c.vx*=0.25;c.vy*=0.25;if(pl){shake=Math.max(shake,10);sfx('crash',0.8);note('Flew into the hillside!');}}c.alt=c.t.plane?Math.max(0,a):Math.max(heliFloor(c),a);}
+    f(c,thr,steer,hb,dt);c.pz=c.alt>0.5?GH(c.x,c.y)+c.alt:null;};
+  planeDrive=wrap(planeDrive);heliDrive=wrap(heliDrive);}

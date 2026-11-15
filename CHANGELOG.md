@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.32.0
+- 08h: planeDrive/heliDrive wrapped: an absolute height c.pz is kept while airborne and c.alt (height above ground, as everything reads it) is recomputed from it each step; a plane meeting the ground at >150 takes damage (hillside crash).
+- Ceilings (Dodo 250, heli 240 above ground) now only stop a climb (cap = max(limit, current alt)), so falling ground never pulls you down.
+- Dodo max 640 -> 430, acc 300 -> 220, take-off 330 -> 250, cruise 400 -> 310, slow 250 -> 190, stall 300 -> 210, hard landing over 400 (was 560). Sparrow max 520 -> 360. smoke.py Dodo test lifts off at 265.
+
 ## v5.31.0
 - 07: walk 120 -> 82, sprint 205x1.1 -> 118x1.1, backwards 90 -> 65; player.anim advances by speed x 0.155 (was a fixed 13/s).
 - 03: fleeing peds 118 -> 96, gang chasers 150 -> 120, cops on foot 152 -> 124 (50 while shooting); cop stride by speed.

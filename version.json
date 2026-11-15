@@ -1,4 +1,4 @@
 {
-  "version": "5.31.0",
-  "notes": "On foot is much slower than traffic now; cops and fleeing people slowed to match."
+  "version": "5.32.0",
+  "notes": "Planes and helicopters hold their height over hills instead of following the land, and fly slower."
 }

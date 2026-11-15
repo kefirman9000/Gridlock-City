@@ -49,7 +49,7 @@ CHECKS = {
     'off-road run finishes': """()=>{const o=OFFROAD[0];if(!o)return 'no off-road run';const c=makeCar('pickup',o.x,o.y,0);player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;offStart(o);
         for(let n=0;ACT&&n<40;n++){const p=ACT.cps[ACT.i];c.x=p.x;c.y=p.y;c.vx=c.vy=0;update(1/60);}const ok=!ACT&&STATS.offWins>=1;c.vx=c.vy=0;exitCar(true);return ok||'run did not finish'}""",
     'the Dodo takes off and lands': """()=>{if(!STRIP)return 'no airstrip';STORY.prog[0]=2;clearHeat();const c=makeCar('dodo',STRIP.x0+30,STRIP.y,0);c.alt=0;player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;
-        keys.KeyW=true;let top=0;for(let i=0;i<420;i++){keys.Space=hyp(c.vx,c.vy)>345;update(1/60);top=Math.max(top,c.alt);}keys.Space=false;keys.KeyW=false;keys.KeyS=true;
+        keys.KeyW=true;let top=0;for(let i=0;i<420;i++){keys.Space=hyp(c.vx,c.vy)>265;update(1/60);top=Math.max(top,c.alt);}keys.Space=false;keys.KeyW=false;keys.KeyS=true;
         for(let i=0;i<1500&&c.alt>0;i++){keys.ShiftLeft=c.alt>16;update(1/60);}keys.ShiftLeft=false;keys.KeyS=false;const ok=top>40&&c.alt===0&&!c.wreck;c.vx=c.vy=0;exitCar(true);
         return ok||('top '+Math.round(top)+', alt '+Math.round(c.alt)+', wreck '+c.wreck)}""",
     'rating, sleep and the PS2 look': """()=>{const r=RANKS[crimRank(crimScore())][1];const c0=clock;enterRoom('safe',{x:player.x,y:player.y});sleepSix();const d=((clock-c0)%1+1)%1;leaveRoom();
