@@ -31,14 +31,15 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.30
+- **Menus fit on phones, with no scrolling**: on a landscape phone the menu runs in two columns, and panels like Options fill the screen in side-by-side columns (text shrinks a little only if it must). Phones hide the mouse and keyboard settings (controller ones too unless a pad is plugged in) and the long explanations in brackets.
+- **Slower on foot**: the normal pace and the sprint are both about 30% slower than before v5.29.
+- Smoke has soft edges and fades out right in front of the camera instead of covering your car.
+
 ## What's new in v5.29
 - **Driving feels more natural**: let off the gas and the car rolls on instead of stopping as if you'd braked. Hills pull the same both ways, so you slow down climbing and speed up going down, and the tyres hold you on a camber instead of sliding you sideways.
 - **Running is a little slower** (sprinting about 17% slower, walking about 10% slower).
 - Neon underglow is a soft glow that follows the ground, no longer a big bright slab that floated off hills. Steep banks and cliffs are drawn as earth, rock, concrete or sand in layers instead of vertical streaks.
-
-## What's new in v5.28
-- The police helicopter's searchlight no longer shines through buildings: the beam only shows when nothing stands between the helicopter and you, and the pool of light stops at walls.
-- Smoke puffs are soft round clouds instead of stacked see-through squares.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

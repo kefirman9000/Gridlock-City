@@ -1097,11 +1097,12 @@ function ring3(x,y,r,z,col,lw){L3.beginPath();let first=true;for(let i=0;i<=24;i
 function drawPart3(p,fg){const f=p.life/p.max;let z;
   if(p.type==='smoke')z=6+(1-f)*46;else if(p.type==='fire')z=3+(1-f)*24+p.size*0.4;else if(p.type==='flash')z=11;else z=2+f*10;
   if(!proj(p.x,p.y,z))return;const s=Math.max(1,p.size*PK*(p.type==='flash'?1.4-f*0.4:p.type==='fire'?0.5+f*0.5:p.type==='smoke'?0.9:0.6));
-  if(p.type==='smoke'){const s2=Math.min(s,LH*0.055);L3.globalAlpha=f*0.42*clamp(PF/70,0.2,1)*(s>s2?s2/s:1);L3.fillStyle=litH(p.col,1,fg);
+  if(p.type==='smoke'){const s2=Math.min(s,LH*0.045),near=clamp((PF-30)/110,0,1);if(near<=0)return;const A0=f*0.42*clamp(PF/70,0.2,1)*(s>s2?s2/s:1)*near;L3.fillStyle=litH(p.col,1,fg); // v5.30: fades out right at the lens instead of covering the car
     // a puff is a little pixel cloud (a few overlapping blobs that drift apart as it rises), not one flat square that read as a pale box
     const sd=(p.x*13.7+p.y*7.3)%6.283,sp=0.55+(1-f)*0.35;
     // v5.28: round blobs filled as one path, so the overlaps don't stack into darker squares
-    L3.beginPath();for(let i=0;i<4;i++){const an=sd+i*1.9,r=s2*(i?0.62:0.78),ox=Math.cos(an)*s2*sp*(i?1:0.2),oy=Math.sin(an)*s2*sp*0.6*(i?1:0.2);L3.moveTo(PX+ox+r,PY+oy);L3.ellipse(PX+ox,PY+oy,r,r*0.85,0,0,TAU);}L3.fill('nonzero');} // capped: a puff right at the lens used to cover the screen
+    // soft edges: an outer, fainter cloud and a denser core (each one path, so overlaps never stack)
+    for(const[sc,ak]of[[1,0.45],[0.62,0.75]]){L3.globalAlpha=A0*ak;L3.beginPath();for(let i=0;i<4;i++){const an=sd+i*1.9,r=s2*(i?0.62:0.78)*sc,ox=Math.cos(an)*s2*sp*(i?1:0.2),oy=Math.sin(an)*s2*sp*0.6*(i?1:0.2);L3.moveTo(PX+ox+r,PY+oy);L3.ellipse(PX+ox,PY+oy,r,r*0.85,0,0,TAU);}L3.fill('nonzero');}} // capped: a puff right at the lens used to cover the screen
   else if(p.type==='fire'||p.type==='flash'){L3.globalCompositeOperation='lighter';L3.globalAlpha=Math.min(1,f*1.5);L3.fillStyle=p.col;L3.fillRect(R2(PX-s),R2(PY-s),R2(s*2),R2(s*2));L3.globalCompositeOperation='source-over';}
   else{L3.globalAlpha=Math.min(1,f*2);L3.fillStyle=p.type==='spark'?p.col:litH(p.col,1,fg);L3.fillRect(R2(PX-s/2),R2(PY-s/2),Math.max(1,R2(s)),Math.max(1,R2(s)));}
   L3.globalAlpha=1;}

@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.30.0
+- index.html: @media (max-height:540px) compact menu (two-column nav, small logo, no tagline) and full-screen column-flow panels (column-width 188px, explicit 95dvh height, opaque); portrait phones get a 94dvh panel. Panel sizes use --fz.
+- 09: fitPanel() (MutationObserver on #mmPanel + resize) shortens '(...)' labels, hides keys/mouselook/invertY/msens (and padmap/pad/rumble without a pad) on touch, and lowers --fz until nothing overflows (min 0.55).
+- 07: walk 150 -> 120, sprint 240x1.12 -> 205x1.1, backwards 105 -> 90. 08-render drawPart3: smoke two soft layers, faded by depth (PF 30-140).
+
 ## v5.29.0
 - 02 driveCar: player coasting (no gas/brake/handbrake) uses rolling resistance 0.008 (was 0.139) and keeps 99.7% of forward speed per tick (was 97%).
 - 07: hill force measured over 48 px, the same pull up and down (G 330 driven, 560 empty; was 0.3/0.6 of 560 for driven cars), split along/across the car (across x0.08 driven, x0.35 empty). Walk 168 -> 150, sprint x1.35 -> x1.12, backwards 115 -> 105.

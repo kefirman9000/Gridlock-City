@@ -81,7 +81,7 @@ function update(dt){
       if(mouse.turn){player.body+=mouse.turn*0.006*(OPT.msens||1);mouse.turn=0;}
       player.body+=clamp(turn,-1.5,1.5)*2.8*dt;}
       // sprint: hold SHIFT (or click the left stick, or push the touch stick all the way)
-      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.12:1),sp=(player.swim?0.45:1)*(fwd<0?105:run?240*(1+(typeof SKR!=='undefined'?SKR:0)):150),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
+      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.1:1),sp=(player.swim?0.45:1)*(fwd<0?90:run?205*(1+(typeof SKR!=='undefined'?SKR:0)):120),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
       player.vx=lerp(player.vx,mx*sp,Math.min(1,dt*14));player.vy=lerp(player.vy,my*sp,Math.min(1,dt*14));
       const ox0=player.x,oy0=player.y;player.x+=player.vx*dt;player.y+=player.vy*dt;
       {let[fl,onCar]=footFloor(player.x,player.y,player.jz);

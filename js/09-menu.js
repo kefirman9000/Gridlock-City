@@ -193,3 +193,18 @@ const standalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedi
 
 requestAnimationFrame(frame);
 try{gfxInit();}catch(e){console.error(e);} // graphics presets and the phone warm-up (08h-metro.js)
+// v5.30: menus never scroll. On a phone the open panel is shrunk (its --fz text scale) until all of it fits on the screen; refitted when its
+// content changes (options re-render) and when the screen turns.
+function fitPanel(){const p=document.getElementById('mmPanel');if(!p||p.style.display==='none')return;
+  const small=innerWidth<=760||innerHeight<=540;p.style.overflow=small?'hidden':'';if(!small){p.style.setProperty('--fz',1);return;}
+  const over=()=>{if(p.scrollHeight>p.clientHeight+1||p.scrollWidth>p.clientWidth+1)return true;const r=p.getBoundingClientRect();
+    for(const el of p.querySelectorAll('*')){const q=el.getBoundingClientRect();if(q.width&&(q.right>r.right+1||q.bottom>r.bottom+1))return true;}return false;};
+  // on a phone: labels lose their long explanations in brackets, and rows for a mouse, keyboard or controller are hidden unless a controller is plugged in
+  const touch=touchMode||(()=>{try{return matchMedia('(pointer:coarse)').matches}catch(_){return false}})();
+  let padOn=false;try{padOn=[...(navigator.getGamepads?navigator.getGamepads():[])].some(g=>g);}catch(_){}
+  for(const row of p.querySelectorAll('.opt')){const sp=row.querySelector('span'),bt=row.querySelector('button[data-opt]');
+    if(sp){if(sp.dataset.full==null)sp.dataset.full=sp.textContent;const sh=sp.dataset.full.replace(/\s*\([^)]*\)\s*$/,'');sp.textContent=sh||sp.dataset.full;}
+    if(touch&&bt&&(['keys','mouselook','invertY','msens'].includes(bt.dataset.opt)||(!padOn&&['padmap','pad','rumble'].includes(bt.dataset.opt))))row.style.display='none';}
+  let k=1;p.style.setProperty('--fz',k);while(over()&&k>0.55){k-=0.05;p.style.setProperty('--fz',k.toFixed(2));}}
+try{const p=document.getElementById('mmPanel');let busy=false;new MutationObserver(()=>{if(busy)return;busy=true;requestAnimationFrame(()=>{fitPanel();busy=false;});}).observe(p,{childList:true,subtree:true,characterData:true});
+  addEventListener('resize',()=>setTimeout(fitPanel,60));}catch(e){console.error(e);}

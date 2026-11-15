@@ -38,6 +38,27 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 #menu .mmPanel button.back{margin-top:16px;background:#33333d;color:#ddd}
 #menu .mmPanel .warn{color:#ff7070}#menu .mmPanel .note{color:#888;font-size:12px}
 #menu .mmPanel .ctl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}#menu .mmPanel .ctl b{color:#ffcc00;font-weight:600;white-space:nowrap}
+/* v5.30: phones. Nothing in the menus scrolls: on short screens (landscape phones) the logo shrinks, the menu runs in two columns and a panel
+   fills the screen with its rows flowing into side-by-side columns; fitPanel() (09) shrinks the panel's text until everything shows */
+#menu .mmPanel{--fz:1}
+@media (max-height:540px){
+ #menu .mmLeft{width:min(600px,96vw);padding:3vh 4vw 2vh}
+ #menu .logo{font-size:clamp(26px,9vh,46px);text-shadow:2px 2px 0 #8a0f14,4px 4px 0 #000}
+ #menu .tag{display:none}
+ #menu nav{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:2.5vh}
+ #menu nav button{font-size:clamp(15px,5.6vh,24px);padding:3px 0 3px 22px}
+ #menu .foot{font-size:10px;line-height:1.4}
+ #menu .mmPanel{position:fixed;left:2vw;right:2vw;top:2.5vh;bottom:auto;height:95vh;height:95dvh;width:auto;max-height:none;margin:0;background:rgba(8,8,12,.98);padding:10px 14px;column-width:188px;column-gap:16px;column-fill:auto}
+ #menu .mmPanel h2{font-size:calc(20px*var(--fz));margin:0 0 4px}
+ #menu .mmPanel .slot,#menu .mmPanel .opt{padding:calc(5px*var(--fz)) 0;font-size:calc(12px*var(--fz));break-inside:avoid}
+ #menu .mmPanel button{font-size:calc(12px*var(--fz));padding:calc(4px*var(--fz)) calc(9px*var(--fz))}
+ #menu .mmPanel button.back{margin-top:6px}
+ #menu .mmPanel .note{font-size:calc(11px*var(--fz))}
+ #menu .mmPanel .ctl{font-size:calc(12px*var(--fz));gap:2px 12px}}
+@media (max-width:760px) and (min-height:541px){#menu .mmPanel{top:3vh;height:94vh;height:94dvh;max-height:none;background:rgba(8,8,12,.98)}
+ #menu .mmPanel .slot,#menu .mmPanel .opt{padding:calc(8px*var(--fz)) 0;font-size:calc(13px*var(--fz))}
+ #menu .mmPanel button{font-size:calc(14px*var(--fz));padding:calc(6px*var(--fz)) calc(12px*var(--fz))}
+ #menu .mmPanel h2{font-size:calc(24px*var(--fz))}}
 @media (max-width:760px){#menu{background:rgba(4,4,8,.8)}#menu .mmPanel{position:fixed;left:4vw;right:4vw;top:5vh;width:auto;margin:0}}
 
 #loading{position:fixed;inset:0;z-index:9999;background:#0d0e12;display:flex;align-items:center;justify-content:center;transition:opacity .35s}
@@ -55,7 +76,7 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 <div class="logo">GRIDLOCK<span>CITY</span></div>
 <div class="tag" id="tagline">Steal cars. Answer payphones. Lose the cops.</div>
 <nav id="mmNav"></nav>
-<div class="foot"><span id="verTxt">v5.29.0</span> &middot; <button id="updBtn">Check for updates</button> &middot; <a href="https://github.com/sponsors/kefirman9000" target="_blank" rel="noopener">&#128156; Sponsor</a><br><button id="instBtn">&#128242; Install as an app</button><div id="upd"></div></div>
+<div class="foot"><span id="verTxt">v5.30.0</span> &middot; <button id="updBtn">Check for updates</button> &middot; <a href="https://github.com/sponsors/kefirman9000" target="_blank" rel="noopener">&#128156; Sponsor</a><br><button id="instBtn">&#128242; Install as an app</button><div id="upd"></div></div>
 </div>
 <div class="mmPanel" id="mmPanel"></div>
 <button id="play" style="display:none">PLAY</button>

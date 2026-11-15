@@ -1,4 +1,4 @@
 {
-  "version": "5.29.0",
-  "notes": "Cars coast instead of stopping dead, hills work both ways, running is a bit slower, and fixes for floating underglow and streaky slopes."
+  "version": "5.30.0",
+  "notes": "Menus fit phone screens without scrolling, slower walking and running, softer smoke."
 }
