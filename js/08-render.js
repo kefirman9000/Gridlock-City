@@ -29,6 +29,9 @@
 //     see climbPre/climbPost, and drawLadder draws them from the same LADDERS entries.)
 //  9. Moving things you can stand on (cars, the El train) must report their velocity from footFloor so the
 //     player rides along, and the player must be drawn after them while on top (see the UNDERFOOT block).
+// 10. Slots are per object, not transitive: two things next to each other can get different slots. Vehicles, the
+//     player and people that overlap on screen are re-ordered by distance after slotting (see the end of the ITEMS
+//     pass); if you add another kind of solid thing that sits among cars, add its kind there too.
 // Checking a change: render the thing from the front, back, both sides and from above at day and night
 // (the Playwright harness idea in CLAUDE.md does exactly this).
 // ======================================================================================================
@@ -994,7 +997,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
       const h=b.hull;
       if(!(inHull(h,sx,yb)||inHull(h,sx,yt)||inHull(h,sx-sw,ym)||inHull(h,sx+sw,ym)||inHull(h,sx,ym)))continue; // not on screen together
       slot=i+1;break;}
-    ITEMS.push({kind,o,f,slot,rad});};
+    ITEMS.push({kind,o,f,slot,rad,sx,sw,yt,yb});};
   for(const c of cars){if(c===player.car)continue;add(0,c,c.x,c.y,Math.max(c.t.L,c.t.Wd)/2+4,null,carRoof(c)+3,c.az||0);}
   if(MIRROR||MENUVIEW){}else if(player.car)add(14,player.car,player.car.x,player.car.y,Math.max(player.car.t.L,player.car.t.Wd)/2+4,null,30,player.car.az||0);
   else if(!player.riding&&!SCOPE.on)add(14,player,player.x,player.y,6,null,26,player.jz||0);
@@ -1037,6 +1040,13 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   for(const ci of ITEMS){if(ci.kind!==0&&ci.kind!==14)continue;const c=ci.o;if(!c.t||!((c.az||0)>2))continue;
     for(const it of ITEMS){if(it.kind!==13||!it.o.k||!UNDERFOOT.has(it.o.k))continue;const dx=it.o.x-c.x,dy=it.o.y-c.y,r=(it.o.rad||24)+24;if(dx*dx+dy*dy>r*r)continue;
       if(it.slot>ci.slot)ci.slot=it.slot;if(it.slot===ci.slot&&it.f<=ci.f)ci.f=it.f-0.01;}}
+  // rule 10: an item's slot comes from overlapping a building's outline on screen, so two cars side by side can land in
+  // different slots (the one hugging the wall overlaps it, the one in the lane doesn't) and the farther car got painted
+  // over yours. Where two vehicles or people overlap on screen, the nearer one is lifted to the farther one's slot,
+  // so the distance order inside that slot decides.
+  {const V=[];for(const it of ITEMS)if((it.kind===0||it.kind===14||it.kind===1)&&it.sx!=null)V.push(it);
+    for(let pass=0;pass<2;pass++)for(const a of V)for(const b of V){if(a.f>=b.f||a.slot>=b.slot)continue;
+      if(Math.abs(a.sx-b.sx)<a.sw+b.sw&&a.yt<b.yb&&b.yt<a.yb)a.slot=b.slot;}}
   ITEMS.sort((a,b)=>a.slot-b.slot||b.f-a.f);
   let ii=0;
   for(let bi=0;bi<=vb.length;bi++){

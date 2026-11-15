@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.4.3
+- Fix: a car parked next to a building could be drawn on top of your car when you pulled up behind it (cars, the player and people that overlap on screen are now always drawn far to near).
+
 ## v5.4.2
 - **GTA III-style crashes.** Car-on-car hits are bouncier, cars glance and slide off each other instead of sticking, and an off-centre hit spins the car you hit (T-bone a car and it goes round). Parked cars are no heavier than moving ones, so you can shove them out of the way. Damage still follows weight, but a light vehicle no longer bursts into flames from a tap.
 - **Lighter bikes.** Hit a motorbike and its rider is thrown over your hood, lands, and gets back up (or doesn't, at high speed); the bike falls on its side and skids away. The same happens to you if something big hits you on a bike. Shooting a rider off also leaves the bike lying down.

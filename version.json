@@ -1,4 +1,4 @@
 {
-  "version": "5.4.2",
-  "notes": "GTA III-style car crashes: bouncier hits, cars slide off each other, off-centre hits spin the car you hit, parked cars can be shoved. Bikes are much lighter: hit one and the rider is thrown over your hood, the bike falls over and skids away."
+  "version": "5.4.3",
+  "notes": "Fix: a car parked next to a building could be drawn on top of your car when you pulled up behind it."
 }

@@ -32,6 +32,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
 ## What's new in v5.4.2
+- *v5.4.3:* fixed a parked car beside a building sometimes being drawn on top of your car.
 - **GTA III-style crashes.** Car-on-car hits are bouncier, cars glance and slide off each other instead of sticking, and an off-centre hit spins the car you hit (T-bone a car and it goes round). Parked cars are no heavier than moving ones, so you can shove them out of the way. Damage still follows weight, but a light vehicle no longer bursts into flames from a tap.
 - **Lighter bikes.** Hit a motorbike and its rider is thrown over your hood, lands, and gets back up (or doesn't, at high speed); the bike falls on its side and skids away. The same happens to you if something big hits you on a bike. Shooting a rider off also leaves the bike lying down.
 
