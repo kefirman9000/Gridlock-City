@@ -173,3 +173,11 @@ function sinkTick(dt){const c=player.car;
     if(k===player.car&&k.sinkT>1.1){player.car=null;k.driver=null;player.x=k.x;player.y=k.y;player.jz=0;player.jv=0;player.vx=player.vy=0;player.a=player.body=k.a;note('Your car sank. Swim for the shore');}
     if(k.sinkT>2.4){const i=cars.indexOf(k);if(i>=0)cars.splice(i,1);}}}
 {const f=g3Tick;g3Tick=function(dt){f(dt);sinkTick(dt);}}
+
+// ---- stunt jumps out in the country get a clear landing: nothing standing in a long corridor ahead of the ramp ----
+(function clearLandings(){const outC=(x,y)=>x<0||y<0||x>WPX||y>WPX;
+  for(const r of RAMPS){if(!outC(r.x,r.y))continue;const ca=Math.cos(r.a),sa=Math.sin(r.a),inC=(x,y)=>{const f=(x-r.x)*ca+(y-r.y)*sa,l=Math.abs(-(x-r.x)*sa+(y-r.y)*ca);return f>-200&&f<1100&&l<150+Math.max(0,f)*0.12;};
+    for(let i=trees.length-1;i>=0;i--)if(inC(trees[i].x,trees[i].y))trees.splice(i,1);
+    for(let i=props.length-1;i>=0;i--){const o=props[i];if((o.k==='hay'||o.k==='bush'||o.k==='rock')&&inC(o.x,o.y))props.splice(i,1);}
+    for(let i=buildings.length-1;i>=0;i--){const b=buildings[i];if(b.outside&&inC(b.x+b.w/2,b.y+b.h/2)){buildings.splice(i,1);const j=OUTB.indexOf(b);if(j>=0)OUTB.splice(j,1);}}}
+  SGRID=null;})();

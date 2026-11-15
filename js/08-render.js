@@ -186,7 +186,7 @@ for(let i=0;i<9;i++){const y=rr(300,WPX-300),x=WPX+rr(160,700);if(GH(x,y)>150)co
 const COAST={L:(x,y,side)=>{const n1=fbm(x/1250,y/1250,31),n2=fbm(x/420,y/420,32),n3=fbm(x/160,y/160,33);
   let L=(side===3?1150:1480)+760*(n1-0.5)+300*(n2-0.5)+70*(n3-0.5);
   // keep the off-road runs, the farms and the airstrip on dry land
-  if(side===1&&y>0&&y<WPX)L=Math.max(L,1290);if(side===0&&x>200&&x<RIVX0*T)L=Math.max(L,1260);return L;}};
+  if(side===1&&y>0&&y<WPX)L=Math.max(L,1820);if(side===0&&x>200&&x<RIVX0*T)L=Math.max(L,1260);return L;}};
 for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS,k=j*HN+i;
   if(TTYPE[k]===0&&(y>WPX||x>WPX||x<0||y<0)&&HMAP[k]===0)continue; // the subway hall and the off-map rooms stay as they are
   if(y>WPX&&x>-40&&x<WPX+40){ // the south shore: a few sandbars and grassy points off the beach, clear of the pier and the river mouth
@@ -223,30 +223,31 @@ const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDP=[];
      const fade=smooth01(Math.min(L[i],tot-L[i])/900),o=(170*(n1(L[i]/1500,1)-0.5)*2+60*(n1(L[i]/520,2)-0.5)*2)*fade;
      // outward: the loop runs clockwise round the city, so the left-hand normal points outward
      return[p[0]-nx*o,p[1]-ny*o];});}
+  {const ys=[3,9,15].map(iy=>(iy*P+2)*T);pts=pts.map(p=>{if(p[0]<=WPX)return p;const dy=Math.min(...ys.map(q=>Math.abs(p[1]-q))),w=smooth01(1-(dy-120)/520),xm=WPX+215+(1-w)*700;return[Math.min(p[0],xm),p[1]];});}
   for(let k=0;k<3;k++)pts=chaikin(pts);
   // resample evenly
   const even=(p,step)=>{const o=[p[0]];let carry=0;for(let i=1;i<p.length;i++){let a=p[i-1],b=p[i],dl=hyp(b[0]-a[0],b[1]-a[1]),t=step-carry;while(t<=dl){o.push([a[0]+(b[0]-a[0])*t/dl,a[1]+(b[1]-a[1])*t/dl]);t+=step;}carry=dl-(t-step);}o.push(p[p.length-1]);return o;};
   const mk=p=>{p=even(p,24);let s=0;const P2=p.map((q,i)=>{if(i)s+=hyp(q[0]-p[i-1][0],q[1]-p[i-1][1]);return{x:q[0],y:q[1],s,h:GH(q[0],q[1])};});
     // grade it: smooth the heights, then limit the slope both ways
-    for(let r=0;r<4;r++){const h=P2.map(q=>q.h);for(let i=0;i<P2.length;i++){let a=0,n=0;for(let j=-10;j<=10;j++){const q=P2[Math.max(0,Math.min(P2.length-1,i+j))];a+=q.h;n++;}P2[i].h=a/n;}}
-    for(const q of P2)q.h=Math.max(q.h,3);
-    for(let i=1;i<P2.length;i++)P2[i].h=Math.min(P2[i].h,P2[i-1].h+24*0.09);for(let i=P2.length-2;i>=0;i--)P2[i].h=Math.min(P2[i].h,P2[i+1].h+24*0.09);
+    const g0=P2.map(q=>q.h),sm=(n,w)=>{for(let r=0;r<n;r++){const h=P2.map(q=>q.h);for(let i=0;i<P2.length;i++){let a=0,c=0;for(let j=-w;j<=w;j++){a+=h[Math.max(0,Math.min(P2.length-1,i+j))];c++;}P2[i].h=a/c;}}};
+    sm(2,6);for(let i=0;i<P2.length;i++)P2[i].h=clamp(P2[i].h,g0[i]-12,g0[i]+10);sm(1,3);for(let i=0;i<P2.length;i++)P2[i].h=Math.max(3,clamp(P2[i].h,g0[i]-14,g0[i]+12));
     for(let i=0;i<P2.length;i++){const a=P2[Math.max(0,i-1)],b=P2[Math.min(P2.length-1,i+1)],l=hyp(b.x-a.x,b.y-a.y)||1;P2[i].ux=(b.x-a.x)/l;P2[i].uy=(b.y-a.y)/l;}
     return P2;};
   const ring=mk(pts);RING.paths.push(ring);
   // spurs from the city's street ends out to the ring
   for(const[jx,jy]of RINGJ){if(jy===NB-1)continue;const[nx,ny]=node(jx,jy),sx=jy===0?nx:jx===0?0:WPX,sy=jy===0?0:ny;let b=null,bd=1e18;for(const q of ring){const d=dist2(q.x,q.y,sx,sy);if(d<bd){bd=d;b=q;}}
     const out=jy===0?[0,-1]:jx===0?[-1,0]:[1,0],mid=[sx+out[0]*Math.sqrt(bd)*0.55,sy+out[1]*Math.sqrt(bd)*0.55];let p=[[sx-out[0]*8,sy-out[1]*8],mid,[b.x,b.y]];for(let k=0;k<3;k++)p=chaikin(p);
-    const sp2=mk(p);sp2[0].h=GH(sx,sy);for(let r=0;r<3;r++)for(let i=1;i<sp2.length-1;i++)sp2[i].h=(sp2[i-1].h+sp2[i].h+sp2[i+1].h)/3;RING.paths.push(sp2);}
+    const sp2=mk(p),h0=GH(sx,sy),h1=b.h,n=sp2.length-1;for(let i=0;i<=n;i++){const t=i/n;sp2[i].h=lerp(lerp(h0,h1,t),sp2[i].h,Math.sin(t*PI)*0.6);}sp2[0].h=h0;sp2[n].h=h1;RING.paths.push(sp2);}
   // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
-  const hw=RING.hw,bank=110;
+  const hw=RING.hw,bank=180;
   for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);
     const ci=Math.round((q.x+HM)/HS),cj=Math.round((q.y+HM)/HS);
     for(let j=cj-r;j<=cj+r;j++)for(let ii=ci-r;ii<=ci+r;ii++){if(ii<1||j<1||ii>=HN-1||j>=HN-1)continue;const x=-HM+ii*HS,y=-HM+j*HS;
       if(x>=-2&&y>=-2&&x<=WPX+2&&y<=WPX+2)continue;const k=j*HN+ii;if(TTYPE[k]===0&&HMAP[k]===0&&y>WPX)continue;
       const lat=(x-q.x)*-q.uy+(y-q.y)*q.ux,lon=(x-q.x)*q.ux+(y-q.y)*q.uy;if(Math.abs(lon)>16)continue;const d=Math.abs(lat);
-      if(d<hw+HS){const prev=RDI[k];if(prev<0||Math.abs(RDP[prev].lat)>d){const e={x:q.x,y:q.y,ux:q.ux,uy:q.uy,s:q.s,lat,main:path===ring};if(prev<0){RDI[k]=RDP.length;RDP.push(e);}else RDP[prev]=e;}
-        HMAP[k]=q.h;TTYPE[k]=10;TCOL[k]=packC(70,70,74);}
+      if(d<hw+HS){const prev=RDI[k],main=path===ring,better=prev<0||(main&&!RDP[prev].main&&d<hw)||(main===RDP[prev].main&&Math.abs(RDP[prev].lat)>d)||(!RDP[prev].main&&!main&&Math.abs(RDP[prev].lat)>d);
+        if(better){const e={x:q.x,y:q.y,ux:q.ux,uy:q.uy,s:q.s,lat,main};if(prev<0){RDI[k]=RDP.length;RDP.push(e);}else RDP[prev]=e;HMAP[k]=q.h;}
+        TTYPE[k]=10;TCOL[k]=packC(70,70,74);}
       else if(d<hw+bank&&TTYPE[k]!==10){const w=1-smooth01((d-hw-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
   // nothing standing in the road; the guard rail opens where the spurs leave town and is gone where the edge has gone wild
   const onRoad=(x,y,m)=>{const k=(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);if(TTYPE[k]===10)return true;if(!m)return false;for(const[dx,dy]of[[m,0],[-m,0],[0,m],[0,-m]]){const k2=(((y+dy+HM)/HS)|0)*HN+(((x+dx+HM)/HS)|0);if(TTYPE[k2]===10)return true;}return false;};

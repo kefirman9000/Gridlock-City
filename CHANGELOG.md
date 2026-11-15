@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.12.1
+- The ring road follows the land: it only cuts or builds up the ground a little, with wide gentle banks, instead of running through deep trenches with dark walls either side.
+- On the east side it runs just outside town, in front of the dirt jumps on the three farm roads, so their run-ups and landings are open fields. The east coast sits further out so the far jumps land on grass, not in the sea, and nothing stands in a long corridor past any countryside jump (hay bales, bushes, rocks, trees, farmhouses).
+- Where a spur meets the ring road the two now join at the same height (there was a step).
+
 ## v5.12.0
 - A ring road: a two-lane road with a yellow centre line winds round the city through the countryside, from the south-west corner up the west side, along the foot of the northern hills and down the east side to the south-east corner. It's graded through the hills (no steeper than about 1 in 11) and cut into the land, and spurs join it to the city's street ends on the north, west and east sides. No rough-ground slowdown on it.
 - The city's edge isn't a ruler line any more: the north-west and north-east corners round off, and woods and parkland bite into the outer blocks in an uneven line. The perimeter road breaks where they do and the city-limits guard rail goes with it; every road traffic can still reach stays connected.
