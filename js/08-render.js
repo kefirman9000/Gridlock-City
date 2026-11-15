@@ -1,5 +1,6 @@
 // ================= RENDER: PSEUDO-3D CHASE CAMERA =================
 // ======================================================================================================
+// (See also the DESIGN RULES at the top of js/01-core-map.js: roads, traffic, the world, look and feel, code.)
 // RENDERING RULES - read before adding or changing anything that gets drawn. Breaking one of these is what
 // caused the see-through ambulance, the glass showing through the bus/SWAT van roof, and the player vanishing
 // on the El stairs. There is NO depth buffer: everything is painted back to front, so draw ORDER is the depth.
@@ -191,8 +192,8 @@ for(let i=0;i<9;i++){const y=rr(300,WPX-300),x=WPX+rr(160,700);if(GH(x,y)>150)co
 const COAST={pts:[[-200,8230],[-330,8120],[-430,7350],[-640,6500],[-860,6620],[-980,7050],[-1150,7350],[-1020,7800],[-900,8180],
   [-1320,8380],[-1880,7980],[-1760,6350],[-1640,4300],[-1820,2300],[-1700,700],[-1840,-600],[-2050,-1550],[-1450,-1800],
   [-300,-1720],[900,-1900],[2300,-1760],[3700,-1920],[5200,-1760],[6600,-1880],[8000,-1720],[9100,-1800],[9900,-2000],
-  [10060,-1000],[10140,300],[9820,1250],[9660,1900],[9840,2500],[10160,2700],[10340,3150],[10120,3500],[9940,3900],
-  [10120,5000],[10220,6500],[10000,7500],[9520,8000],[9080,8300],[8880,8720],[8540,8860],[8300,8420],[8230,8230]]};
+  [10060,-1000],[10140,300],[10200,1400],[9920,1900],[9700,2300],[9880,2780],[10200,2980],[10360,3300],[10150,3620],[10200,4000],
+  [10230,4500],[10120,5200],[10250,6000],[10260,6900],[10000,7500],[9520,8000],[9080,8300],[8880,8720],[8540,8860],[8300,8420],[8230,8230]]};
 (function coast(){const C=COAST.pts,n=C.length,cr=(p0,p1,p2,p3,t)=>{const t2=t*t,t3=t2*t;return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);};
   // the south shore under the city closes the loop: the outline runs along the city's beach from the south-east corner to the south-west
   const loop=C.concat([[WPX*0.66,8230],[WPX*0.33,8230]]),N=loop.length,poly=[];
@@ -281,10 +282,18 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
     for(let i=0;i<P2.length;i++){const a=P2[Math.max(0,i-1)],b=P2[Math.min(P2.length-1,i+1)],l=hyp(b.x-a.x,b.y-a.y)||1;P2[i].ux=(b.x-a.x)/l;P2[i].uy=(b.y-a.y)/l;}
     return P2;};
   const ring=mk(pts);RING.paths.push(ring);
+  // grade the beltway (DESIGN RULE B5): where each spur will join, its height is held to what a spur can climb from the street at a
+  // gentle slope; then the whole road is eased to no steeper than SLOPE either way, the held points staying put
+  const SLOPE=0.115,spurAt=[];
+  for(const[jx,jy]of RINGJ){if(jy===NB-1)continue;const[nx,ny]=node(jx,jy),sx=jy===0?nx:jx===0?0:WPX,sy=jy===0?0:ny;let bi=0,bd=1e18;ring.forEach((q,i)=>{const d=dist2(q.x,q.y,sx,sy);if(d<bd){bd=d;bi=i;}});
+    const h0=GH(sx,sy),L=Math.sqrt(bd)*1.08,lim=SLOPE*0.85*L;ring[bi].h=clamp(ring[bi].h,h0-lim,h0+lim);ring[bi].fix=true;spurAt.push(bi);}
+  ring[0].fix=ring[ring.length-1].fix=true;
+  for(let pass=0;pass<4;pass++){for(let i=1;i<ring.length;i++)if(!ring[i].fix){const m=SLOPE*(ring[i].s-ring[i-1].s);ring[i].h=clamp(ring[i].h,ring[i-1].h-m,ring[i-1].h+m);}
+    for(let i=ring.length-2;i>=0;i--)if(!ring[i].fix){const m=SLOPE*(ring[i+1].s-ring[i].s);ring[i].h=clamp(ring[i].h,ring[i+1].h-m,ring[i+1].h+m);}}
   // spurs from the city's street ends out to the ring
   for(const[jx,jy]of RINGJ){if(jy===NB-1)continue;const[nx,ny]=node(jx,jy),sx=jy===0?nx:jx===0?0:WPX,sy=jy===0?0:ny;let b=null,bd=1e18;for(const q of ring){const d=dist2(q.x,q.y,sx,sy);if(d<bd){bd=d;b=q;}}
     const out=jy===0?[0,-1]:jx===0?[-1,0]:[1,0],mid=[sx+out[0]*Math.sqrt(bd)*0.55,sy+out[1]*Math.sqrt(bd)*0.55];let p=[[sx-out[0]*8,sy-out[1]*8],mid,[b.x,b.y]];for(let k=0;k<3;k++)p=chaikin(p);
-    const sp2=mk(p),h0=GH(sx,sy),h1=b.h,n=sp2.length-1;sp2.ringI=ring.indexOf(b);sp2.node=[jx,jy];for(let i=0;i<=n;i++){const t=i/n;sp2[i].h=lerp(lerp(h0,h1,t),sp2[i].h,Math.sin(t*PI)*0.6);}sp2[0].h=h0;sp2[n].h=h1;RING.paths.push(sp2);}
+    const sp2=mk(p),h0=GH(sx,sy),h1=b.h,n=sp2.length-1,tot=sp2[n].s||1;sp2.ringI=ring.indexOf(b);sp2.node=[jx,jy];for(let i=0;i<=n;i++){const t=sp2[i].s/tot;sp2[i].h=lerp(h0,h1,t*t*(3-2*t)*0.5+t*0.5);}RING.paths.push(sp2);}
   // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
   const hw=RING.hw,bank=180;
   for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);

@@ -47,6 +47,10 @@ centre-line point (`RDP` entries are `{p:path,i:point}`, up to two roads per cel
 The frame loop in 09 catches errors from `update`/`render` (`loopErr` shows 'Glitch caught: ...'), so one bad frame no longer stops the game.
 Errors are kept in `ERRLOG` (localStorage `gc_errlog`, last 60, with context) and shown by `showErrLog()` (pause menu ERROR LOG). The farm roads are traffic-only paths in `RING.paths` too (`FARMR`, `farm:true`, not carved).
 
+## Design rules
+The **DESIGN RULES** block at the top of `js/01-core-map.js` lists what every addition must follow: road paint and junctions, roads that make sense
+and carry traffic, the world, opaque objects, look and feel, and code. Read it before adding anything. `python3 tests/design_check.py` checks what can be checked automatically.
+
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).
 There is no depth buffer, so draw order is depth. Past bugs from breaking those rules: see-through ambulance,
@@ -85,5 +89,5 @@ are indexed by station (talk is `null`); DJs can have `intros` with `{song}`.
 Mission steps live in the chapters in `js/05-story.js`. A `drive` step can take `minZ` (the car must be at least that high, e.g. the garage roof).
 
 ## Releasing
-Bump `VERSION` (top of `js/01-core-map.js`), the `#verTxt` text in `index.html`, `version.json` (version + one-line notes) and the cache name in
+Run `python3 tests/smoke.py` and `python3 tests/design_check.py` first. Bump `VERSION` (top of `js/01-core-map.js`), the `#verTxt` text in `index.html`, `version.json` (version + one-line notes) and the cache name in
 `sw.js`; update the README (keep only the latest two "What's new" sections; older ones live in CHANGELOG.md) and add a CHANGELOG.md entry. GitHub Pages serves `main`.

@@ -188,7 +188,7 @@ function trafficBounds(){const m=12;for(const c of cars){if(!c.ai||c.ai.mode==='
   if(c.y<m){c.y=m;if(c.vy<0)c.vy=0;}else if(c.y>WPX-m){c.y=WPX-m;if(c.vy>0)c.vy=0;}
   // run wide onto a verge, a riverbank or a park and stuck there: gone if you can't see it, back on its lane if you can
   if(c.ai.mode==='lane'||c.ai.mode==='diag'){const tx=Math.floor(c.x/T),ty=Math.floor(c.y/T),t=tileAt(tx,ty);
-    if((t===GRASS||t===TREE)&&!(DIAGT[ty*W+tx])){c.offT=(c.offT||0)+1/60;if(c.offT>2.5){c.offT=0;if(!camSees(c.x,c.y)&&!c.vip)c.stuckOut=true;else if(c.ai.mode==='lane'){const s=laneSpotNear(c.x,c.y)||null;laneFromHere(c);if(s){c.x+=(s.x-c.x)*0.5;c.y+=(s.y-c.y)*0.5;}}}}else c.offT=0;}}}
+    if((t===GRASS||t===TREE)&&!(DIAGT[ty*W+tx])){c.offT=(c.offT||0)+1/60;if(c.offT>1.2){c.offT=0;if(!camSees(c.x,c.y)&&!c.vip)c.stuckOut=true;else if(c.ai.mode==='lane'){const s=laneSpotNear(c.x,c.y)||null;laneFromHere(c);if(s){c.x+=(s.x-c.x)*0.5;c.y+=(s.y-c.y)*0.5;}}}}else c.offT=0;}}}
 {const f=g3Tick;g3Tick=function(dt){f(dt);trafficBounds();}}
 
 // ================= traffic on the beltway =================

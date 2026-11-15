@@ -1,5 +1,88 @@
 'use strict';
-const VERSION='5.14.2',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+// =====================================================================================================================
+// DESIGN RULES - read these before adding or changing anything in Gridlock City. Each one is here because breaking it
+// already caused a visible bug. The drawing-order rules for 3D objects (vehicles, props, decks, stairs) are the
+// RENDERING RULES at the top of js/08-render.js; read those too before drawing anything. tests/design_check.py checks
+// the rules that can be checked automatically: run it, and the smoke test, before every release.
+//
+// A. ROADS AND GROUND PAINT
+//  A1. One owner per pixel. Where two kinds of road meet, exactly one of them paints the overlap. Grid streets own their
+//      own tiles: anything laid over or across them (diagonal avenues, crooked side streets, plazas, the beltway's spurs)
+//      stops at the street's edge and lets the street draw its own asphalt, lines and crossings. Never paint a second
+//      road's markings across another road. (Crooked side streets used to paint over the streets they met.)
+//  A2. Lines and edges come from the exact distance to the road's centre line, worked out per pixel from the road's real
+//      geometry. Never use one value per ground cell (16 or 32 px), which steps and saw-tooths on curves and angles.
+//      (The beltway's edges used to be jagged.)
+//  A3. No painted line is narrower than about 3 px of world width. A 1-2 px band at an angle breaks into a chain of
+//      dots. Solid centre lines at least 3.6 wide, double lines 2.5 each with a gap, dashes at least 20 long.
+//  A4. Markings follow one scheme everywhere. City streets: yellow centre line (168,137,58), white lane and edge lines,
+//      zebra crossings only where a road meets a street, striped across the direction of traffic. Beltway: yellow
+//      dashed centre (214,176,40), white edge lines. Dirt roads: no paint, just ruts.
+//  A5. A road's edge shows what's really next to it: a thin gravel shoulder (about 4 px), then the land's own colour
+//      and texture. No flat-colour wedges or bands where two roads or a road and a verge meet.
+//  A6. Every new kind of road gets screenshots of each junction and each end, from above and at road level, by day
+//      and at night, before it ships.
+//
+// B. ROADS HAVE TO MAKE SENSE
+//  B1. Every drivable road goes somewhere. Both ends join the network (a street, the beltway, a spur), or the road
+//      ends in a deliberate turn-round (the farm roads). No dead-end stubs or paths to nowhere.
+//  B2. Every drivable road carries traffic. A new kind of road needs an AI path or lane for traffic to follow, so cars
+//      can drive onto it from the roads it joins and off it again (see aiLane, aiDiag, aiRing and RING.paths).
+//  B3. Traffic never leaves the road. Street traffic stays inside the city (trafficBounds), cars that run wide are put
+//      back or cleared (the off-road backstop), and turns at the city edge must not swing onto the land outside.
+//  B4. The street grid never moves (laneCoord, linkOK and every story location depend on it). Close a street by adding
+//      it to CUT, grass it over, and check that everything left is still reachable from the middle of town. Then
+//      remove any dead ends that leaves (see cityEdge).
+//  B5. Roads follow the land but are graded like real roads: no steeper than about 1 in 8 anywhere (spurs and ramps
+//      included), cut into or built up from the land as little as that allows, with banks at least 180 wide. No trenches, vertical earth walls or steps where two roads join (they share
+//      one height at the join).
+//
+// C. THE WORLD
+//  C1. No invisible walls on land. The edge of the world is out at sea, well past the coast.
+//  C2. Every stunt jump has an open landing: nothing standing in a corridor about 1,100 long past the ramp, solid
+//      ground (not sea) where it comes down, and no road cutting through the run-up or landing.
+//  C3. Generation never calls R(), pick() or rr() in a new step. Use hash() or a stream of its own, or every saved
+//      city changes and old saves' hidden packages move. Anything placed after the city is built checks the busy
+//      registries first (packages, stashes, ramps, shops, places, safehouses and so on).
+//  C4. Places are modelled on real ones (the island is Oahu-shaped with the city where Honolulu sits). A new area
+//      should make sense the way a real place does, not be random noise.
+//
+// D. OBJECTS, VEHICLES, BRIDGES AND BUILDINGS (with the RENDERING RULES in 08-render.js)
+//  D1. Everything is opaque. No see-through vehicles, decks or walls. Glass is an opaque tinted colour drawn only
+//      on faces the camera can see, never alpha over a body. Every vehicle has a full body box from bumper to
+//      bumper (RENDERING RULE 6).
+//  D2. A bridge or deck is a solid box with visible side faces and an underside. Railings and lamps stand on top
+//      of it, and anything under it is drawn first or clipped (occClip with honest ht/rad).
+//  D3. Detail boxes (windshields, light bars, signs, spoilers) never show through the body from the far side.
+//      Draw them only when the camera can see that face, or make them flush decals (RENDERING RULES 3 and 5).
+//  D4. Anything you can stand on has a matching walk surface (WALKS) at the same footprint and height, and it is
+//      drawn under the player (UNDERFOOT).
+//  D5. Every new object is checked from the front, back, both sides, above and at night (clock=0.95).
+//
+// E. LOOK AND FEEL: keep new things in step with the rest
+//  E1. Colour comes through lit() (it applies time of day and fog). Pick colours near the existing palettes: brick,
+//      concrete, asphalt (64-70 grey), sidewalk, grass (90-120 green) and sand (212,194,148). No pure white, black
+//      or saturated primaries, except lights and markings.
+//  E2. Pixel scale: the smallest visible detail is about 2 world units. No smooth gradients on objects (only the
+//      sky, fog and glow()). Night lights use glow() scaled by LIGHTK and switch off by day.
+//  E3. Things are sized like the real thing, relative to a 32 px tile, a car about 52 long and a person about 26 tall.
+//  E4. On-screen text uses showBig() and note(). Overlays use the same panel as COMPLETION and ERROR LOG (#16171b
+//      background, gold border, Pixelify Sans heading).
+//  E5. Sound goes through master (or radioG for the radio) and respects muted. Spoken lines go through talkSay2.
+//
+// F. CODE
+//  F1. Before adding a global, check the name isn't taken. All files share one scope, and a clash stops a whole file
+//      from loading (ISLE, tone, streetT and completion have all clashed). New files go in index.html and in sw.js
+//      ASSETS.
+//  F2. Later files extend earlier ones by wrapping (const f=fn; fn=function(){f(...); ...}). Wrappers check their
+//      own conditions and return what the original returned.
+//  F3. Nothing may stop the frame loop. Errors are caught in frame() and recorded in the error log (ERROR LOG in
+//      the pause menu). Fix anything that turns up there; don't hide it.
+//  F4. Test the way a player plays: let the game's own camera and traffic run, not just a still placed by hand.
+//      Check that what you added actually shows up and survives a minute of play (things can be culled, despawned
+//      or pushed away).
+// =====================================================================================================================
+const VERSION='5.14.3',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -79,14 +162,16 @@ const nearDiag=(x,y,r)=>DIAGS.some(d=>diagDist(d,x,y)<r);
 function diagPix(i,xi,yi,nz,tx,ty){const d=DIAGS[i],[t,sd]=diagRel(d,xi,yi),a=Math.abs(sd),DHW=d.hw||56,DSW=d.sw||84;if(t<-DHW||t>d.L+DHW)return null;
   const grid=MXT[tx]<4||MXT[ty]<4;
   // where the avenue crosses a street, the street's own asphalt shows: no avenue sidewalk painted across it
-  if(grid&&a>=DHW)return null;
+  // and where it meets a street at all, the street draws itself: the diagonal's own asphalt and paint stop at its edge
+  if(grid)return null;
   if(a<DHW){let r=43+nz,g=44+nz,b=47+nz;
     if(!grid){const PT2=P*T,ux=xi%PT2,uy=yi%PT2,eg=Math.min(Math.max(0,ux-128),PT2-ux,Math.max(0,uy-128),PT2-uy);
       // a zebra crossing on the avenue where it meets each street, then the usual markings
       // (stripes run with the traffic and alternate across the road, like the crossings on the grid streets)
-      if(eg<14&&eg>6&&a<DHW-6){if((((sd+60)/6)|0)&1){r=206;g=206;b=200;}}
+      if(!d.side&&eg<14&&eg>6&&a<DHW-6){if((((sd+60)/6)|0)&1){r=206;g=206;b=200;}}
       else if(eg<=4){}
-      else if(a<2.4&&a>0.6){r=168;g=137;b=58;}else if(!d.side&&Math.abs(a-28)<1&&(((t/18)|0)&1)){r=200;g=200;b=194;}else if(a>DHW-3){r=85;g=87;b=92;}}
+      // centre line: wide enough to stay a clean line at an angle (a thin band broke into a chain of dots); avenues get a double line
+      else if(d.side?a<1.9:(a>1.1&&a<3.6)){r=168;g=137;b=58;}else if(!d.side&&Math.abs(a-28)<1&&(((t/18)|0)&1)){r=200;g=200;b=194;}else if(a>DHW-3){r=85;g=87;b=92;}}
     return[r,g,b];}
   // the avenue's sidewalks use the same paving as the neighbourhood's own sidewalks, and run on over the bits of
   // block the avenue cut into road (so there are no jagged asphalt slivers beside it)

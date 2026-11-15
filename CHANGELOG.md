@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.14.3
+- Crooked side streets and avenues stop at the edge of the street they meet, and the street draws its own surface, lines and crossings there (the diagonal's road and paint used to run on into the other road). Their centre lines are wide enough to stay a clean line at an angle (they broke up into a chain of dots), and side streets lose the stray zebra stripes.
+- The beltway and its spurs are graded like real roads: no steeper than about 1 in 8, with each spur an even climb from the street to the beltway (some were steep ramps).
+- The windward coast moved so Kane'ohe Bay sits between the farm roads: the far jumps on the farm roads land on open fields, not in the bay or the sea.
+- Street traffic that runs wide onto grass is put back on its lane sooner.
+- DESIGN RULES at the top of js/01-core-map.js: what every addition must follow (road paint and junctions, roads that go somewhere and carry traffic, the world, opaque objects, look and feel, code), each from a bug it caused. tests/design_check.py checks the ones a script can: dead-end streets, diagonals painting over streets, road grades, open jump landings, traffic on and off its roads, and errors.
+
 ## v5.14.2
 - Traffic out in the countryside follows the roads: besides the beltway and its spurs, pickups and trucks drive the dirt farm roads east of town, keep to their side, turn round at the far end, sometimes turn onto the north-south farm lane, and head back into the city along the streets. City traffic at the three east street ends sometimes heads out to the farms.
 - ERROR LOG in the pause menu (just above QUIT TO TITLE; it shows how many problems were recorded). Every error the game hits is kept with the version, time, where you were and what was going on (mission, wanted level, car, rampage, room), and survives reloads. COPY or DOWNLOAD .TXT to send it on; CLEAR to empty it.
