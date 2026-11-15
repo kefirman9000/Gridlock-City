@@ -61,6 +61,7 @@ CHECKS = {
     'the cathedral is placed': """()=>(!!CATH)||'no cathedral'""",
     'floaty car jump hangs in the air': """()=>{OPT.floaty=true;const r=RAMPS.find(r=>r.h>8);if(!r)return true;const ca=Math.cos(r.a),sa=Math.sin(r.a);
         const c=makeCar('sports',r.x-ca*(r.hl+120),r.y-sa*(r.hl+120),r.a);player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;c.vx=ca*520;c.vy=sa*520;
+        for(let i=cars.length-1;i>=0;i--)if(cars[i]!==c&&hyp(cars[i].x-r.x,cars[i].y-r.y)<r.hl+260)cars.splice(i,1);peds.length=0; // nothing in the run-up
         keys.KeyW=true;let air=0;for(let i=0;i<60*4;i++){update(1/60);if(c.air>0)air=Math.max(air,c.airT);}keys.KeyW=false;c.vx=c.vy=0;exitCar(true);return air>0.6||('air '+air.toFixed(2))}""",
     'cars splash through a pond': """()=>{let pt=null;for(let ty=0;ty<W&&!pt;ty++)for(let tx=0;tx<W;tx++)if(shallowTile(tx,ty)){pt={x:(tx+.5)*T,y:(ty+.5)*T};break;}if(!pt)return true;
         const c=makeCar('sedan',pt.x,pt.y,0);c.vx=200;for(let i=0;i<10;i++)update(1/60);const ok=shallowAt(c.x,c.y)||hyp(c.x-pt.x,c.y-pt.y)>15;cars.splice(cars.indexOf(c),1);return ok||'pond blocked the car'}""",

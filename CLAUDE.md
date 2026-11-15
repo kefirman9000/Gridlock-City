@@ -32,6 +32,7 @@ To test climbing, set keys (`keys.KeyW=true`) and step the game with `update(1/6
 Run `python3 tests/smoke.py` (it loads the game headless and checks the core systems). For visuals, load `index.html` in headless Chrome (Playwright), call `newGame()`, then for a still shot set `game.paused=true`,
 place the camera (`cam.x/cam.y/cam.yaw/cam.h`, `cam.gz=GH(cam.x,cam.y)`, `setCam()`) and screenshot. Look at new
 vehicles and props from the front, back, both sides, from above, and at night (`clock=0.95`; noon is `clock=0.5`).
+`tests/shots.py [count] [seed]` takes random shots around the city (any time of day, on foot or driving) into /tmp/shots for a glitch sweep.
 The city seed is random per browser profile, so place things relative to `hospitalSpawn` or a block index.
 
 ## City generation

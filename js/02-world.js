@@ -523,7 +523,11 @@ function busted(){if(game.state!=='play')return;game.state='busted';game.timer=D
 // ================= MESSAGES =================
 let big=null;const ticker=[];
 function showBig(text,sub,col,dur){big={text,sub,col,t:dur||2.5,max:dur||2.5}}
-function note(text){const old=ticker.find(q=>q.text===text);if(old){old.t=4;return;}ticker.push({text,t:4});if(ticker.length>4)ticker.shift()}
+// on-screen notes: a note that keeps getting re-sent (a hint fired every frame, the heli warning) shows for at most 8 s,
+// then rests for 15 s (only notes that were re-sent like that; a one-off note can repeat straight away) before it can come back, so the same lines don't sit over the car for minutes
+const NOTEREST=new Map();
+function note(text){const now=game.t||0,old=ticker.find(q=>q.text===text);if(old){old.hits=(old.hits||0)+1;if(now-old.born<8)old.t=Math.max(old.t,Math.min(4,8-(now-old.born)+0.6));return;}
+  if((NOTEREST.get(text)||-1e9)>now)return;ticker.push({text,t:4,born:now});NOTEREST.set(text,now+0.1);if(ticker.length>4)ticker.shift();}
 
 // ================= PICKUPS / PHONES / MISSIONS =================
 const pickups=[];

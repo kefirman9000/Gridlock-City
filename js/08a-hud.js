@@ -167,10 +167,20 @@ function drawHUD(){
     if(zoneBanner&&!big){ctx.globalAlpha=Math.min(1,zoneBanner.t*1.5);if(!touchMode)hudText(zoneBanner.sub,bx,by+24*sc,Math.round(13*sc),'#ddd',al,`600 ${Math.round(13*sc)}px system-ui`);
       bigTextAl(zoneBanner.text,bx,by,Math.round(26*sc),zoneBanner.col==='#ffe9a8'?'#a9c8ff':zoneBanner.col,al);if(touchMode)hudText(zoneBanner.sub,bx,by+24*sc,Math.round(13*sc),'#ddd',al,`600 ${Math.round(13*sc)}px system-ui`);ctx.globalAlpha=1;by+=touchMode?50*sc:-38*sc;}
     if(carBanner&&!big){const age=game.t-carBanner.at;if(age>3)carBanner=null;else{ctx.globalAlpha=clamp(Math.min(age*4,(3-age)*1.5),0,1);bigTextAl(carBanner.text,bx,by,Math.round(28*sc),'#8fe08a',al);ctx.globalAlpha=1;}}}
-  if(radioBanner&&player.car){ctx.globalAlpha=Math.min(1,radioBanner.t*1.5);const rx=touchMode?VW/2:(16*sc+msz+16*sc),ry=touchMode?VH*0.3:VH-34*sc,al=touchMode?'center':'left';hudText('📻 '+radioBanner.text+(radioBanner.sub?'  ·  '+radioBanner.sub:''),rx,ry,Math.round(14*sc),'#9fe0ff',al,`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ctx.globalAlpha=1;}
+  // the radio: station name, then what's on, wrapped to fit beside the minimap (long DJ lines and ads used to run off the screen)
+  let radH=0;
+  if(radioBanner&&player.car){ctx.globalAlpha=Math.min(1,radioBanner.t*1.5);const rx=touchMode?VW/2:(16*sc+msz+16*sc),al=touchMode?'center':'left',fs=Math.round(14*sc),fnt=`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`;
+    const maxW=touchMode?VW*0.86:Math.max(200*sc,VW-rx-230*sc);ctx.font=fnt;const lines=[];
+    if(radioBanner.sub){let cur='';for(const w of String(radioBanner.sub).split(' ')){const t=cur?cur+' '+w:w;if(cur&&ctx.measureText(t).width>maxW){lines.push(cur);cur=w;}else cur=t;}if(cur)lines.push(cur);}
+    if(lines.length>4){lines.length=4;lines[3]+='…';}
+    const lh=19*sc;let ry=touchMode?VH*0.3:VH-34*sc-(lines.length)*lh;
+    hudText('📻 '+radioBanner.text,rx,ry,fs,'#9fe0ff',al,fnt);
+    for(const l of lines){ry+=lh;hudText(l,rx,ry,fs,'#d8f2ff',al,`${Math.round(14*sc)}px 'Archivo Black',Arial,sans-serif`);}
+    radH=(lines.length+1)*lh;ctx.globalAlpha=1;}
   // ticker
   let ty=touchMode?VH*0.62:VH-40*sc;
   if(game.t<12&&game.state==='play'&&!touchMode)ty=VH-108*sc; // keep clear of the controls hint
+  if(radH&&!touchMode)ty=Math.min(ty,VH-34*sc-radH-8*sc); // and of the radio text
   for(let i=ticker.length-1;i>=0;i--){const t=ticker[i];ctx.globalAlpha=Math.min(1,t.t);hudText(t.text,VW/2,ty,Math.round(14*sc),'#fff','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ty-=22*sc;}
   ctx.globalAlpha=1;
   // big message

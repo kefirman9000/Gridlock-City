@@ -384,7 +384,7 @@ function update(dt){
   for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.type==='smoke'){p.vx*=0.97;p.vy*=0.97;p.size+=dt*10}else if(p.type==='debris'||p.type==='spark'){p.vx*=0.92;p.vy*=0.92}else if(p.type==='fire'){p.vx*=0.93;p.vy*=0.93}}
   parts=parts.filter(p=>p.life>0);
   if(big){big.t-=dt;if(big.t<=0)big=null;}
-  for(const t of ticker)t.t-=dt;while(ticker.length&&ticker[0].t<=0)ticker.shift();
+  for(const t of ticker)t.t-=dt;for(let i=ticker.length-1;i>=0;i--)if(ticker[i].t<=0){if(ticker[i].hits>3)NOTEREST.set(ticker[i].text,game.t+15);ticker.splice(i,1);}
   if(moneyPop){moneyPop.t-=dt;if(moneyPop.t<=0)moneyPop=null;}
   shake=Math.max(0,shake-dt*30);
 

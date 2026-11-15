@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.4.1
+- **Wilder radio.** Chatter 96.1 has been rewritten with more outlandish calls (a hitman opening a bakery, a man who lives in the claw machine, the Reverend with a baseball bat, Dr. Fennick the occasional surgeon), the DJs are ruder and stranger, and there are more ads. Each line now stays on air for as long as it takes to say.
+- **Graphics fixes from a screenshot sweep:** the radio text wraps beside the minimap instead of running off the screen and no longer collides with the notes; repeated notes (the heli warning, job hints) fade out instead of sitting over your car for minutes; the police helicopter's searchlight is a cone with a pool of light around you instead of a hard line across the screen; tyre and exhaust smoke is drawn as small clouds instead of pale boxes.
+
 ## v5.4.0
 - **Live radio.** Every station keeps running while you're away: it starts at a random point and when you tune back in you pick up wherever it has got to. Songs have names, the music stations have spoken DJ breaks (SKIDS on KRUD, LUCINDA on NEON, LOW TIDE on BASSLINE) and ad breaks, and the talk station has a much longer show with Marty Vance and his callers, all read out loud.
 - **Four new jobs:** Vince's *Top Floor* (garage roof), Dex's *Pier Pressure* and *Container Job* (pier and docks), Lin's *Sanctuary* (cathedral).

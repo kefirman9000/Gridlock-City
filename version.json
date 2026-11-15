@@ -1,4 +1,4 @@
 {
-  "version": "5.4.0",
-  "notes": "Live radio: every station keeps its own clock, so you tune in mid-song like real radio; named songs, spoken DJ breaks, ads and a much longer talk show. Four new jobs at the garage roof, pier, docks and cathedral. Heavier landings, parked cars sleep for speed, a notice for saves from an older layout."
+  "version": "5.4.1",
+  "notes": "Wilder radio: Chatter 96.1, the DJs and the ads are rewritten to be louder, ruder and stranger, with lines timed to their length. Graphics fixes: the radio text wraps instead of running off screen, notes no longer pile up over the car, the police searchlight is a proper cone with a pool of light, smoke puffs are little clouds instead of pale boxes."
 }
