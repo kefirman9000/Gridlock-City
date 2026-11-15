@@ -517,7 +517,7 @@ function drawBigMap(sc){const G=bigMapGeom(),s=G.s,ox=G.ox,oy=G.oy,k=G.k,k_=k;
 // ---------- mobile: dynamic resolution, background pause, keep the screen awake ----------
 let frameAvg=16,dynT=0,DYN=1;
 function mobileTick(dt){if(!touchMode)return;frameAvg=lerp(frameAvg,dt*1000,0.05);dynT+=dt;
-  if(dynT>3){dynT=0;const old=DYN;if(frameAvg>30&&DYN>0.7)DYN-=0.1;else if(frameAvg<19&&DYN<1)DYN+=0.1;DYN=Math.round(DYN*10)/10;if(DYN!==old)resizeLow();}
+  if(dynT>3){dynT=0;const old=DYN;if(frameAvg>30&&DYN>0.6)DYN-=0.1;else if(frameAvg<19&&DYN<(typeof GFXMAX==='number'?GFXMAX:1))DYN+=0.1;DYN=Math.round(DYN*10)/10;if(DYN!==old)resizeLow();}
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.started&&game.state==='play'){if(!game.paused)togglePause();if(OPT.autosave&&stars()===0)writeSave('auto');hornStop();}});
 let wakeLock=null;async function keepAwake(){try{if(navigator.wakeLock&&!wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}}catch(_){}}

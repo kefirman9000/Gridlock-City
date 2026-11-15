@@ -201,6 +201,7 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   ai.pi=ringNear(P,ai.pi|0,c.x,c.y);const i=ai.pi,dir=ai.dir,last=P.length-1;
   // the end of a road: back into town, or onto the beltway
   if((dir>0&&i>=last-1)||(dir<0&&i<=1)){
+    if(P.tun){const k=cars.indexOf(c);if(k>=0&&c!==player.car)cars.splice(k,1);return;} // the East River Tunnel: cars leave the world at the ends
     if(P.isl){if(dir>0){ai.dir=-1;c.vx*=0.2;c.vy*=0.2;return;}ringJoin(c,0,P.ringI,R()<0.5?1:-1);return;} // Ironwood Island: turn round at the far end, back onto the beltway at the bridge
     if(P.farm){if(P.ns){const r=FARMR[dir>0?2:0];ringJoin(c,r.id,r.jI,R()<0.5?1:-1);return;}
       if(dir>0){ai.dir=-1;c.vx*=0.2;c.vy*=0.2;return;} // the end of the dirt road: turn round

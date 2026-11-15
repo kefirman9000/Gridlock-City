@@ -273,7 +273,7 @@ function update(dt){
   let nTraffic=0;for(const c of cars)if(c.traffic&&c.driver)nTraffic++;
   // v5 rush hour: the streets fill up around 8 am and 5 pm and empty out after midnight
   const hr24=clock*24,bump=(c,w)=>Math.exp(-(((hr24-c)/w)**2)),rush=1+0.38*bump(8.2,1.4)+0.42*bump(17.3,1.6)-0.42*(hr24<5||hr24>23.5?1:hr24<6.5?(6.5-hr24)/1.5:0);
-  const wantTraffic=Math.round(clamp(viewR/30,18,34)*rush);
+  const wantTraffic=Math.round(clamp(viewR/30,18,34)*rush*(typeof GFXC==='number'?GFXC:1));
   if(nTraffic<wantTraffic)spawnTraffic(false,false);
   const despR=viewR+800;
   cars=cars.filter(c=>{
@@ -285,7 +285,7 @@ function update(dt){
     if((c.traffic||(c.special&&!(c.ai&&c.ai.mode==='chase')))&&d2>despR*despR&&!(mission&&mission.car===c))return false;
     return true;
   });
-  const busy=districtAt(player.x,player.y)==='TIMES SQUARE'?1.7:zoneOf(player.x,player.y)===-1?1.35:1,outC=player.x<0||player.y<0||player.x>WPX||player.y>WPX,wantPeds=Math.round(clamp(viewR/15,36,64)*busy*(outC?0.35:1)*(clock>0.96||clock<0.24?0.6:1));
+  const busy=districtAt(player.x,player.y)==='TIMES SQUARE'?1.7:zoneOf(player.x,player.y)===-1?1.35:1,outC=player.x<0||player.y<0||player.x>WPX||player.y>WPX,wantPeds=Math.round((typeof GFXC==='number'?GFXC:1)*clamp(viewR/15,36,64)*busy*(outC?0.35:1)*(clock>0.96||clock<0.24?0.6:1));
   let nPeds=0;for(const p of peds)if(!p.gone)nPeds++;
   if(nPeds<wantPeds){spawnPed();spawnPed();}
   peds=peds.filter(p=>!p.gone&&(p.target||dist2(p.x,p.y,player.x,player.y)<(viewR+600)**2));

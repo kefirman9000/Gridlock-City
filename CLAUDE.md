@@ -68,6 +68,9 @@ v5.24 (end of 08g): a `carAir` wrapper launches cars off crests (`c._zg`/`c._vg`
 map south of the rooms (a 0.38-scale copy of the station layout, one `ROOMLIST` rect, `roomTile` wrapped, rock `HMAP` 90 round the tunnels); trains `MTR`
 are drawn through a `forCells` wrapper; `SUBRIDE` is set while you ride (the player is hidden; `update` is wrapped for boarding, riding, the ride camera
 and train strikes; `updateSubway` is replaced so entrances lead to the platforms).
+v5.27 (also 08h): the East River Tunnel (`ETUN`: portal pads at street row 12 on each riverside, the tube is an off-map `ROOMLIST` room `etun` with a `tun:true`
+RING path; `etunTick` moves you between them). Cars tilt with the ground (`c.tp`/`c.tr` from `slopeTick`; `ROL` is the roll in `oboxP`). Graphics presets
+`OPT.gfx` (`gfxMode`, `gfxApply`, `gfxInit` called at the end of 09): touch devices default to FAST and get a warm-up screen in a `beginPlay` wrapper.
 
 ## The island (v5.11)
 The terrain grid reaches `HM` (6400 since v5.26; was 2600) beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

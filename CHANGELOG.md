@@ -2,6 +2,12 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.27.0
+- ETUN (08h): portal pads on the river edge at street row 12 (map tiles re-set to ROAD, HMAP levelled, `tportal` prop); the tube is an off-map ROOMLIST room (`etun`, roomTile wrapped) south of the subway with a `tun:true` RING path (cars are removed at its ends in aiRing). `etunTick` (chained on g3Tick) moves the player/car between portals and the tube; closed until cityOpen(); districtAt and extrasMap wrapped.
+- Car slope tilt: `slopeTick` (08h) sets c.tp/c.tr from GH under the wheels for cars within 900 px of the player; 08v adds c.tp to PIT and sets ROL (new, roll about the long axis in oboxP).
+- Graphics presets: OPT.gfx fast/balanced/best (gfxMode/gfxApply/gfxInit in 08h, called at the end of 09); GFXD scales FOG1, GFXC the traffic/ped targets, GFXMAX caps DYN; FAST/BALANCED drop REFL, FAST drops SUNSH. Touch devices default to FAST and get a ~2.5 s warm-up overlay in a beginPlay wrapper. DYN can now go down to 0.6.
+- SWAT van details (08v); Ironwood bridge arch 22 -> 12, approaches 1400/700 px, island path graded to 0.11.
+
 ## v5.26.0
 - HM 2600 -> 6400 (terrain reaches further; load ~2.5 s). COAST.pts reshaped (south-west coves, east coast and Diamond Head kept); COAST.isl2 is Ironwood Island (ISL2M marks its cells, ISL2C its centre; its terrain is set in the coast pass).
 - ringRoad: RING.isl (the bridge + island road, `isl:true`, joins the beltway at `ringI`; `q.br` points are the deck, cells beside them stay water) and RING.br2 (bridge span). aiRing turns round at its far end; beltway cars sometimes take it. Graded to slope 0.11.

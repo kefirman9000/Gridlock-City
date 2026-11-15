@@ -212,3 +212,86 @@ let mPedT=0;function metroPedTick(dt){mPedT-=dt;if(mPedT>0)return;mPedT=2;metroP
 {const f=extrasHUD;extrasHUD=function(sc){f(sc);if(metroAt(player.x,player.y)&&!SUBRIDE){let best=1e9;for(const tr of MTR){const st=METRO.st.find(s=>hyp(player.x-s.px,player.y-s.py)<260);if(!st)break;
     const d=tr.dwell>0&&METRO.st[tr.next]===st?0:mwrap(mStopS(st)-tr.s);best=Math.min(best,d===0?0:d/MVMAX+3);}
   if(best<1e8)hudText(best===0?'TRAIN IN THE STATION · step in':'NEXT TRAIN  '+Math.ceil(best)+' s',VW/2,(touchMode?96:70)*sc,Math.round(14*sc),'#7dff8a','center');}};}
+
+// ---------- v5.27 cars sit on the slope: pitch along the hill and roll across it, from the ground under the wheels ----------
+// (c.tp and c.tr are added at draw time in 08v; ramps and jumps keep their own c.pitch)
+function slopeTick(dt){const k=Math.min(1,dt*8);for(const c of cars){if(c.t.heli||c.t.boat||c.t.plane||c.wreck&&c.wreckT>3){c.tp=c.tr=0;continue;}
+  const dx=c.x-player.x,dy=c.y-player.y;if(dx*dx+dy*dy>900*900){c.tp=c.tr=0;continue;}
+  if(c.air>0||(c.garage)){c.tp=lerp(c.tp||0,0,k);c.tr=lerp(c.tr||0,0,k);continue;}
+  const ca=Math.cos(c.a),sa=Math.sin(c.a),hl=c.t.L*0.42,hw=c.t.Wd*0.45;
+  const f=GH(c.x+ca*hl,c.y+sa*hl),b=GH(c.x-ca*hl,c.y-sa*hl),r=GH(c.x-sa*hw,c.y+ca*hw),l=GH(c.x+sa*hw,c.y-ca*hw);
+  const tp=clamp(Math.atan2(f-b,2*hl),-0.5,0.5),tr=clamp(Math.atan2(r-l,2*hw),-0.4,0.4);
+  c.tp=lerp(c.tp||0,tp,k);c.tr=lerp(c.tr||0,tr,k);}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);slopeTick(dt);};}
+
+// ---------- v5.27 graphics presets and a warm-up on phones ----------
+// FAST (the default on touch devices until you pick one): internal resolution capped at 0.8, 22% shorter view, no sun shadows or wet-road
+// reflections, 20% fewer people and cars, no PS2 trails. BALANCED: resolution 0.9, view 0.9, shadows on, no reflections. BEST: everything.
+// GFXD scales the fog distance (08-render), GFXC the crowd targets (07), GFXMAX caps the dynamic resolution (05).
+var GFXD=1,GFXC=1,GFXMAX=1;
+function gfxMode(){return OPT.gfx||(touchMode||(()=>{try{return matchMedia('(pointer:coarse)').matches}catch(_){return false}})()?'fast':'best');}
+function gfxApply(){const m=gfxMode();GFXD=m==='fast'?0.78:m==='balanced'?0.9:1;GFXC=m==='fast'?0.8:m==='balanced'?0.9:1;GFXMAX=m==='fast'?0.8:m==='balanced'?0.9:1;
+  if(DYN>GFXMAX){DYN=GFXMAX;resizeLow();}if(m==='fast'&&OPT.ps2==null)OPT.ps2=false;}
+// OPT and beginPlay live in 09-menu.js, which loads after this file: it calls gfxInit() at its end
+function gfxInit(){gfxApply();
+{const lp=lookPrep;lookPrep=function(){lp();const m=gfxMode();if(m!=='best')REFL.length=0;if(m==='fast')SUNSH.on=false;};}
+// the first seconds on a phone used to stutter while everything was built for the first time (the item grid, shadows, traffic, the first
+// frames' code paths). On touch devices the game now starts behind a short "getting ready" screen that runs those first frames unseen.
+{const bp=beginPlay;beginPlay=function(){const first=!game.started;bp();gfxApply();if(!first||!touchMode)return;
+  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:70;background:#0d0f14;color:#ffd600;display:flex;align-items:center;justify-content:center;font:20px "Black Ops One",system-ui,sans-serif;letter-spacing:1px';
+  ov.textContent='GETTING THE STREETS READY…';document.body.appendChild(ov);const wasP=game.paused;game.paused=true;let n=0;const t0=performance.now();
+  const step=()=>{try{for(let k=0;k<2;k++)update(1/30);render();}catch(_){}n++;if(n<40&&performance.now()-t0<2600){requestAnimationFrame(step);return;}
+    game.paused=wasP;ov.style.transition='opacity .35s';ov.style.opacity='0';setTimeout(()=>ov.remove(),400);};requestAnimationFrame(step);};}}
+
+// ================= v5.27 THE EAST RIVER TUNNEL: a road tunnel under the river, Holland Tunnel style =================
+// Two portals sit out on the river's edge where an east-west street meets each riverside drive (row ETUN.iy): drive into one and you're
+// in the tube, a real stretch of road (off the map like the subway, with tiled walls, lights and traffic both ways); drive out the far end
+// and you come out of the other portal heading on along the same street. Closed until the bridges open. The cops lose you inside.
+const ETUN=(()=>{const iy=12,ty=iy*P,TX0=-1500,TX1=1680,TY=11100;
+  const W0={x0:88,x1:91},E0={x0:108,x1:111};
+  // the pads: the river's edge turns into a concrete apron at street level, walled at the sides
+  for(const p of[W0,E0]){const gx=p===W0?RIVX0*T-40:RIVX1*T+40,gh=GH(gx,(ty+2)*T);
+    for(let y=ty-1;y<=ty+4;y++)for(let x=p.x0;x<=p.x1;x++){const ti=y*W+x;map[ti]=(y===ty-1||y===ty+4)?BLD:ROAD;RIV[ti]=0;PARKT[ti]=0;}
+    for(let yy=(ty-1)*T-16;yy<=(ty+5)*T+16;yy+=HS)for(let xx=p.x0*T-16;xx<=(p.x1+1)*T+16;xx+=HS){const k=tcell(xx,yy);HMAP[k]=gh;TTYPE[k]=0;}
+    for(const arr of[props,trees]){const keep=arr.filter(o=>!(o.x>p.x0*T-20&&o.x<(p.x1+1)*T+20&&o.y>(ty-1)*T-20&&o.y<(ty+5)*T+20));arr.length=0;arr.push(...keep);}
+    p.gh=gh;p.cx=(p.x0+p.x1+1)/2*T;p.cy=(ty+2)*T;props.push({x:p===W0?(p.x1+0.5)*T:(p.x0+0.5)*T,y:p.cy,k:'tportal',a:p===W0?0:PI,rad:110,ht:70});}
+  // the tube
+  const tw=3,G0={tx0:Math.floor(TX0/T)-1,ty0:Math.floor(TY/T)-3,w:Math.ceil((TX1-TX0)/T)+3,h:7};
+  return{iy,ty,W0,E0,TX0,TX1,TY,G0,r:null};})();
+{const rt=roomTile;roomTile=function(tx,ty){const G=ETUN.G0,i=tx-G.tx0,j=ty-G.ty0;if(i>=0&&j>=0&&i<G.w&&j<G.h)return(j>=2&&j<=4&&i>=1&&i<G.w-1)?WALK:BLD;return rt(tx,ty);};}
+(function tubeBuild(){const E=ETUN,G=E.G0,x0=G.tx0*T,y0=G.ty0*T,x1=(G.tx0+G.w)*T,y1=(G.ty0+G.h)*T;
+  for(let y=y0-320;y<=y1+320;y+=HS)for(let x=x0-320;x<=x1+320;x+=HS){const k=tcell(x,y),j=Math.floor(y/T)-G.ty0,i=Math.floor(x/T)-G.tx0,road=j>=2&&j<=4&&i>=1&&i<G.w-1;
+    HMAP[k]=road?0:80;SHMAP[k]=1;TTYPE[k]=0;const h=hash(i*3+1,j*7+2)&7;TCOL[k]=road?packC(58+h,58+h,62+h):(((i+j)&1)?packC(214,212,200):packC(200,198,186));}
+  const P2=[];for(let x=E.TX0+40;x<E.TX1-40;x+=64){P2.push({x,y:E.TY,k:'tline',a:0,hl:16,rad:20,ht:1});for(const s of[-1,1])P2.push({x:x+32,y:E.TY+s*44,k:'mlamp',a:0,rad:8,ht:54});}
+  const r={id:'etun',name:'EAST RIVER TUNNEL',x0,y0,x1,y1,tx0:G.tx0,ty0:G.ty0,tx1:G.tx0+G.w,ty1:G.ty0+G.h,cx:(x0+x1)/2,cy:(y0+y1)/2,floor:[58,58,62],wall:[214,212,200],props:P2};
+  ROOMLIST.push(r);E.r=r;
+  // traffic through the tube both ways (a ring-road path; cars leave the world at either end)
+  const pts=[];for(let x=E.TX0+30;x<=E.TX1-30;x+=24)pts.push({x,y:E.TY,s:x-E.TX0-30,ux:1,uy:0,h:0});pts.tun=true;pts.lo=22;RING.paths.push(pts);E.pid=RING.paths.length-1;})();
+{const f=placesProp;placesProp=function(o,fg){switch(o.k){
+  case 'tportal':{const ca=Math.cos(o.a),sa=Math.sin(o.a);
+    // side walls, a deep concrete hood over the mouth, the dark tube, and the name across the front
+    for(const s of[-1,1])obox(o.x-sa*s*82,o.y+ca*s*82,o.a,64,10,0,40,[176,170,156],[190,184,170],fg);
+    obox(o.x+ca*30,o.y+sa*30,o.a,34,92,40,58,[176,170,156],[190,184,170],fg);
+    obox(o.x+ca*62,o.y+sa*62,o.a,2,70,0,40,[18,18,20],null,fg);
+    sign3(o.x-ca*4,o.y-sa*4,52,'EAST RIVER TUNNEL','#2a2a2a','#ffd23a',8,fg);return;}
+  case 'tline':{obox(o.x,o.y-1.5,0,o.hl,0.9,0,0.4,[230,190,40],null,fg);obox(o.x,o.y+1.5,0,o.hl,0.9,0,0.4,[230,190,40],null,fg);return;}
+  }f(o,fg);};}
+// through the portals and out the far end
+let etCool=0;
+function etunTick(dt){etCool-=dt;const E=ETUN,o=player.car||player,inCar=!!player.car;if(game.state!=='play'||player.riding||SUBRIDE)return;
+  const ty=E.ty,sp=inCar?hyp(o.vx,o.vy):0,hd=inCar?o.a:player.body,ex=Math.cos(hd),put=(x,y,a)=>{const v=inCar?Math.max(sp,60):0;o.x=x;o.y=y;if(inCar){o.a=a;o.vx=Math.cos(a)*v;o.vy=Math.sin(a)*v;o.va=0;o.air=0;o.az=0;o.vz=0;o._za=null;o._zg=null;o._vg=0;o.pitch=0;player.x=x;player.y=y;}else{player.a=player.body=a;}fadeIn=1;cam.gz=null;cam.base=cam.yaw=a;etCool=1.2;};
+  if(etCool>0)return;
+  const inPad=(p)=>o.y>ty*T&&o.y<(ty+4)*T&&o.x>p.x0*T&&o.x<(p.x1+1)*T;
+  if(inPad(E.W0)&&o.x>(E.W0.x0+1.6)*T&&ex>0.3){if(!cityOpen()){note('The tunnel is closed until the bridges open');o.vx=-Math.abs(o.vx||0)*0.3;if(!inCar)player.x-=20;etCool=1;return;}
+    put(E.TX0+90,E.TY+22,0);showBig('EAST RIVER TUNNEL','','#ffd23a',1.4);if(stars()>0){seenT=99;}return;}
+  if(inPad(E.E0)&&o.x<(E.E0.x1-0.6)*T&&ex<-0.3){if(!cityOpen()){note('The tunnel is closed until the bridges open');o.vx=Math.abs(o.vx||0)*0.3;if(!inCar)player.x+=20;etCool=1;return;}
+    put(E.TX1-90,E.TY-22,PI);showBig('EAST RIVER TUNNEL','','#ffd23a',1.4);if(stars()>0){seenT=99;}return;}
+  if(Math.abs(o.y-E.TY)<80&&o.x>E.TX0-60&&o.x<E.TX1+60){
+    if(o.x>E.TX1-50&&ex>0)put((E.E0.x1+0.2)*T,(ty+3)*T,0);
+    else if(o.x<E.TX0+50&&ex<0)put((E.W0.x0-0.2)*T,(ty+1)*T,PI);
+    // a few cars in the tube, both ways
+    etunTick.t=(etunTick.t||0)-dt;if(etunTick.t<=0){etunTick.t=2.2;let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&c.ai.pth===E.pid)n++;
+      if(n<4){const dir=R()<0.5?1:-1,P2=RING.paths[E.pid],i=dir>0?1:P2.length-2,q=P2[i],y=q.y+dir*22;if(Math.abs(q.x-o.x)>500&&!carNear(q.x,y,120)){const c=makeCar(pick(['sedan','taxi','van','sports','pickup'].filter(t=>CT[t])),q.x,y,dir>0?0:PI);if(c){c.traffic=true;c.driver='ai';ringJoin(c,E.pid,i,dir);c.ai.cruise=rr(200,260);c.vx=Math.cos(c.a)*180;c.vy=Math.sin(c.a)*180;}}}}}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);etunTick(dt);};}
+{const f=districtAt;districtAt=function(x,y){if(Math.abs(y-ETUN.TY)<200&&x>ETUN.TX0-100&&x<ETUN.TX1+100)return 'EAST RIVER TUNNEL';return f(x,y);};}
+{const f=extrasMap;extrasMap=function(P2,icon0){const E=ETUN,[a,b]=P2((E.W0.x0)*T,(E.ty+2)*T),[c,d]=P2((E.E0.x1+1)*T,(E.ty+2)*T);ctx.save();ctx.strokeStyle='rgba(255,210,60,.8)';ctx.lineWidth=2.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();ctx.restore();f(P2,icon0);};}

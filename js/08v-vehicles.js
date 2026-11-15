@@ -27,8 +27,8 @@ function drawDents(c,t,hl,hw,ca,sa,fg){const lat=(CX-c.x)*-sa+(CY-c.y)*ca;if(Mat
 function drawCar3(c,fg){
   ZOFF+=c.az||0;
   if(!c.wreck&&!c.t.heli&&!c.t.boat&&c.hp<c.t.hp*0.5)ZOFF-=1.6*(1-c.hp/(c.t.hp*0.5)); // a wrecked suspension sits low
-  const t=c.t,hl=t.L/2,hw=t.Wd/2,a=c.a;PIT=Math.abs(c.pitch||0)>0.004?c.pitch:0;PVX=c.x;PVY=c.y;PCA=Math.cos(a);PSA=Math.sin(a);
-  try{drawCarBody(c,fg,t,hl,hw,a);}finally{PIT=0;}
+  const t=c.t,hl=t.L/2,hw=t.Wd/2,a=c.a;{const pp=(c.pitch||0)+(c.air>0?0:(c.tp||0));PIT=Math.abs(pp)>0.004?pp:0;ROL=c.air>0?0:(Math.abs(c.tr||0)>0.004?c.tr:0);}PVX=c.x;PVY=c.y;PCA=Math.cos(a);PSA=Math.sin(a);
+  try{drawCarBody(c,fg,t,hl,hw,a);}finally{PIT=0;ROL=0;}
 }
 function drawBoat3(c,fg,t,hl,hw,a){const ca=Math.cos(a),sa=Math.sin(a),col=rgbOf(c.col),cop=t.police;
   obox(c.x-ca*4,c.y-sa*4,a,hl-6,hw,0,5,[230,230,226],[200,200,196],fg);
@@ -118,8 +118,17 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     if(!c.wreck){const on=(job&&job.kind==='amb'&&c===player.car)||c.ai&&c.ai.cruise>260,ph=Math.floor(game.t*8)%2;
       obox(c.x+ca*hl*0.55,c.y+sa*hl*0.55,a,2.5,hw*0.8,20,22.5,on&&ph?[255,40,40]:[150,30,30],null,fg);if(on&&proj(c.x+ca*hl*0.55,c.y+sa*hl*0.55,23))glow(PX,PY,4*PK,'#ff2020',ph?0.9:0.3);}
   }else if(t.swat){
-    fv=obox(c.x,c.y,a,hl,hw,4,28,col,null,fg);
-    if((CX-c.x)*ca+(CY-c.y)*sa>hl*0.75)obox(c.x+ca*hl*0.9,c.y+sa*hl*0.9,a,hl*0.11,hw*0.88,16,25,GLASS,null,fg);
+    fv=obox(c.x,c.y,a,hl,hw,4,28,col,mixA(col,[255,255,255],0.08),fg);
+    const fw2=(CX-c.x)*ca+(CY-c.y)*sa,lt2=(CX-c.x)*-sa+(CY-c.y)*ca,sd2=lt2>0?1:-1;
+    if(fw2>hl*0.75)obox(c.x+ca*hl*0.9,c.y+sa*hl*0.9,a,hl*0.11,hw*0.88,16,25,GLASS,null,fg);
+    // v5.27: the SWAT van's sides and back (it was a plain black box from behind): a white band and side windows, two rear doors with
+    // windows, a bumper and tail lights, and a light bar on the roof. Each is a thin box just proud of the face the camera can see.
+    if(!c.wreck){const S=(f,l,bl,bw,z0,z1,cc,em)=>obox(c.x+ca*f-sa*l,c.y+sa*f+ca*l,a,bl,bw,z0,z1,cc,null,fg,null,null,em);
+      if(Math.abs(lt2)>hw){NOTOP=true;S(0,sd2*(hw+0.15),hl*0.96,0.12,12,14,[226,226,220]);S(hl*0.42,sd2*(hw+0.15),hl*0.34,0.12,17,24,GLASS);NOTOP=false;}
+      if(fw2<-hl*0.75){NOTOP=true;const lc=c.brk?[255,60,50]:[190,30,28];
+        for(const s2 of[-1,1]){S(-(hl+0.15),s2*hw*0.48,0.12,hw*0.44,6,26,mixA(col,[255,255,255],0.1));S(-(hl+0.3),s2*hw*0.48,0.12,hw*0.3,17,23,GLASS);S(-(hl+0.3),s2*hw*0.86,0.12,hw*0.1,9,13,lc,true);}
+        S(-(hl+0.3),0,0.12,0.5,6,26,[16,16,18]);S(-(hl+1.2),0,1,hw,4,7.5,[44,44,48]);NOTOP=false;}
+      S(hl*0.55,0,2.2,hw*0.62,28,30.5,[34,34,38]);}
   }else{
     const ty=c.type,low=ty==='sports'||ty==='roadster',bz=low?10.5:ty==='compact'?13.5:13,cz=low?17:ty==='compact'?22.5:ty==='limo'?20:21;
     fv=obox(c.x,c.y,a,hl,hw,4,bz,col,null,fg);

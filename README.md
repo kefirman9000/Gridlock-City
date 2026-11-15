@@ -31,14 +31,17 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.27
+- **The East River Tunnel**: a road tunnel under the river, Holland Tunnel style. The portals are on the riverside on both banks; drive in and you're in a long tiled tube with lights and traffic both ways, and you come out the far side heading on along the same street. It opens with the bridges, and the cops lose sight of you inside.
+- **Cars sit on the hills**: they now tilt with the slope, nose up or down a hill and leaning on a camber, instead of floating level.
+- **Phones**: a new Graphics option (FAST / BALANCED / BEST). Phones start on FAST (lower resolution, a shorter view, no sun shadows or wet reflections, a few less people and cars); change it in Options. The game now warms up behind a short "getting the streets ready" screen on phones, so the first seconds don't stutter.
+- The SWAT van has proper sides and a back (doors, windows, tail lights, light bar). The Ironwood Bridge approach is gentler and its hump lower.
+
 ## What's new in v5.26
 - **A bigger, natural-shaped island**: the coast now has a south-west peninsula, a bulging west coast, a north-west cape, a ragged north shore with a bay and a north-east cape, instead of a rounded square round the city.
 - **Ironwood Island and the Ironwood Bridge**: a new island out east, reached by a red suspension bridge from the beltway (follow the IRONWOOD ISLAND exit). It has a road almost all the way round, Port Ironwood's houses and shops by the bridge, farms on its eastern slopes, a forested peak and a lighthouse on its northern point. Traffic drives over and round it.
 - **A real subway**: walk down any SUBWAY entrance to that station's platform. Trains run the Loop line all the time and stop at every station with their doors open: step in, ride (the camera follows the train; V for the driver's view), press F at a stop to get off, and take the stairs at the end of the platform back up. $5 a ride. Stay off the tracks. The line is drawn on the big map with the trains on it.
 - Fixes: no rain or snow underground or indoors; the sea south of the city is as deep on the map as everywhere else.
-
-## What's new in v5.25
-- **Glitch sweep**: motorbikes look like bikes from behind (the rider leans forward with his legs out, and there's a tail light, fender, seat and bars) instead of a person standing on the road; the fire truck has its own shape with a ladder, light bar and lockers; the ice cream van, taco truck and box trucks have proper backs (doors, windows, bumper, lights), and the ice cream van a stripe, a serving hatch and a cone on the roof; the bottom messages no longer overlap the controls hint when the radio is talking.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

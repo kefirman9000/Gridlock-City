@@ -451,13 +451,13 @@ function quadP(ax,ay,az,bx,by,bz,cx,cy,cz,dx,dy,dz){const q=_q;q[0]=ax;q[1]=ay;q
 function flat(x,y,a,hl,hw,z,col){const ca=Math.cos(a),sa=Math.sin(a),fx=ca*hl,fy=sa*hl,rx=-sa*hw,ry=ca*hw;quad(x+fx-rx,y+fy-ry,z,x+fx+rx,y+fy+ry,z,x-fx+rx,y-fy+ry,z,x-fx-rx,y-fy-ry,z,col);}
 // oriented box; returns true if its front face is visible
 // a box tilted nose-up/down around a pivot (used for cars on ramps and in the air)
-let PIT=0,PVX=0,PVY=0,PCA=1,PSA=0;
+let PIT=0,ROL=0,PVX=0,PVY=0,PCA=1,PSA=0; // ROL (v5.27): a car's sideways tilt on a slope, about its long axis
 const _pc=[];for(let i=0;i<8;i++)_pc.push([0,0,0]);
 const PFACES=[[0,1,3,2],[4,6,7,5],[0,4,5,1],[2,3,7,6],[0,2,6,4],[1,5,7,3]];
 function oboxP(x,y,a,hl,hw,z0,z1,side,top,fg,front,back,em){
-  const ca=Math.cos(a),sa=Math.sin(a),cp=Math.cos(PIT),sp=Math.sin(PIT);
+  const ca=Math.cos(a),sa=Math.sin(a),cp=Math.cos(PIT),sp=Math.sin(PIT),cr=Math.cos(ROL),sr=Math.sin(ROL);
   for(let i=0;i<8;i++){const fx=i&1?hl:-hl,ry=i&2?hw:-hw,z=i&4?z1:z0,wx=x+ca*fx-sa*ry,wy=y+sa*fx+ca*ry;
-    const along=(wx-PVX)*PCA+(wy-PVY)*PSA,lat=-(wx-PVX)*PSA+(wy-PVY)*PCA,na=along*cp-z*sp,nz=along*sp+z*cp,c=_pc[i];c[0]=PVX+PCA*na-PSA*lat;c[1]=PVY+PSA*na+PCA*lat;c[2]=nz;}
+    const along=(wx-PVX)*PCA+(wy-PVY)*PSA,lat0=-(wx-PVX)*PSA+(wy-PVY)*PCA,z2=lat0*sr+z*cr,lat=lat0*cr-z*sr,na=along*cp-z2*sp,nz=along*sp+z2*cp,c=_pc[i];c[0]=PVX+PCA*na-PSA*lat;c[1]=PVY+PSA*na+PCA*lat;c[2]=nz;}
   let cx=0,cy=0,cz=0;for(const c of _pc){cx+=c[0];cy+=c[1];cz+=c[2];}cx/=8;cy/=8;cz/=8;
   const ez=CZ-ZOFF;let fv=false;
   for(let f=0;f<6;f++){const F=PFACES[f],A=_pc[F[0]],B=_pc[F[1]],C=_pc[F[2]],D=_pc[F[3]];
@@ -473,7 +473,7 @@ function oboxP(x,y,a,hl,hw,z0,z1,side,top,fg,front,back,em){
   return fv;
 }
 function obox(x,y,a,hl,hw,z0,z1,side,top,fg,front,back,em){
-  if(PIT)return oboxP(x,y,a,hl,hw,z0,z1,side,top,fg,front,back,em);
+  if(PIT||ROL)return oboxP(x,y,a,hl,hw,z0,z1,side,top,fg,front,back,em);
   const ca=Math.cos(a),sa=Math.sin(a),fx=ca*hl,fy=sa*hl,rx=-sa*hw,ry=ca*hw;
   const FLx=x+fx-rx,FLy=y+fy-ry,FRx=x+fx+rx,FRy=y+fy+ry,BRx=x-fx+rx,BRy=y-fy+ry,BLx=x-fx-rx,BLy=y-fy-ry;
   let fv=false;
@@ -1157,7 +1157,7 @@ function render(){if(SCOPE.on&&!MENUVIEW){FOC=Math.round(FOC0*SCOPE.z);HALF=HW/F
   let top=mixA([70,128,206],[92,64,128],warm),bot=mixA([196,212,230],[255,150,96],warm);
   top=mixA(top,[8,10,28],night);bot=mixA(bot,[36,40,78],night);
   if(rain>0.02){top=mixA(top,mixA([92,98,110],[16,18,26],night),rain*0.75);bot=mixA(bot,mixA([150,156,164],[40,44,56],night),rain*0.75);}
-  const FKX=Math.max(FOGK,rain>0.6?(rain-0.6)*1.4:0);FOG0=360*(1-0.75*FKX);FOG1=1250*(1-0.38*FKX);FOGN0=FOG0;FOGN1=FOG1;if(FOGK>0.02)bot=mixA(bot,mixA([176,182,190],[40,44,56],clamp(darkness/0.8,0,1)),FOGK*0.7);
+  const FKX=Math.max(FOGK,rain>0.6?(rain-0.6)*1.4:0);FOG0=360*(1-0.75*FKX);FOG1=1250*(1-0.38*FKX)*(typeof GFXD==='number'?GFXD:1);FOGN0=FOG0;FOGN1=FOG1;if(FOGK>0.02)bot=mixA(bot,mixA([176,182,190],[40,44,56],clamp(darkness/0.8,0,1)),FOGK*0.7);
   FOGC=bot;SKYT=top;if(inHall(cam.x,cam.y)||roomAt(cam.x,cam.y)){FOGC=[18,18,22];SKYT=[12,12,14];top=[12,12,14];bot=[18,18,22];}
   AMB=mixA([1,1,1],[0.24,0.28,0.46],night);if(warm>0)AMB=[AMB[0],AMB[1]*(1-warm*0.1),AMB[2]*(1-warm*0.2)];
   if(lightning>0)AMB=AMB.map(v=>v+lightning*0.7);
