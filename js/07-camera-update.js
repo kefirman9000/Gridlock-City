@@ -283,7 +283,7 @@ function update(dt){
     if((c.traffic||(c.special&&!(c.ai&&c.ai.mode==='chase')))&&d2>despR*despR&&!(mission&&mission.car===c))return false;
     return true;
   });
-  const busy=districtAt(player.x,player.y)==='TIMES SQUARE'?1.7:zoneOf(player.x,player.y)===-1?1.35:1,wantPeds=Math.round(clamp(viewR/18,30,55)*busy*(clock>0.96||clock<0.24?0.6:1));
+  const busy=districtAt(player.x,player.y)==='TIMES SQUARE'?1.7:zoneOf(player.x,player.y)===-1?1.35:1,outC=player.x<0||player.y<0||player.x>WPX||player.y>WPX,wantPeds=Math.round(clamp(viewR/15,36,64)*busy*(outC?0.35:1)*(clock>0.96||clock<0.24?0.6:1));
   let nPeds=0;for(const p of peds)if(!p.gone)nPeds++;
   if(nPeds<wantPeds){spawnPed();spawnPed();}
   peds=peds.filter(p=>!p.gone&&(p.target||dist2(p.x,p.y,player.x,player.y)<(viewR+600)**2));

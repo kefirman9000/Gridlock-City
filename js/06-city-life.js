@@ -174,7 +174,7 @@ function drawPager(sc){if(!PAGER)return;const age=(performance.now()-PAGER.at)/1
   ctx.save();ctx.fillStyle='#1a1e1a';rrect(x-4,y-4,w+8,h+8,6);ctx.fill();ctx.fillStyle='#8fb87a';ctx.fillRect(x,y,w,h);ctx.beginPath();ctx.rect(x+4,y,w-8,h);ctx.clip();
   ctx.font=`bold ${Math.round(15*sc)}px "Pixelify Sans",monospace`;ctx.textBaseline='middle';ctx.fillStyle='#1d2a18';const tw=ctx.measureText(PAGER.t).width;
   const span=w+tw+30*sc,off=w-((age*70*sc)%span);ctx.fillText(PAGER.t,x+4+off,y+h/2+1);ctx.restore();}
-function radioMsg(t){RADIOLOG.push({t,life:6});if(RADIOLOG.length>3)RADIOLOG.shift();}
+function radioMsg(t){if(RADIOLOG.some(q=>q.t===t))return;RADIOLOG.push({t,life:6});if(RADIOLOG.length>2)RADIOLOG.shift();}
 function areaName(){const o=player.car||player,d=districtAt(o.x,o.y);if(d)return d.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());const z=zoneOf(o.x,o.y);return z>=0?GANGS[z].name+' turf':'downtown';}
 function updateRadioChatter(dt){for(let i=RADIOLOG.length-1;i>=0;i--){RADIOLOG[i].life-=dt;if(RADIOLOG[i].life<=0)RADIOLOG.splice(i,1);}
   const s=stars(),o=player.car||player;
@@ -825,7 +825,7 @@ function initCountry(){{const ys=[3,9,15].map(iy=>(iy*P+2)*T);
   props.push({x:WPX+760,y:(9*P+2)*T-140,k:'windmill',rad:40,ht:120});}}
 function updateStages(dt){syncBarriers();if(cityOpen()||game.state!=='play'||SUB||ROOM)return;const o=player.car||player;
   if(o.x>RIVX1*T&&o.y>0&&o.y<WPX+400){if(stars()<4){crime(0,4);if(!keepOutShown){keepOutShown=true;showBig('KEEP OUT','The east side is closed to you for now','#ff4040',2.4);}else note('The east side is closed to you for now');}}
-  else keepOutShown=false;}
+  }
 let keepOutShown=false;
 // dock workers in hard hats and hi-vis keep the port busy while you're nearby
 let dockT=0;function updateDockers(dt){dockT-=dt;if(dockT>0||game.state!=='play')return;dockT=1.5;

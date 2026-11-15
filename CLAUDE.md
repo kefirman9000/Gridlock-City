@@ -42,6 +42,10 @@ v5.15.2 (end of 08g): expressway dressing on the beltway (`rail`/`hwylamp`/`gant
 plantation rows recoloured in `TCOL`; `MARINA` flattens its water in `HMAP` so boats are not hidden down the sea-floor slope, and spawns its boats near the player), suburbs and the airport
 via `outsideBuilding()` (pushes to `buildings` and `OUTB`), and walk-in clinic/precinct/mall: room templates in `ROOMS2` (added to `ROOMS`, not `ROOMLIST`) placed with `liveOnLot`, counters handled in `walkInTick`.
 Note: deep sea `HMAP` slopes down, so things far out on open water can be clipped by the ground occlusion.
+v5.16 (end of 08g): `VIPN` (nearest special cars, set in `v516Tick`; 08v draws the yellow marker only on those), `HINTMV` (time spent moving; hides the controls hint),
+turn arrows (`ARRL` list, `ARRT` per-tile index, painted in the road branch of the ground raster), facade extras in a `walls` wrapper (balconies, air-con, awnings; within 420 px),
+the runway (`STRIPR`, its own branch in the terrain raster) and airport props. In 08v, cars within 330 px get tyres/rims/arches/mirrors (`near`), far ones the old slab.
+In 08-render, `drawPed3` scales non-player, non-cop people by `HS`/`WS` (height/build from their id) inside `P()`.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

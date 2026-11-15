@@ -360,3 +360,53 @@ function walkInTick(dt){walkCool-=dt;if(walkCool>0||!ROOM||!ROOM.live||DLG.open|
     const fee=st*400;say([['Desk Sergeant','Walking in here with '+st+' star'+(st>1?'s':'')+'? Bold. Pay the fine and we lose the paperwork.']],null,[['PAY $'+fee,()=>{if(money>=fee){addMoney(-fee);clearHeat();note('Fines paid. You are clean.');}else note('Not enough cash');}],['LEAVE',()=>{},'no']]);}
   else if(ROOM.id==='mall')say([['Food court','What can I get you?']],null,[['PLATE LUNCH $12',()=>{if(money>=12){addMoney(-12);player.hp=Math.min(PMAX(),player.hp+30);note('Filling. +30 health');}}],['SHAVE ICE $4',()=>{if(money>=4){addMoney(-4);player.hp=Math.min(PMAX(),player.hp+8);note('Refreshing. +8 health');}}],['NOTHING',()=>{},'no']]);}
 {const f=cityTick;cityTick=function(dt){f(dt);walkInTick(dt);}}
+
+// ================= v5.16: a closer look at the city =================
+// ---- HUD: the controls hint goes once you've been moving for a moment; yellow markers only on the nearest special cars ----
+function v516Tick(dt){if(game.state!=='play')return;const o=player.car||player;if(hyp(o.vx||0,o.vy||0)>40||(typeof mlLocked==='function'&&mlLocked()))HINTMV+=dt;
+  VIPN[0]=VIPN[1]=null;if(player.car)return;let d0=380*380,d1=380*380;
+  for(const c of cars){if(!c.vip||c.wreck||c.driver)continue;const d=dist2(c.x,c.y,player.x,player.y);if(d<d0){d1=d0;VIPN[1]=VIPN[0];d0=d;VIPN[0]=c;}else if(d<d1){d1=d;VIPN[1]=c;}}}
+{const f=cityTick;cityTick=function(dt){f(dt);v516Tick(dt);}}
+
+// ---- turn arrows painted on each lane a little before a junction where it can turn ----
+(function arrows(){ARRT=new Uint16Array(W*W);const put=(x,y,a)=>{const tx=Math.floor(x/T),ty=Math.floor(y/T);if(tx<1||ty<1||tx>=W-1||ty>=W-1)return;
+    const hz=Math.abs(Math.cos(a))>0.5,X0=hz?tx-1:tx-1,X1=hz?tx+1:tx,Y0=hz?ty-1:ty-1,Y1=hz?ty:ty+1;
+    for(let j=Y0;j<=Y1;j++)for(let i=X0;i<=X1;i++){const k=j*W+i;if(map[k]!==ROAD||DIAGT[k]||BRT[k]||ARRT[k]||PARKT[k]>=10)return;}
+    ARRL.push({x,y,ca:Math.cos(a),sa:Math.sin(a)});const n=ARRL.length;for(let j=Y0;j<=Y1;j++)for(let i=X0;i<=X1;i++)ARRT[j*W+i]=n;};
+  for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(nodeDeg(ix,iy)<3||ARRL.length>600)continue;
+    if(linkOK(ix,iy,2))put(ix*P*T-86,laneCoord(0,iy),0);
+    if(linkOK(ix,iy,0))put((ix*P+4)*T+86,laneCoord(2,iy),PI);
+    if(linkOK(ix,iy,3))put(laneCoord(1,ix),iy*P*T-86,PI/2);
+    if(linkOK(ix,iy,1))put(laneCoord(3,ix),(iy*P+4)*T+86,-PI/2);}})();
+
+// ---- facades: air-con units under some windows, balconies on the apartment blocks, awnings over ground-floor windows ----
+const AWNC=[[176,52,44],[40,96,150],[46,120,70],[200,150,40],[120,60,120],[60,60,64]];
+{const f=walls;walls=function(b,x0,y0,x1,y1,z0,z1,fg,det,gr){f(b,x0,y0,x1,y1,z0,z1,fg,det,gr);
+  if(!det||!gr||b.outside||b.hollow||b.shop||b.kind==='stadium'||PK===undefined)return;const st=b.st;if(st==='glass'||st==='ware'||st==='garage'||st==='house')return;
+  const hv=(b.id*2654435761)>>>0,H=z1-z0;if(H<BH*1.4)return;const nf=Math.max(1,Math.round(H/(BH/2))),fh=H/nf;
+  const faces=[];if(CY<y0)faces.push([x0,y0,x1,y0,0,-1]);if(CX>x1)faces.push([x1,y0,x1,y1,1,0]);if(CY>y1)faces.push([x1,y1,x0,y1,0,1]);if(CX<x0)faces.push([x0,y1,x0,y0,-1,0]);
+  for(const[ax,ay,bx,by,nx,ny]of faces){const len=hyp(bx-ax,by-ay);if(len<50)continue;const dx=(bx-ax)/len,dy=(by-ay)/len,ang=Math.atan2(dy,dx),nc=Math.max(1,Math.floor(len/b.ws)),cw=len/nc;
+    if(hyp((ax+bx)/2-CX,(ay+by)/2-CY)>420)continue;
+    const balc=(st==='plaster'||st==='conc')&&hv%3===0,ac=st==='brick'||hv%3===1,awn=hv%4!==3;
+    for(let fl=1;fl<Math.min(nf,10);fl++)for(let i=0;i<nc;i++){const h2=hash(b.id*31+i,fl*7+(ax|0));const s=(i+0.5)*cw,px=ax+dx*s+nx*1.5,py=ay+dy*s+ny*1.5,zw=z0+fl*fh;
+      if(balc&&(i%2===0)&&fl%1===0&&(h2&3)!==0){obox(px+nx*3,py+ny*3,ang,cw*0.42,3,zw+fh*0.12,zw+fh*0.18,[150,146,140],[176,172,166],fg);NOTOP=true;obox(px+nx*5.8,py+ny*5.8,ang,cw*0.42,0.3,zw+fh*0.18,zw+fh*0.48,[60,60,64],null,fg);NOTOP=false;}
+      else if(ac&&(h2&7)===2)obox(px+nx*1.6,py+ny*1.6,ang,2.6,1.8,zw+fh*0.14,zw+fh*0.36,[176,178,176],[196,198,196],fg);}
+    if(awn&&!b.lad){const c=AWNC[hv%AWNC.length];for(let i=0;i<nc;i++){if((hash(b.id+i,7)&3)===0)continue;const s=(i+0.5)*cw,px=ax+dx*s+nx*3,py=ay+dy*s+ny*3;
+      obox(px,py,ang,cw*0.36,3,fh*0.62,fh*0.7,c,mixA(c,[255,255,255],(i&1)?0.25:0),fg);}}}}}
+
+// ---- the airport: a painted runway, a tarmac apron, a windsock and a couple of parked light planes ----
+(function airportMore(){if(!STRIP)return;const s=STRIP;STRIPR={x0:s.x0-30,x1:s.x1+30,y:s.y,hw:40};
+  for(let i=props.length-1;i>=0;i--){const p=props[i];if(p.k==='cone'&&p.x>=s.x0-1&&p.x<=s.x1+1&&Math.abs(Math.abs(p.y-s.y)-46)<1)props.splice(i,1);}
+  const ys=[3,9,15].map(iy=>(iy*P+2)*T);let side=1;for(const yy of ys)if(Math.abs(s.y+150-yy)<180)side=-1;const ay=s.y+side*150;
+  if(!ys.some(yy=>Math.abs(ay-yy)<150)){for(let y=s.y+side*48;side>0?y<ay+60:y>ay-60;y+=side*HS)for(let x=s.x0+80;x<s.x0+560;x+=HS){const k=tcell(x,y);if(TTYPE[k]===10||TTYPE[k]===1)continue;TTYPE[k]=9;TCOL[k]=packC(96,96,98);}
+    props.push({x:s.x0+620,y:s.y+side*70,k:'windsock',rad:8,ht:30});
+    for(const[dx,c]of[[340,'#e8e4d8'],[470,'#d8382a']])props.push({x:s.x0+dx,y:s.y+side*96,k:'lplane',a:side>0?-PI/2:PI/2,c,rad:24,ht:16});}
+  props.push({x:s.x1+60,y:s.y-34,k:'rwylight',rad:4,ht:4},{x:s.x1+60,y:s.y+34,k:'rwylight',rad:4,ht:4},{x:s.x0-60,y:s.y-34,k:'rwylight',rad:4,ht:4},{x:s.x0-60,y:s.y+34,k:'rwylight',rad:4,ht:4});
+  SGRID=null;})();
+{const f=placesProp;placesProp=function(o,fg){const a=o.a||0,ca=Math.cos(a),sa=Math.sin(a);switch(o.k){
+  case 'windsock':{obox(o.x,o.y,0,0.8,0.8,0,26,[200,200,204],null,fg);const w=Math.sin(game.t*1.3)*0.4+0.6;for(let i=0;i<3;i++)obox(o.x+(3+i*4)*w,o.y+i*1.2,0.3,2.2,1.6-i*0.3,22-i*0.4,25.5-i*0.6,i%2?[245,245,240]:[240,110,30],null,fg);return;}
+  case 'lplane':{const c=rgbOf(o.c),B=(f,s,l,w,z0,z1,cc,tp)=>obox(o.x+ca*f-sa*s,o.y+sa*f+ca*s,a,l,w,z0,z1,cc,tp||null,fg);
+    for(const s of[-1,1])B(4,s*6,1.2,1.2,0,5,[40,40,44]);B(-12,0,1,1,0,4,[40,40,44]);B(0,0,16,3.4,4,10,c,mixA(c,[255,255,255],0.15));B(4,0,4,2.8,10,13,[60,80,100]);
+    B(3,0,4,20,9,10.2,c,mixA(c,[255,255,255],0.2));B(-14,0,2.5,7,8,9,c);B(-14.5,0,2.5,0.6,9,15,c);B(16.5,0,0.6,0.6,6,8,[30,30,30]);return;}
+  case 'rwylight':{obox(o.x,o.y,0,1,1,0,2.5,[60,60,64],null,fg);if(proj(o.x,o.y,3))glow(PX,PY,2.4*PK,Math.floor(game.t*1.5+o.y)%2?'#40ff60':'#1a6a2a',0.6);return;}}
+  return f(o,fg);}}

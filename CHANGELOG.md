@@ -2,6 +2,16 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.16.0
+- Cars: four tyres poking out under the body with rims on the side you can see, dark wheel arches, door lines and a trim line, side mirrors. Each type has its own shape: sports cars and roadsters sit low with the cabin set back and a front splitter, compacts are tall hatchbacks, limos have a long cabin. Close cars get the detail; far ones keep the old single wheel slab.
+- At night, parked cars get a warm street-light lift and their tail lights glint, so they don't disappear. The yellow marker over special cars only shows on the nearest one or two when you're on foot.
+- People: different heights and builds; some carry backpacks, some have long hair. More people on city pavements, fewer outside the city.
+- Buildings: balconies with railings on plaster and concrete blocks, air-con units under brick windows, coloured awnings over ground-floor windows. Times Square screens are smaller, in dark frames, with softer colours.
+- The distant skyline gets sunlit edges, roof lines, masts and water tanks, and faint window rows by day.
+- Roads: white turn arrows painted on each lane before junctions, and crosswalks with worn paint.
+- The airstrip is a proper runway: asphalt with edge lines, centre dashes, threshold bars and piano keys; a tarmac apron in front of the terminal, a windsock, two parked light planes and blinking runway lights.
+- HUD: at most two notes and two dispatch lines at a time (repeats are dropped); the controls hint fades once you've been moving or captured the mouse; KEEP OUT shows once per session; the sky gradient is drawn per row, so no stripes.
+
 ## v5.15.2
 - The beltway is dressed as an expressway: guard rails on the bends and embankments, tall highway lamps that light up at night, and green EXIT signs over the road before each turn-off into the city. (It runs on the ground, not on stilts.)
 - Landmarks after Oahu's: a dirt trail up the Diamond Head crater rim to a lookout, a Pali lookout on the high ground north of the city, a North Shore surf beach with bigger waves, lifeguard towers, surfboards and umbrellas, a pineapple farm out among the fields, and a marina in the harbour inlet with pontoons and boats tied up. Finding a lookout pays $500 once.

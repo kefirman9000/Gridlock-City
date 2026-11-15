@@ -1,4 +1,5 @@
 // ================= VEHICLES: cars, vans, trucks, bikes, boats and the helicopters (drawn by the world pass in 08-render.js) =================
+let VIPN=[null,null]; // v5.16: only the nearest special cars get the yellow marker (set each frame in 08g)
 const BLACK=[18,18,20],TAIL=[192,40,36];
 // Follow the RENDERING RULES at the top of js/08-render.js: no depth buffer, so the order parts are drawn in is their depth.
 // dents and scrapes on the flank facing the camera (rendering rule 5: a thin slab, only on the visible side)
@@ -51,7 +52,7 @@ function drawBike3(c,fg,t,hl,hw,a){const ca=Math.cos(a),sa=Math.sin(a),col=rgbOf
   if(c.driver){const sh=c.driver==='player'?[217,115,31]:c.driver==='cop'?[43,76,155]:[120,90,70];obox(c.x-ca*3,c.y-sa*3,a,3.5,4,12,24,sh,null,fg);obox(c.x-ca*2,c.y-sa*2,a,2.6,2.6,24,30,[30,30,34],[40,40,44],fg);}}
 function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return;}if(t.bike){drawBike3(c,fg,t,hl,hw,a);return;}if(t.plane){drawPlaneP(c,fg,t,a);return;}if(t.heli){drawHeliP(c,fg,t,a);return;}if(t.rc){drawRC(c,fg,t,a);return;}
   const base=c.wreck?[40,36,33]:(c.flash>0?[255,255,255]:rgbOf(c.col));
-  const dmg=c.wreck?1:clamp(0.55+0.45*c.hp/t.hp,0.55,1),col=[base[0]*dmg,base[1]*dmg,base[2]*dmg];
+  const dmg=c.wreck?1:clamp(0.55+0.45*c.hp/t.hp,0.55,1),lift=LIGHTK>0.2&&!c.wreck?0.16*LIGHTK:0,col=[(base[0]*dmg)*(1-lift)+255*lift*0.9,(base[1]*dmg)*(1-lift)+226*lift*0.9,(base[2]*dmg)*(1-lift)+170*lift*0.9]; // at night a warm street-light lift keeps cars readable
   const ca=Math.cos(a),sa=Math.sin(a);
   if(t.tank){
     obox(c.x,c.y,a,hl,hw,0,6,[34,36,26],null,fg);
@@ -63,7 +64,14 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
   }
   const U=c.up||{};
   if(U.neon&&!c.wreck){const nc=U.neon===true?'#ff3ad0':U.neon;flat(c.x,c.y,a,hl+5,hw+5,0.25,nc);if(proj(c.x,c.y,1))glow(PX,PY,(hl+8)*PK,nc,LIGHTK>0.2?0.55:0.25);} // neon underglow
-  obox(c.x,c.y,a,hl*0.86,hw*0.98,0,5,U.chrome?[178,182,190]:BLACK,null,fg); // wheels (chrome if fitted)
+  const near=(c.x-CX)**2+(c.y-CY)**2<330*330;
+  if(!near)obox(c.x,c.y,a,hl*0.86,hw*0.98,0,5,U.chrome?[178,182,190]:BLACK,null,fg); // far away: the old single wheel slab
+  else{obox(c.x,c.y,a,hl*0.8,hw*0.86,1,5,BLACK,null,fg); // the underside
+  {// four tyres poking out under the body, rims on the side you can see (chrome if fitted)
+   const lat=(CX-c.x)*-sa+(CY-c.y)*ca,vs=lat>0?1:-1,R0=t.L>70?6:5,wl=t.L>70?5.4:4.4,rim=U.chrome?[200,204,212]:c.wreck?[60,58,56]:[150,152,158];
+   const ax=t.L>70?[hl*0.68,-hl*0.62]:[hl*0.6,-hl*0.6];
+   for(const s of[-vs,vs])for(const f of ax){const x=c.x+ca*f-sa*s*(hw*0.82),y=c.y+sa*f+ca*s*(hw*0.82);obox(x,y,a,wl,1.7,0,R0+1.5,[22,22,24],[34,34,36],fg);
+     if(s===vs&&Math.abs(lat)>hw){NOTOP=true;obox(c.x+ca*f-sa*s*(hw*0.82+1.75),c.y+sa*f+ca*s*(hw*0.82+1.75),a,wl*0.5,0.15,1.6,R0,rim,null,fg);NOTOP=false;}}}}
   if(c.hazard&&!c.wreck&&Math.floor(game.t*2.5)%2)for(const e of[-1,1])for(const s of[-1,1]){const x=c.x+Math.cos(a)*hl*0.95*e-Math.sin(a)*hw*0.8*s,y=c.y+Math.sin(a)*hl*0.95*e+Math.cos(a)*hw*0.8*s;if(proj(x,y,7))glow(PX,PY,3*PK,'#ffa020',0.9);}
   let fv;
   // two-box vehicles: draw whichever box is farther from the camera first, so the near one covers it
@@ -87,14 +95,19 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     fv=obox(c.x,c.y,a,hl,hw,4,28,col,null,fg);
     if((CX-c.x)*ca+(CY-c.y)*sa>hl*0.75)obox(c.x+ca*hl*0.9,c.y+sa*hl*0.9,a,hl*0.11,hw*0.88,16,25,GLASS,null,fg);
   }else{
-    const low=c.type==='sports',bz=low?11:13,cz=low?18:21;
+    const ty=c.type,low=ty==='sports'||ty==='roadster',bz=low?10.5:ty==='compact'?13.5:13,cz=low?17:ty==='compact'?22.5:ty==='limo'?20:21;
     fv=obox(c.x,c.y,a,hl,hw,4,bz,col,null,fg);
+    {const lat2=(CX-c.x)*-sa+(CY-c.y)*ca,vs=lat2>0?1:-1;if(near&&Math.abs(lat2)>hw&&!c.wreck){NOTOP=true;const dk=mixA(col,[0,0,0],0.55),fl=(f,l,z0,z1,cc)=>obox(c.x+ca*f-sa*vs*(hw+0.15),c.y+sa*f+ca*vs*(hw+0.15),a,l,0.12,z0,z1,cc,null,fg);
+      for(const f of[hl*0.6,-hl*0.6])fl(f,5.4,4,7.4,dk);fl(ty==='compact'?-hl*0.02:hl*0.08,0.25,5.2,bz-0.6,dk);if(ty!=='compact'&&ty!=='roadster')fl(-hl*0.28,0.25,5.2,bz-0.6,dk);
+      fl(0,hl*0.9,bz-1.1,bz-0.8,mixA(col,[255,255,255],0.25));NOTOP=false;}}
+    if(low&&!c.wreck)obox(c.x+ca*(hl+0.4),c.y+sa*(hl+0.4),a,0.8,hw*0.9,3.2,4.6,[26,26,28],null,fg); // splitter
     const roof=c.gang!=null&&!c.wreck?rgbOf(GANGS[c.gang].col):(t.police&&!c.wreck?[18,18,20]:c.roofc&&!c.wreck?c.roofc:mixA(col,[255,255,255],.1));
     if(c.stripe&&!c.wreck)obox(c.x,c.y,a,hl+0.1,hw*0.17,bz,bz+0.3,c.stripe,c.stripe,fg);
-    const cx2=c.x-ca*hl*0.12,cy2=c.y-sa*hl*0.12;
+    const cof=ty==='sports'||ty==='roadster'?-0.24:ty==='compact'?-0.2:ty==='limo'?-0.05:-0.1,cx2=c.x+ca*hl*cof,cy2=c.y+sa*hl*cof;
     const spoil=()=>{if(!U.spoiler||c.wreck)return;const sx=c.x-ca*hl*0.86,sy=c.y-sa*hl*0.86;for(const e of[-1,1])obox(sx-sa*hw*0.6*e,sy+ca*hw*0.6*e,a,0.8,0.8,bz,bz+4,[30,30,34],null,fg);obox(sx,sy,a,2.4,hw*0.95,bz+4,bz+5.2,col,mixA(col,[255,255,255],0.15),fg);};
     if(front)spoil();
-    obox(cx2,cy2,a,hl*(low?0.4:0.48),hw*0.84,bz,cz,c.wreck?[20,20,20]:c.dmg&&(c.dmg.f+c.dmg.r+c.dmg.L+c.dmg.R)>LOOSE.lose*1.3?mixA(U.tint?[24,28,34]:GLASS,[196,204,212],0.42):U.tint?[24,28,34]:GLASS,roof,fg);
+    if(near&&!c.wreck)for(const s of[-1,1])obox(c.x+ca*hl*(cof+(ty==='limo'?0.62:0.36))-sa*s*(hw+1.1),c.y+sa*hl*(cof+(ty==='limo'?0.62:0.36))+ca*s*(hw+1.1),a,0.9,1.1,bz+0.6,bz+2.6,col,null,fg); // mirrors
+    obox(cx2,cy2,a,hl*(low?0.36:ty==='compact'?0.58:ty==='limo'?0.66:0.46),hw*0.84,bz,cz,c.wreck?[20,20,20]:c.dmg&&(c.dmg.f+c.dmg.r+c.dmg.L+c.dmg.R)>LOOSE.lose*1.3?mixA(U.tint?[24,28,34]:GLASS,[196,204,212],0.42):U.tint?[24,28,34]:GLASS,roof,fg);
     if(!front)spoil();
     if(!c.wreck){
       if(t.police){const on=(c.ai&&(c.ai.mode==='chase'||c.ai.pursuit))||(c.driver==='player'&&heat>0),ph=Math.floor(game.t*8)%2;
@@ -108,9 +121,9 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
   if(c.dmg&&!c.wreck)drawLoose(c,t,hl,hw,ca,sa,fg,col);
   // lamps (one headlight goes out once the front end is smashed)
   if(!c.wreck){const fz=8+(PIT?hl*Math.sin(PIT)*(fv?1:-1):0),rx=-sa*hw*0.7,ry=ca*hw*0.7,night=LIGHTK>0.1||c.driver==='player';
-    if(fv){for(const sd of[-1,1])if(!(sd<0&&c.hp<t.hp*0.45)&&proj(c.x+ca*(hl+0.5)+rx*sd,c.y+sa*(hl+0.5)+ry*sd,fz)){const s=Math.max(1,2.2*PK);L3.fillStyle=lit([255,246,200],1,fg,true);L3.fillRect(R2(PX-s/2),R2(PY-s/2),Math.max(1,R2(s)),Math.max(1,R2(s*0.7)));if(night&&c.driver){glow(PX,PY,3*PK,'#fff2c0',0.55*Math.max(LIGHTK,0.25));if(rain>0.3&&c.driver){const ly=PY;if(proj(c.x+ca*(hl+0.5)+rx*sd,c.y+sa*(hl+0.5)+ry*sd,0))wetGlint(PX,PY,ly,'#fff2c0',0.8);}}}}
-    else{for(const sd of[-1,1])if(proj(c.x-ca*(hl+0.5)+rx*sd,c.y-sa*(hl+0.5)+ry*sd,fz)){const s=Math.max(1,2.2*PK);L3.fillStyle=lit(c.rev?[236,236,228]:c.brk?[255,72,60]:TAIL,1,fg,LIGHTK>0.1||c.brk||c.rev);L3.fillRect(R2(PX-s/2),R2(PY-s/2),Math.max(1,R2(s)),Math.max(1,R2(s*0.7)));if((LIGHTK>0.1&&c.driver)||c.brk||c.rev)glow(PX,PY,(c.brk||c.rev?3.4:2.6)*PK,c.rev?'#fff4e0':'#ff3030',c.brk||c.rev?0.35+0.5*LIGHTK:0.6*LIGHTK);}}}
-  if(c.vip&&!c.wreck&&proj(c.x,c.y,34+Math.sin(game.t*5)*3)){const s=Math.max(2,5*PK);L3.fillStyle='#ffd700';L3.beginPath();L3.moveTo(PX,PY+s);L3.lineTo(PX-s*0.8,PY-s*0.4);L3.lineTo(PX+s*0.8,PY-s*0.4);L3.closePath();L3.fill();}
+    if(fv){for(const sd of[-1,1])if(!(sd<0&&c.hp<t.hp*0.45)&&proj(c.x+ca*(hl+0.5)+rx*sd,c.y+sa*(hl+0.5)+ry*sd,fz)){const s=Math.max(1,2.2*PK);L3.fillStyle=lit(night&&!c.driver?[150,146,128]:[255,246,200],1,fg,!(night&&!c.driver));L3.fillRect(R2(PX-s/2),R2(PY-s/2),Math.max(1,R2(s)),Math.max(1,R2(s*0.7)));if(night&&c.driver){glow(PX,PY,3*PK,'#fff2c0',0.55*Math.max(LIGHTK,0.25));if(rain>0.3&&c.driver){const ly=PY;if(proj(c.x+ca*(hl+0.5)+rx*sd,c.y+sa*(hl+0.5)+ry*sd,0))wetGlint(PX,PY,ly,'#fff2c0',0.8);}}}}
+    else{for(const sd of[-1,1])if(proj(c.x-ca*(hl+0.5)+rx*sd,c.y-sa*(hl+0.5)+ry*sd,fz)){const s=Math.max(1,2.2*PK);L3.fillStyle=lit(c.rev?[236,236,228]:c.brk?[255,72,60]:TAIL,1,fg,LIGHTK>0.1||c.brk||c.rev);if(LIGHTK>0.3&&!c.driver&&!c.brk)glow(PX,PY,1.6*PK,'#ff2a20',0.22*LIGHTK);L3.fillRect(R2(PX-s/2),R2(PY-s/2),Math.max(1,R2(s)),Math.max(1,R2(s*0.7)));if((LIGHTK>0.1&&c.driver)||c.brk||c.rev)glow(PX,PY,(c.brk||c.rev?3.4:2.6)*PK,c.rev?'#fff4e0':'#ff3030',c.brk||c.rev?0.35+0.5*LIGHTK:0.6*LIGHTK);}}}
+  if(c.vip&&!c.wreck&&(c===VIPN[0]||c===VIPN[1])&&proj(c.x,c.y,34+Math.sin(game.t*5)*3)){const s=Math.max(2,5*PK);L3.fillStyle='#ffd700';L3.beginPath();L3.moveTo(PX,PY+s);L3.lineTo(PX-s*0.8,PY-s*0.4);L3.lineTo(PX+s*0.8,PY-s*0.4);L3.closePath();L3.fill();}
 }
 // the newer vehicles: each is a few shaded boxes, drawn far-to-near so the near ones cover the far ones
 function drawVX(c,fg,t,hl,hw,a,col,front,ca,sa){

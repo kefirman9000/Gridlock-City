@@ -179,9 +179,9 @@ function drawHUD(){
     radH=(lines.length+1)*lh;ctx.globalAlpha=1;}
   // ticker
   let ty=touchMode?VH*0.62:VH-40*sc;
-  if(game.t<12&&game.state==='play'&&!touchMode)ty=VH-108*sc; // keep clear of the controls hint
+  if(game.t<12&&HINTMV<1.5&&game.state==='play'&&!touchMode)ty=VH-108*sc; // keep clear of the controls hint
   if(radH&&!touchMode)ty=Math.min(ty,VH-34*sc-radH-8*sc); // and of the radio text
-  for(let i=ticker.length-1;i>=0;i--){const t=ticker[i];ctx.globalAlpha=Math.min(1,t.t);hudText(t.text,VW/2,ty,Math.round(14*sc),'#fff','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ty-=22*sc;}
+  for(let i=ticker.length-1;i>=Math.max(0,ticker.length-2);i--){const t=ticker[i];ctx.globalAlpha=Math.min(1,t.t);hudText(t.text,VW/2,ty,Math.round(14*sc),'#fff','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ty-=22*sc;}
   ctx.globalAlpha=1;
   // big message
   if(big){const f=big.t/big.max,a=Math.min(1,big.t*2,(big.max-big.t)*6);ctx.globalAlpha=a;
@@ -189,7 +189,7 @@ function drawHUD(){
     if(big.sub)hudText(big.sub,VW/2,by+sz*0.82,Math.round(22*sc),'#fff','center',G3F);
     ctx.globalAlpha=1;}
   // first-time hints
-  if(game.t<12&&game.state==='play'&&!touchMode){ctx.globalAlpha=Math.min(1,(12-game.t)/2);hudText(player.car?'W/S gas · A/D steer · SPACE handbrake · hold Q/E to look left/right and click for a drive-by · V camera view · F get out':(GTA3MOVE()?(mlLocked()?'WASD move · mouse to look · click to shoot · hold right mouse to lock on · SPACE jump · F steal a car':'Click the game to capture the mouse · WASD move · SPACE jump · F steal a car'):'W/S walk · A/D turn · SPACE jump · mouse aim & shoot · F steal a car'),VW/2,VH-80*sc,Math.round(14*sc),'#ffe680','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ctx.globalAlpha=1;}
+  if(game.t<12&&HINTMV<1.5&&game.state==='play'&&!touchMode){ctx.globalAlpha=Math.min(1,(12-game.t)/2,(1.5-HINTMV)*2);hudText(player.car?'W/S gas · A/D steer · SPACE handbrake · hold Q/E to look left/right and click for a drive-by · V camera view · F get out':(GTA3MOVE()?(mlLocked()?'WASD move · mouse to look · click to shoot · hold right mouse to lock on · SPACE jump · F steal a car':'Click the game to capture the mouse · WASD move · SPACE jump · F steal a car'):'W/S walk · A/D turn · SPACE jump · mouse aim & shoot · F steal a car'),VW/2,VH-80*sc,Math.round(14*sc),'#ffe680','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ctx.globalAlpha=1;}
   // crosshair, hit markers, throw charge
   if(SCOPE.on){const cx=VW/2,cy=OY+HOR0*SCL,w=WEAPONS[player.w];
     if(w.sniper){const r=Math.min(VW,VH)*0.42;ctx.save();ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,VW,VH);ctx.arc(cx,cy,r,0,TAU,true);ctx.fill('evenodd');

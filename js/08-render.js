@@ -337,7 +337,7 @@ const BMAP=new Int32Array(W*W).fill(-1);
 buildings.forEach((b,i)=>{for(let ty=Math.floor(b.y/T);ty<Math.ceil((b.y+b.h)/T);ty++)for(let tx=Math.floor(b.x/T);tx<Math.ceil((b.x+b.w)/T);tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)BMAP[ty*W+tx]=i;});
 // v5.15 look: sun shadows on the ground, night reflections on wet roads, windows that light and go dark with the hour,
 // a lightning bolt in the sky (all set up each frame by lookPrep() in 08g-world.js)
-let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null,TRAMR=null,SURFB=null;
+let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null,TRAMR=null,SURFB=null,ARRT=null,ARRL=[],HINTMV=0,STRIPR=null;
 const SHD=[10,22,38,60,90,130,180,240,310,400];
 // cached on an 8-unit grid (0 = not worked out yet, 1 = in sun, 2 = in shade); lookPrep() clears it when the sun has moved
 const SHCW=W*4,SHC=new Uint8Array(SHCW*SHCW);
@@ -473,12 +473,12 @@ function renderGround(heads){
             if(mx<4&&my>=4){
               if((mx===2&&u<2)||(mx===1&&u>=30)){if(v>5&&v<26){r=168;g=137;b=58;}}
               else if((mx===0&&u<2)||(mx===3&&u>=30)){r=85;g=87;b=92;}
-              if((my===4||my===13)&&v>4&&v<28&&(u&7)>=3&&(u&7)<7){r=147;g=146;b=140;}
+              if((my===4||my===13)&&v>4&&v<28&&(u&7)>=3&&(u&7)<7&&((nz*5+u*3+v*7+h)&15)>1){r=147-nz*2;g=146-nz*2;b=140-nz*2;}
               if((my===12&&mx<2&&v>=27&&v<30)||(my===5&&mx>=2&&v>=2&&v<5)){r=214;g=214;b=208;}
             }else if(my<4&&mx>=4){
               if((my===2&&v<2)||(my===1&&v>=30)){if(u>5&&u<26){r=168;g=137;b=58;}}
               else if((my===0&&v<2)||(my===3&&v>=30)){r=85;g=87;b=92;}
-              if((mx===4||mx===13)&&u>4&&u<28&&(v&7)>=3&&(v&7)<7){r=147;g=146;b=140;}
+              if((mx===4||mx===13)&&u>4&&u<28&&(v&7)>=3&&(v&7)<7&&((nz*5+v*3+u*7+h)&15)>1){r=147-nz*2;g=146-nz*2;b=140-nz*2;}
               if((mx===12&&my>=2&&u>=27&&u<30)||(mx===5&&my<2&&u>=2&&u<5)){r=214;g=214;b=208;}
             }
             // v5 avenues: a planted median down the middle between the crossings
@@ -489,6 +489,7 @@ function renderGround(heads){
             if(h%11===0){const ex=u-((h>>4&15)+8),ey=v-((h>>8&15)+8);if(ex*ex*0.5+ey*ey*1.4<38){r-=13;g-=13;b-=12;}}
             if(h%13===0&&u>4&&u<28&&v>6&&v<22){r+=7;g+=7;b+=6;}
             if(h%29===0){const ex=u-16,ey=v-16,dd=ex*ex+ey*ey;if(dd<20&&dd>8){r=66;g=66;b=68;}}
+            if(ARRT&&ARRT[ti]){const A=ARRL[ARRT[ti]-1],dx=wx-A.x,dy=wy-A.y,f=dx*A.ca+dy*A.sa,l=Math.abs(-dx*A.sa+dy*A.ca);if(((f>-20&&f<2&&l<2.4)||(f>=2&&f<14&&l<(14-f)*0.62))&&((nz+u+v)&7)!==0){r=190-nz;g=190-nz;b=182-nz;}}
             if(ZT[ti]===1&&r<62&&BLOCKK[Math.floor(ty/P)*NB+Math.floor(tx/P)]!=='docks'){const cu=(u+((v>>2)&1)*4)&7;if((v&3)===0||cu===0){r-=8;g-=9;b-=9;}else{r+=9;g+=6;b+=2;}}
             if(ZT[ti]===1){r+=3;g+=1;}else if(ZT[ti]===0){r-=3;g-=3;b-=2;}
             if(rn>0.3&&((nz+u)&15)===0){r+=18*rn;g+=20*rn;b+=26*rn;}
@@ -551,6 +552,13 @@ function renderGround(heads){
           if(w>0.3||dd<0.9){const k=Math.min(1,(dd<0.9?0.55:0)+(w-0.3)*1.4)*(1-dd/3);r+=(232-r)*k;g+=(240-g)*k;b+=(242-b)*k;}
           const fz=Math.min(0.5,f/1300);r+=(fr-r)*fz;g+=(fgc-g)*fz;b+=(fb-b)*fz;}else{r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}}
       else if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
+      else if(STRIPR&&wx>STRIPR.x0&&wx<STRIPR.x1&&Math.abs(wy-STRIPR.y)<STRIPR.hw){const sh=SHMAP[gi],dy=wy-STRIPR.y,ay=Math.abs(dy),ex=Math.min(wx-STRIPR.x0,STRIPR.x1-wx);
+        r=70+nz;g=70+nz;b=73+nz;if(((nz+xi*3)&31)===0){r-=8;g-=8;b-=8;}
+        if(ay>STRIPR.hw-3.5&&ay<STRIPR.hw-1.5)r=g=b=206;                                   // edge lines
+        else if(ex>70&&ay<1.3&&((((wx-STRIPR.x0)|0)%56)<30))r=g=b=214;                       // centre dashes
+        else if(ex>8&&ex<46&&ay<STRIPR.hw-7&&((((dy+200)|0)%7)<4))r=g=b=214;                 // threshold piano keys
+        else if(ex>56&&ex<64&&ay<STRIPR.hw-7)r=g=b=214;                                       // threshold bar
+        r*=sh;g*=sh;b*=sh;}
       else if(tt===10){const sh=SHMAP[gi],hw=RING.hw,ia=RDI[gi],ib=RDI2[gi];let al=1e9,s=0,main=false,onAny=false;
         // the nearer road decides, but a road's tarmac always wins over another road's shoulder (no grey wedges at junctions)
         if(ia>=0){const e=RDP[ia],d=roadLat(e,wx,wy);al=d;s=RLS;main=e.main;}
@@ -594,7 +602,7 @@ function renderGround(heads){
 // ---------- sky ----------
 function drawSky(top,bot,lightLvl,warm0){
   L3.fillStyle=rgbS(FOGC);L3.fillRect(0,HOR-1,LW,LH-HOR+1);
-  const bands=12;for(let i=0;i<bands;i++){const y0=Math.floor(HOR*i/bands),y1=Math.ceil(HOR*(i+1)/bands)+1;L3.fillStyle=rgbS(mixA(top,bot,i/(bands-1)));L3.fillRect(0,y0,LW,y1-y0);}
+  for(let y=0;y<HOR;y++){const k=y/Math.max(1,HOR-1),c=mixA(top,bot,k);L3.fillStyle=`rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;L3.fillRect(0,y,LW,1);}
   const night=clamp(darkness/0.8,0,1);
   if(night>0.35&&rain<0.6){L3.fillStyle='#fff';L3.globalAlpha=clamp((night-0.35)*2,0,1)*(1-rain);for(const[sx,sy]of STARS){const x=((sx*LW*3-cam.yaw*LW*3/TAU)%LW+LW)%LW;if(sy*HOR<HOR-24)L3.fillRect(x|0,(sy*HOR*.8)|0,1,1);}L3.globalAlpha=1;}
   // sun sets in the west, moon rises in the east
@@ -614,7 +622,14 @@ function drawSky(top,bot,lightLvl,warm0){
   const sc=rgbS(mixA(FOGC,[24,26,40],0.5)),off=((cam.yaw*FARW*2/TAU)%FARW+FARW)%FARW;
   // the backdrop is the rest of the city: fade it when you look out past the city limits
   const ccx=WPX/2-CX,ccy=WPX/2-CY,cd=hyp(ccx,ccy)||1,cf=Math.min(1,cd/(WPX*0.4)),skyW=x=>{const a=cam.yaw+Math.atan((x-HW)/FOC);return clamp(0.75+(Math.cos(a)*ccx+Math.sin(a)*ccy)/cd*1.3*cf,0,1);};
-  L3.fillStyle=sc;for(let base=-off;base<LW;base+=FARW)for(const s of SKYL){const x=base+s[0];if(x>LW||x+s[1]<0)continue;const w=skyW(x+s[1]/2);if(w<=0.02)continue;L3.globalAlpha=w;L3.fillRect(R2(x),HOR-s[2]+1,s[1],s[2]);}L3.globalAlpha=1;
+  L3.fillStyle=sc;for(let base=-off;base<LW;base+=FARW)for(const s of SKYL){const x=base+s[0];if(x>LW||x+s[1]<0)continue;const w=skyW(x+s[1]/2);if(w<=0.02)continue;L3.globalAlpha=w;L3.fillRect(R2(x),HOR-s[2]+1,s[1],s[2]);}
+  // v5.16: the backdrop gets a sunlit edge, roof lines, masts on the tall ones and window rows by day, so it reads as towers, not cards
+  {const lc=rgbS(mixA(FOGC,[250,246,236],0.25)),dc=rgbS(mixA(FOGC,[10,12,22],0.62)),lk=1-clamp(darkness/0.6,0,1);
+   for(let base=-off;base<LW;base+=FARW)for(const s of SKYL){const x=base+s[0];if(x>LW||x+s[1]<0)continue;const w=skyW(x+s[1]/2);if(w<=0.02)continue;const X=R2(x),Y=HOR-s[2]+1;
+     L3.globalAlpha=w*0.5*lk;L3.fillStyle=lc;L3.fillRect(X+s[1]-2,Y,2,s[2]);L3.globalAlpha=w*0.8;L3.fillStyle=dc;L3.fillRect(X,Y,s[1],1);
+     if(s[2]>40&&(s[0]&3)===1){L3.fillRect(X+(s[1]>>1),Y-7,1,7);}else if(s[2]>30&&(s[0]&3)===2){L3.fillRect(X+2,Y-3,Math.min(5,s[1]-3),3);}}
+   if(lk>0.3){L3.fillStyle=dc;for(let base=-off;base<LW;base+=FARW)for(const q of SKYW){const x=base+q[0];if(x<0||x>LW)continue;const k=skyW(x);if(k<0.3)continue;L3.globalAlpha=0.32*lk*k;L3.fillRect(R2(x),HOR-q[1],1,2);}}}
+  L3.globalAlpha=1;
   if(LIGHTK>0.05){L3.fillStyle='#ffd27a';for(let base=-off;base<LW;base+=FARW)for(const w of SKYW){const x=base+w[0];if(x<0||x>LW)continue;const k=skyW(x);if(k<0.3)continue;L3.globalAlpha=LIGHTK*0.75*k;L3.fillRect(R2(x),HOR-w[1],1,2);}L3.globalAlpha=1;}
 }
 
@@ -692,10 +707,11 @@ function wall(ax,ay,bx,by,z0,z1,b,k,fg,det,gr){
   if(st==='garage'){garageWall(ax,ay,bx,by,z0,z1,b,k,fg,det);return;}
   if(!det)return;
   const len=hyp(bx-ax,by-ay),dx=(bx-ax)/len,dy=(by-ay)/len,nx=dy,ny=-dx,H=z1-z0,nf=Math.max(1,Math.round(H/(BH/2))),fh=H/nf,litOn=LIGHTK>0.12;
-  if(b.ts&&H>BH*2.5){const nsc=len>140?2:1;for(let i=0;i<nsc;i++){const s0=len*(i+0.12)/nsc,s1=len*(i+0.88)/nsc,za=z0+BH*0.9+((b.id+i)%3)*BH*0.6,zb=Math.min(z1-BH*0.4,za+BH*(1.6+((b.id*7+i)%4)*0.5));if(zb<=za+8)continue;
-      const ph=game.t*0.6+b.id*1.7+i*2.3,cA=[128+127*Math.sin(ph),128+127*Math.sin(ph+2.1),128+127*Math.sin(ph+4.2)],cB=[128+127*Math.sin(ph*1.7+1),128+127*Math.sin(ph*1.7+3),128+127*Math.sin(ph*1.7+5)];
+  if(b.ts&&H>BH*2.5){const nsc=len>140?2:1;for(let i=0;i<nsc;i++){const s0=len*(i+0.12)/nsc,s1=len*(i+0.88)/nsc,za=z0+BH*0.9+((b.id+i)%3)*BH*0.6,zb=Math.min(z1-BH*0.4,za+BH*(1.2+((b.id*7+i)%4)*0.3));if(zb<=za+8)continue;
+      const ph=game.t*0.6+b.id*1.7+i*2.3,cA=[118+62*Math.sin(ph),118+62*Math.sin(ph+2.1),118+62*Math.sin(ph+4.2)],cB=[150+80*Math.sin(ph*1.7+1),150+80*Math.sin(ph*1.7+3),150+80*Math.sin(ph*1.7+5)];
       const P0x=ax+dx*s0,P0y=ay+dy*s0,P1x=ax+dx*s1,P1y=ay+dy*s1,ox=nx*0.6,oy=ny*0.6;
-      quad(P0x+ox,P0y+oy,za,P1x+ox,P1y+oy,za,P1x+ox,P1y+oy,zb,P0x+ox,P0y+oy,zb,lit(cA,1,fg,true));
+      quad(P0x+ox*0.8-dx*2,P0y+oy*0.8-dy*2,za-2,P1x+ox*0.8+dx*2,P1y+oy*0.8+dy*2,za-2,P1x+ox*0.8+dx*2,P1y+oy*0.8+dy*2,zb+2,P0x+ox*0.8-dx*2,P0y+oy*0.8-dy*2,zb+2,lit([22,22,26],k,fg)); // the screen's frame
+      quad(P0x+ox,P0y+oy,za,P1x+ox,P1y+oy,za,P1x+ox,P1y+oy,zb,P0x+ox,P0y+oy,zb,lit(cA,LIGHTK>0.2?1:0.8,fg,true));
       const band=(zb-za)/3,sh2=((game.t*1.3+b.id)%3)|0;quad(P0x+ox*1.2,P0y+oy*1.2,za+band*sh2,P1x+ox*1.2,P1y+oy*1.2,za+band*sh2,P1x+ox*1.2,P1y+oy*1.2,za+band*(sh2+1),P0x+ox*1.2,P0y+oy*1.2,za+band*(sh2+1),lit(cB,1,fg,true));
       if(proj((P0x+P1x)/2+nx*4,(P0y+P1y)/2+ny*4,(za+zb)/2))glow(PX,PY,Math.min(12,(s1-s0)*0.25*PK),rgbS(cA),0.18+0.3*LIGHTK);}}
   if(st==='glass'){
@@ -961,7 +977,9 @@ function drawPed3(p,isPl,fg){
   const body=rgbOf(isPl?plook().b:(p.flash>0?'#ffffff':p.col)),skin=rgbOf(p.skin||'#e0ac69'),pants=isPl?plook().p:PANTS[(p.id||0)%PANTS.length];
   const hair=p.cop?rgbOf(p.kind==='swat'?'#15171c':p.kind==='fbi'?'#202020':(p.kind==='armytruck'||p.kind==='tank')?'#3d4a22':'#1b2a55'):rgbOf(p.hair||'#222');
   const sw=p.moving?Math.sin(p.anim):0,armed=isPl?!(SCENE.on||WEAPONS[player.w].fist):p.gun,lod=PK<0.7;
-  const parts=[];const P=(f,r,hl,hw,z0,z1,c,top)=>{const[x,y]=at(f,r);parts.push([(x-CX)*CC+(y-CY)*CS,z0,x,y,hl,hw,z1,c,top]);};
+  // v5.16: people come in different heights and builds (the player and police keep the standard size)
+  const pv=isPl||p.cop?0:((p.id||0)*2654435761)>>>0,HS=isPl||p.cop?1:0.9+((pv>>3)&15)/15*0.2,WS=isPl||p.cop?1:0.88+((pv>>7)&15)/15*0.26;
+  const parts=[];const P=(f,r,hl,hw,z0,z1,c,top)=>{const[x,y]=at(f,r*WS);parts.push([(x-CX)*CC+(y-CY)*CS,z0*HS,x,y,hl,hw*WS,z1*HS,c,top]);};
   if(lod){P(0,0,2,4,0,18,body);P(0,0,2.4,2.4,18,23.5,skin,hair);}
   else if(PK>=1.05&&!MIRROR){
     // close up: thighs and shins with bending knees, shoes, a belt, waist and chest, arms with elbows and hands, a neck and a face.
@@ -983,6 +1001,8 @@ function drawPed3(p,isPl,fg){
       P(as*1.1+L,side*4.45,1,1,sh-4.2,sh,sleeve);P(as*2.3+L+run*0.9,side*4.5,0.95,0.95,sh-7.2+run*1.7,sh-4.2,sleeve);P(as*2.8+L+run*1.3,side*4.5,0.85,0.85,sh-8.4+run*2,sh-7.2+run*1.7,skin);}
     const hx=lean*0.8,hz=sh+1.3;P(hx,0,0.95,0.95,sh,hz+0.3,skin);P(hx,0,2.35,2.3,hz,hz+5,skin,hair);
     for(const e of[-0.95,0.95])P(hx+2.3,e,0.12,0.38,hz+2.6,hz+3.3,[28,24,22]);P(hx+2.45,0,0.2,0.4,hz+1.6,hz+2.4,mixA(skin,[0,0,0],0.12));
+    if(!isPl&&!p.cop&&p.gang==null){if(pv%4===1)P(-2.9+lean*0.3,0,1.1,2.7,hip+3.4,hip+8.6,rgbOf(['#3a3a40','#6a4a2a','#2a4a6a','#7a2a2a'][(pv>>12)&3])); // backpack
+      if(pv%5===2&&!p.hat)P(hx-2,0,0.6,2.3,hz-2.6,hz+4,hair);} // long hair
     if(p.cop){P(hx+0.3,0,2.75,2.75,hz+3.9,hz+5.9,hair);P(hx+2.9,0,0.9,2.4,hz+3.9,hz+4.5,hair);}
     else if(p.hat&&!isPl)P(hx,0,2.9,2.9,hz+4.4,hz+6.6,rgbOf(p.hat),mixA(rgbOf(p.hat),[255,255,255],0.15));
     else P(hx-0.5,0,2.2,2.55,hz+3,hz+5.6,hair,hair);

@@ -31,16 +31,18 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.16
+- **Cars**: four tyres with rims, wheel arches, door lines and mirrors; sports cars sit low with a long hood, compacts are hatchbacks, limos stretch; parked cars stay readable at night. Only the nearest special cars carry the yellow marker.
+- **People** in different heights and builds, some with backpacks or long hair; busier pavements downtown, quieter out in the country.
+- **Buildings** with balconies, air-con units and shop awnings; calmer Times Square screens in frames; a skyline with sunlit edges, roof lines, masts and windows.
+- **Roads** with turn arrows before junctions and worn crosswalks; the airstrip is a painted runway with an apron, a windsock, parked planes and runway lights.
+- **HUD**: at most two messages at once, the controls hint goes once you're moving, KEEP OUT shows once, and the sky is smooth.
+
 ## What's new in v5.15
 - **Building shadows** that follow the sun, **soft wet-road reflections**, **windows** that light up and go dark through the night.
 - **Surf**, **lightning bolts**, **boat wakes**, **umbrellas, phones and smokers**, **neon shop signs**, **cracked glass and crumpled cars**.
 - **Night street races** on the beltway, **bus, delivery and impound jobs**, **random events** (thieves, police chases, crashes, gang fights), **skills**, and a **street tram**.
 - **The island**: the beltway is now an expressway (guard rails, highway lamps, green exit signs), **Diamond Head** and **Pali lookouts** ($500 the first time), a **North Shore surf beach**, a **pineapple farm**, a **marina**, **suburbs**, an **airport**, and a walk-in **clinic**, **police station** and **mall**.
-
-## What's new in v5.14 (patches)
-- **Traffic on the beltway, spurs and farm roads**, always on the road; smooth road edges and clean junctions; graded roads.
-- Crooked side streets stop cleanly at the streets they meet.
-- **ERROR LOG** in the pause menu (copy or download it to report a problem), and the game no longer freezes on an error.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.
