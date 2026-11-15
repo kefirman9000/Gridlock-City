@@ -35,6 +35,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - **Building shadows** that follow the sun, **soft wet-road reflections**, **windows** that light up and go dark through the night.
 - **Surf**, **lightning bolts**, **boat wakes**, **umbrellas, phones and smokers**, **neon shop signs**, **cracked glass and crumpled cars**.
 - **Night street races** on the beltway, **bus, delivery and impound jobs**, **random events** (thieves, police chases, crashes, gang fights), **skills**, and a **street tram**.
+- **The island**: the beltway is now an expressway (guard rails, highway lamps, green exit signs), **Diamond Head** and **Pali lookouts** ($500 the first time), a **North Shore surf beach**, a **pineapple farm**, a **marina**, **suburbs**, an **airport**, and a walk-in **clinic**, **police station** and **mall**.
 
 ## What's new in v5.14 (patches)
 - **Traffic on the beltway, spurs and farm roads**, always on the road; smooth road edges and clean junctions; graded roads.

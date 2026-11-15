@@ -38,6 +38,10 @@ parachutes (`player.chute`, bail out via the `exitCar` wrapper), cop flashlights
 and window lights (`WINLIT`) for the renderer each frame; also lightning bolts (`BOLT`), boat wakes, umbrellas/phones/smokers (a `drawPed3` wrapper), neon shop signs
 (a `walls` wrapper; building fields `nsg`/`nsC`/`nsF`, because `b.neon` was already taken) and damage sag. v5.15.1 adds street races (`MEET`, `BRACE`), bus/delivery/impound side jobs (wrapping `startSideJob`/`updateSideJob`/`sideJobHUD`;
 `dutyKind` knows bus and van), random events (`EVT`; gang fighters use `p.fight` through a `brawlTick` wrapper), skills (`STATS.sk`, `skLvl`) and the tram (`TRAM`, rails via `TRAMR` in the ground raster).
+v5.15.2 (end of 08g): expressway dressing on the beltway (`rail`/`hwylamp`/`gantry` props, `HWYL`), landmarks (`LOOKS` pay once via `STATS.looks`; `SURFB` doubles the surf in 08-render;
+plantation rows recoloured in `TCOL`; `MARINA` flattens its water in `HMAP` so boats are not hidden down the sea-floor slope, and spawns its boats near the player), suburbs and the airport
+via `outsideBuilding()` (pushes to `buildings` and `OUTB`), and walk-in clinic/precinct/mall: room templates in `ROOMS2` (added to `ROOMS`, not `ROOMLIST`) placed with `liveOnLot`, counters handled in `walkInTick`.
+Note: deep sea `HMAP` slopes down, so things far out on open water can be clipped by the ground occlusion.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

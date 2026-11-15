@@ -337,7 +337,7 @@ const BMAP=new Int32Array(W*W).fill(-1);
 buildings.forEach((b,i)=>{for(let ty=Math.floor(b.y/T);ty<Math.ceil((b.y+b.h)/T);ty++)for(let tx=Math.floor(b.x/T);tx<Math.ceil((b.x+b.w)/T);tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)BMAP[ty*W+tx]=i;});
 // v5.15 look: sun shadows on the ground, night reflections on wet roads, windows that light and go dark with the hour,
 // a lightning bolt in the sky (all set up each frame by lookPrep() in 08g-world.js)
-let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null,TRAMR=null;
+let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null,TRAMR=null,SURFB=null;
 const SHD=[10,22,38,60,90,130,180,240,310,400];
 // cached on an 8-unit grid (0 = not worked out yet, 1 = in sun, 2 = in shade); lookPrep() clears it when the sun has moved
 const SHCW=W*4,SHC=new Uint8Array(SHCW*SHCW);
@@ -546,7 +546,7 @@ function renderGround(heads){
           const lat=Math.abs(-ex*q.uy+ey*q.ux),w=2.5+al*0.022;if(lat>=w)continue;const e=1-lat/w,k=e*e*Math.min(1,u)*Math.min(1,u)*q.k*WETK*lk*0.32;r+=q.r*k;g+=q.g*k;b+=q.b*k;}}
     }else{
       const xi=wx|0,yi=wy|0,gi=(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0),tt=TTYPE[gi],nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
-      if(tt===1&&COAST.D&&!water){const dd=COAST.D[gi];if(dd<3){const w=Math.sin(game.t*1.6-dd*2.1+(wx+wy)*0.003);r=32+nz;g=84+nz*2;b=126+nz*2;
+      if(tt===1&&COAST.D&&!water){const big=SURFB&&Math.abs(wx-SURFB.x)<SURFB.r&&Math.abs(wy-SURFB.y)<SURFB.r?2:1,dd=COAST.D[gi]/big;if(dd<3){const w=Math.sin(game.t*1.6-dd*2.1+(wx+wy)*0.003);r=32+nz;g=84+nz*2;b=126+nz*2;
           // surf: lines of white water rolling in to the shore
           if(w>0.3||dd<0.9){const k=Math.min(1,(dd<0.9?0.55:0)+(w-0.3)*1.4)*(1-dd/3);r+=(232-r)*k;g+=(240-g)*k;b+=(242-b)*k;}
           const fz=Math.min(0.5,f/1300);r+=(fr-r)*fz;g+=(fgc-g)*fz;b+=(fb-b)*fz;}else{r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}}

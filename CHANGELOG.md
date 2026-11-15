@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.15.2
+- The beltway is dressed as an expressway: guard rails on the bends and embankments, tall highway lamps that light up at night, and green EXIT signs over the road before each turn-off into the city. (It runs on the ground, not on stilts.)
+- Landmarks after Oahu's: a dirt trail up the Diamond Head crater rim to a lookout, a Pali lookout on the high ground north of the city, a North Shore surf beach with bigger waves, lifeguard towers, surfboards and umbrellas, a pineapple farm out among the fields, and a marina in the harbour inlet with pontoons and boats tied up. Finding a lookout pays $500 once.
+- Suburbs: rows of houses with driveways and mailboxes out past the beltway on the gentle west and north land.
+- The airstrip gets an airport: a glass terminal, a hangar and a control tower with a blinking light.
+- Walk-in clinic (patch up for $100), police precinct (pay your fines to lose the stars, $400 a star) and Harbor Mall (food court), each a real building you walk into.
+
 ## v5.15.1
 - Night street races: after dark, racers gather on the beltway's shoulder. Pull up next to them and honk (H) to race round the beltway through five checkpoints. 1st pays $2,500, 2nd $1,000. If a cop sees the race, you get a star.
 - More jobs. Bus: get in and tap the horn to go on duty, then pull up at each stop on the route for passengers. Van: deliver parcels to doors around town; a bashed-in parcel pays half. Tow truck: impound calls come in on their own; hook the car and haul it to the police lot.

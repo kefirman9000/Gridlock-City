@@ -226,3 +226,137 @@ function playTick(dt){if(game.state!=='play')return;meetTick(dt);evtTick(dt);skT
 {const f=lifeTick;lifeTick=function(dt){f(dt);playTick(dt);}}
 {const f=lifeHUD;lifeHUD=function(sc){f(sc);if(game.state==='play')raceHUD(sc);}}
 setTimeout(()=>{try{skApply();}catch(_){}},0);
+
+// ================= v5.15 batch 3: the city and the island =================
+const HSEED=(CITY_SEED>>>0)%9973;
+const hr01=(i,k)=>(hash(i*131+HSEED,k*977+11)&65535)/65535;
+function outsideBuilding(b){b.outside=true;b.id=++uid;b.ac=b.ac||[];b.base=Math.min(GH(b.x,b.y),GH(b.x+b.w,b.y),GH(b.x,b.y+b.h),GH(b.x+b.w,b.y+b.h))-1;b.st=b.st||'conc';b.ws=b.ws||22;b.wf=b.wf||.5;b.wh=b.wh||.55;
+  b.rgb=rgbOf(b.col);if(b.roof)b.rrgb=rgbOf(b.roof);b.corn=false;b.fe=false;b.feAx=0;b.bulk=null;buildings.push(b);OUTB.push(b);
+  for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(t.x>b.x-14&&t.x<b.x+b.w+14&&t.y>b.y-14&&t.y<b.y+b.h+14)trees.splice(i,1);}return b;}
+const tcell=(x,y)=>(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);
+const onRoadCell=(x,y,m)=>{for(const[dx,dy]of[[0,0],[m,0],[-m,0],[0,m],[0,-m]]){const k=tcell(x+dx,y+dy);if(TTYPE[k]===10||TTYPE[k]===9||TTYPE[k]===1)return true;}return false;};
+function dirtLine(ax,ay,bx,by,w){const L=hyp(bx-ax,by-ay),n=Math.ceil(L/8);for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n,y=ay+(by-ay)*i/n;for(let o=-w;o<=w;o+=8){const k=tcell(x+(by-ay)/L*o,y-(bx-ax)/L*o);if(TTYPE[k]!==10&&TTYPE[k]!==1){TTYPE[k]=9;TCOL[k]=packC(150,124,86);}}}}
+
+// ---- the beltway dressed as an expressway: guard rails on the bends and embankments, tall highway lamps, green exit signs ----
+const HWYL=[];
+(function expressway(){const R0=RING.paths[0];if(!R0)return;const hw=RING.hw,gaps=[];for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm){for(const q of S)gaps.push(q);}else gaps.push(S[S.length-1]);}
+  const near=(x,y,r)=>gaps.some(q=>dist2(q.x,q.y,x,y)<r*r);
+  for(let i=4;i<R0.length-4;i+=2){const q=R0[i],a=Math.atan2(q.uy,q.ux),bend=Math.abs(angDiff(Math.atan2(R0[i+3].uy,R0[i+3].ux),Math.atan2(R0[i-3].uy,R0[i-3].ux)));
+    for(const s of[-1,1]){const x=q.x-q.uy*(hw+7)*s,y=q.y+q.ux*(hw+7)*s,fill=q.h-GH(q.x-q.uy*(hw+60)*s,q.y+q.ux*(hw+60)*s);
+      if((bend>0.12||fill>8)&&!near(x,y,90))props.push({x,y,k:'rail',a,rad:22,ht:12});}
+    if(i%22===0){const s=(i/22)%2?1:-1,x=q.x-q.uy*(hw+12)*s,y=q.y+q.ux*(hw+12)*s;if(!near(x,y,60)){props.push({x,y,k:'hwylamp',a:a+(s>0?-PI/2:PI/2),rad:10,ht:44});HWYL.push({x:x+q.uy*s*14,y:y-q.ux*s*14});}}}
+  // an exit sign over the beltway before each spur, both ways
+  for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm||S.ringI==null)continue;const nm=(districtAt((S.node[0]*P+2)*T,(S.node[1]*P+2)*T)||'CITY').toUpperCase();
+    for(const d of[-1,1]){const i=clamp(S.ringI-d*9,0,R0.length-1),q=R0[i];props.push({x:q.x,y:q.y,k:'gantry',a:Math.atan2(q.uy,q.ux),txt:'EXIT  '+nm,rad:hw+12,ht:46});}}})();
+
+// ---- landmarks after Oahu's ----
+const LOOKS=[];
+// Diamond Head: a trail from the city's south-east corner up the crater rim to a lookout over the sea
+(function diamondHead(){const cx=WPX+500,cy=WPX+380,r=168,lx=cx+Math.cos(1.2)*r,ly=cy+Math.sin(1.2)*r;if(!COAST.LAND[tcell(lx,ly)])return;
+  let px=WPX-30,py=WPX-60;const pts=[[px,py]];for(let a=-2.3;a<=1.2;a+=0.25){pts.push([cx+Math.cos(a)*(r+30-(a+2.3)*9),cy+Math.sin(a)*(r+30-(a+2.3)*9)]);}pts.push([lx,ly]);
+  for(let i=1;i<pts.length;i++)dirtLine(pts[i-1][0],pts[i-1][1],pts[i][0],pts[i][1],6);
+  props.push({x:lx,y:ly,k:'lookout',a:1.2,rad:26,ht:26,txt:'DIAMOND HEAD LOOKOUT'});LOOKS.push({x:lx,y:ly,id:'dh',name:'Diamond Head Lookout'});
+  props.push({x:WPX-10,y:WPX-90,k:'trailsign',a:0,txt:'DIAMOND HEAD TRAIL',rad:8,ht:30});})();
+// the Pali-style lookout: the highest ground near the beltway's north side, with a railing and a view
+(function pali(){const R0=RING.paths[0];let best=null;for(let i=0;i<R0.length;i+=6){const q=R0[i];if(q.y>-100||q.x<600||q.x>WPX-600)continue;
+    for(let d=160;d<=620;d+=40){const x=q.x,y=q.y-d,k=tcell(x,y);if(!COAST.LAND[k]||TTYPE[k]===10)continue;const h=HMAP[k],sl=Math.abs(GH(x+30,y)-GH(x-30,y))+Math.abs(GH(x,y+30)-GH(x,y-30));if(sl<40&&(!best||h>best.h))best={x,y,h,ri:i};}}
+  if(!best)return;const q=R0[best.ri];dirtLine(q.x,q.y-RING.hw-4,best.x,best.y,5);
+  props.push({x:best.x,y:best.y,k:'lookout',a:-PI/2,rad:26,ht:26,txt:'PALI LOOKOUT'});LOOKS.push({x:best.x,y:best.y,id:'pali',name:'Pali Lookout'});})();
+// the North Shore: a surf beach with big waves, lifeguard towers and surfboards in the sand
+(function northShore(){let best=null;for(let x=1200;x<WPX-1200;x+=80){for(let y=-2300;y<-1300;y+=16){const k=tcell(x,y);if(COAST.LAND[k]&&COAST.D[k]<1.5&&HMAP[k]<12){if(!best||Math.abs(x-WPX*0.42)<Math.abs(best.x-WPX*0.42))best={x,y};break;}}}
+  if(!best)return;SURFB={x:best.x,y:best.y-60,r:520};const b=best;
+  for(const[dx,dy]of[[-160,40],[150,46]])props.push({x:b.x+dx,y:b.y+dy,k:'lifeguard',a:-PI/2,rad:12,ht:30});
+  for(let i=0;i<7;i++)props.push({x:b.x-120+i*38,y:b.y+70+(i%2)*10,k:'surfboard',c:['#f2c040','#40b8e0','#e85a40','#f2f2f2'][i%4],rad:4,ht:16});
+  for(let i=0;i<4;i++)props.push({x:b.x-90+i*60,y:b.y+110,k:'umbrella',c:['#e04a3a','#3a8ae0','#f2c040','#4ac07a'][i],rad:10,ht:22});
+  props.push({x:b.x,y:b.y+150,k:'trailsign',a:0,txt:'NORTH SHORE SURF',rad:8,ht:30});LOOKS.push({x:b.x,y:b.y+60,id:'ns',name:'the North Shore'});})();
+// a pineapple plantation out among the farms: rows of plants, and a sign by the farm lane
+(function plantation(){const ys=[3,9,15].map(iy=>(iy*P+2)*T),x0=WPX+700,x1=WPX+1040,y0=ys[0]+260,y1=ys[1]-260;let n=0;
+  for(let y=y0;y<y1;y+=HS)for(let x=x0;x<x1;x+=HS){const k=tcell(x,y);if(TTYPE[k]!==7)continue;const row=(((y-y0)/32)|0)%2===0,nz=hr01(x,y)*14;TCOL[k]=row?packC(70+nz,112+nz,48):packC(130+nz,96+nz,62);n++;}
+  if(n>40){for(let i=0;i<10;i++)props.push({x:x0+20+i*16,y:y0+16,k:'pineapple',rad:4,ht:10});props.push({x:WPX+665,y:(y0+y1)/2,k:'trailsign',a:0,txt:'GRIDLOCK PINEAPPLE CO.',rad:8,ht:30});}})();
+// a marina in the harbour inlet: pontoons with yachts tied up
+CT.yacht=Object.assign({},CT.boat,{name:'Yacht',L:Math.round((CT.boat.L||46)*1.7),Wd:Math.round((CT.boat.Wd||20)*1.35),max:Math.round((CT.boat.max||300)*0.7),cols:['#f4f4f0','#e8eef4']});
+const MARINA=(()=>{let shore=null;for(let y=6700;y<7900&&!shore;y+=40)for(let x=-300;x>-1200;x-=16){const k=tcell(x,y);if(!COAST.LAND[k]&&COAST.D[k]<1.2){shore={x:x+24,y};break;}}
+  if(!shore)return null;// calm, shallow water in the marina so the boats and pontoons sit level instead of down the sea-floor slope
+  for(let y=shore.y-200;y<shore.y+480;y+=HS)for(let x=shore.x-420;x<shore.x+40;x+=HS){const k=tcell(x,y);if(COAST.LAND[k])continue;
+    const e=Math.min(y-(shore.y-200),shore.y+480-y,x-(shore.x-420))/120,w=clamp(e,0,1);HMAP[k]=HMAP[k]+(Math.max(HMAP[k],-3)-HMAP[k])*w;}
+  const out=[];for(let j=0;j<3;j++){const y=shore.y+j*120;if(COAST.LAND[tcell(shore.x-160,y)])continue;props.push({x:shore.x-80,y,k:'pontoon',a:0,rad:84,ht:4});out.push({x:shore.x-80,y});}
+  return{shore,pont:out,boats:[]};})();
+function marinaTick(){const M=MARINA;if(!M||!M.pont.length)return;const near=dist2(M.shore.x,M.shore.y,player.x,player.y)<1600*1600;
+  if(near&&!M.boats.length){M.pont.forEach((p,j)=>{for(const s of[-1,1]){const c=makeCar(j%2?'yacht':'boat',p.x-30,p.y+s*26,PI);if(c){c.vip=true;c.traffic=false;c.driver=null;c.vx=c.vy=0;M.boats.push(c);}}});}
+  if(!near&&M.boats.length){for(const c of M.boats){const i=cars.indexOf(c);if(i>=0&&c!==player.car&&!c.driver)cars.splice(i,1);else c.vip=false;}M.boats.length=0;}}
+// the suburbs: rows of houses with driveways out past the beltway on the west and north, where the land is gentle
+(function suburbs(){const R0=RING.paths[0];if(!R0)return;const busy=(x,y)=>RAMPS.some(r=>dist2(r.x,r.y,x,y)<500*500)||(STRIP&&x>STRIP.x0-160&&x<STRIP.x1+160&&Math.abs(y-STRIP.y)<260)||LOOKS.some(l=>dist2(l.x,l.y,x,y)<300*300);
+  let n=0;for(let i=10;i<R0.length-10;i+=6){const q=R0[i];if(!(q.x<-60||q.y<-60))continue;if(q.y>WPX-900)continue;
+    let nx=-q.uy,ny=q.ux;if((q.x+nx*50-WPX/2)**2+(q.y+ny*50-WPX/2)**2<(q.x-WPX/2)**2+(q.y-WPX/2)**2){nx=-nx;ny=-ny;}// outward, away from the city
+    for(const off of[110,200,290]){
+      const x=q.x+nx*off+q.ux*((hr01(i,off)-0.5)*20),y=q.y+ny*off+q.uy*((hr01(off,i)-0.5)*20),w=58+((hr01(i,off)*20)|0),h=50+((hr01(off,i)*14)|0),bx=x-w/2,by=y-h/2;
+      if(x>-20&&y>-20&&x<WPX+20)continue;const k=tcell(x,y);if(!COAST.LAND[k]||COAST.D[k]*HS<220||HMAP[k]>170)continue;
+      const sl=Math.max(Math.abs(GH(bx,by)-GH(bx+w,by+h)),Math.abs(GH(bx+w,by)-GH(bx,by+h)));if(sl>14||busy(x,y))continue;
+      if(onRoadCell(x,y,w/2+8)||buildings.some(o=>o.outside&&x+w/2+18>o.x&&x-w/2-18<o.x+o.w&&y+h/2+18>o.y&&y-h/2-18<o.y+o.h))continue;
+      outsideBuilding({x:bx,y:by,w,h,hg:0.9,col:['#d9cdb8','#b8c8d0','#e0b8a0','#c8d8b0','#f0e8d8'][(i+off)%5],st:'house',roof:['#5a2a22','#3e4652','#6a5a4a'][(i>>1)%3],rx:(i>>2)%2===0,chim:(i%3)===0,door:0});
+      if(off===110)dirtLine(x+nx*-(h/2),y+ny*-(h/2),q.x+nx*(RING.hw+2),q.y+ny*(RING.hw+2),5);
+      props.push({x:x+nx*-(h/2+14)+q.ux*(w/2-6),y:y+ny*-(h/2+14)+q.uy*(w/2-6),k:'mail',a:0,rad:3,ht:8});n++;}}
+  SUBN=n;})();
+var SUBN=SUBN||0;
+// the airport: a terminal, a hangar and a control tower beside the airstrip
+(function airport(){if(!STRIP)return;const s=STRIP,ys=[3,9,15].map(iy=>(iy*P+2)*T);let side=1;for(const yy of ys)if(Math.abs(s.y+150-yy)<180)side=-1;
+  const y=s.y+side*150;if(ys.some(yy=>Math.abs(y-yy)<150))return;
+  outsideBuilding({x:s.x0+220,y:y-32,w:150,h:64,hg:1.3,col:'#9fb4c4',st:'glass'});
+  outsideBuilding({x:s.x0+420,y:y-40,w:110,h:80,hg:1.6,col:'#8a8f96',st:'ware'});
+  outsideBuilding({x:s.x0+120,y:y-10,w:20,h:20,hg:3.4,col:'#c9c4b8',st:'conc'});
+  props.push({x:s.x0+300,y:y+side*44,k:'trailsign',a:0,txt:'GRIDLOCK MUNICIPAL AIRPORT',rad:8,ht:30});
+  props.push({x:s.x0+130,y:y,k:'towercab',rad:16,ht:150});})();
+SGRID=null;
+
+// drawing the new props
+{const f=placesProp;placesProp=function(o,fg){const a=o.a||0,ca=Math.cos(a),sa=Math.sin(a);switch(o.k){
+  case 'hwylamp':{obox(o.x,o.y,0,1.4,1.4,0,44,[120,122,128],null,fg);obox(o.x+ca*7,o.y+sa*7,a,8,1,42,44,[120,122,128],null,fg);obox(o.x+ca*14,o.y+sa*14,a,2.6,2,40.5,42.5,[90,92,96],LIGHTK>0.2?[255,236,190]:[180,180,170],fg,null,null,LIGHTK>0.2);
+    if(LIGHTK>0.2&&proj(o.x+ca*14,o.y+sa*14,40))glow(PX,PY,10*PK,'#ffe2a8',0.35*LIGHTK);return;}
+  case 'gantry':{const r=o.rad,px=-sa,py=ca;for(const s of[-1,1])obox(o.x+px*r*s,o.y+py*r*s,0,1.5,1.5,0,46,[110,114,120],null,fg);obox(o.x,o.y,a+PI/2,r,1.4,42,45,[110,114,120],null,fg);
+    obox(o.x-ca*0.5,o.y-sa*0.5,a+PI/2,r*0.62,0.6,34,45,[34,110,60],[34,110,60],fg);sign3(o.x-ca*1.5,o.y-sa*1.5,36,o.txt,'#226e3c','#ffffff',7,fg);return;}
+  case 'lookout':{obox(o.x,o.y,a,22,16,0,1.2,[150,130,104],[176,156,128],fg);for(const s of[-1,1])obox(o.x-sa*16*s,o.y+ca*16*s,a,22,0.5,1.2,9,[90,80,70],null,fg);obox(o.x+ca*22,o.y+sa*22,a+PI/2,16,0.5,1.2,9,[90,80,70],null,fg);
+    obox(o.x+ca*14,o.y+sa*14,0,0.8,0.8,1.2,14,[60,60,64],null,fg);obox(o.x+ca*15,o.y+sa*15,a,3,1.2,13,16,[50,70,90],null,fg);sign3(o.x-ca*20,o.y-sa*20,22,o.txt,'#4a3a26','#f2e6c8',7,fg);return;}
+  case 'trailsign':{for(const s of[-1,1])obox(o.x+s*12,o.y,0,0.8,0.8,0,18,[90,70,50],null,fg);sign3(o.x,o.y,26,o.txt,'#4a3a26','#f2e6c8',7,fg);return;}
+  case 'lifeguard':{for(const[dx,dy]of[[-5,-5],[5,-5],[-5,5],[5,5]])obox(o.x+dx,o.y+dy,0,0.7,0.7,0,16,[230,230,226],null,fg);obox(o.x,o.y,0,8,7,16,18,[220,220,214],[236,236,230],fg);obox(o.x,o.y,0,7,6,18,26,[214,60,48],null,fg);obox(o.x,o.y,0,8,7,26,27.5,[240,240,236],[250,250,246],fg);return;}
+  case 'surfboard':{const c=rgbOf(o.c);obox(o.x,o.y,0.3,1.6,0.5,0,16,c,mixA(c,[255,255,255],0.2),fg);return;}
+  case 'pineapple':{obox(o.x,o.y,0,2.2,2.2,0,3,[196,150,52],null,fg);obox(o.x,o.y,PI/4,2.6,0.6,3,7,[70,120,50],null,fg);obox(o.x,o.y,-PI/4,2.6,0.6,3,7,[60,110,46],null,fg);return;}
+  case 'pontoon':{obox(o.x,o.y,0,84,6,0,1.6,[120,94,66],[150,118,84],fg);for(let i=-3;i<=3;i++)obox(o.x+i*26,o.y,0,1,1,0,5,[96,76,56],null,fg);return;}
+  case 'towercab':{const z=3.4*BH;obox(o.x+10,o.y-10+10,0,13,13,z,z+12,[60,80,100],[90,110,130],fg,null,null,LIGHTK>0.2);obox(o.x+10,o.y,0,14,14,z+12,z+14,[200,196,188],[210,206,198],fg);
+    if(proj(o.x+10,o.y,z+16))glow(PX,PY,3*PK,Math.floor(game.t*1.2)%2?'#ff3030':'#401010',0.7);return;}}
+  return f(o,fg);}}
+
+function cityTick(dt){marinaTick();
+  for(const L of LOOKS){if(player.car||dist2(L.x,L.y,player.x,player.y)>70*70)continue;const S=STATS.looks||(STATS.looks={});if(S[L.id])continue;S[L.id]=1;addMoney(500);showBig(L.name.toUpperCase(),'You found a lookout  ·  +$500','#7dd8ff',2.6);sfx('pass');}}
+{const f=lifeTick;lifeTick=function(dt){f(dt);if(game.state==='play')cityTick(dt);}}
+
+// ---- walk-in hospital, police station and mall: live interiors (08d's liveOnLot) on a lot near each place ----
+// Templates live off-map like the other rooms (tile rows past W); they are not in ROOMLIST, so nothing warps to them.
+const ROOMS2={hosp:{tx0:226,tx1:240,ty1:10,floor:[214,220,222],wall:[236,240,240],name:'WALK-IN CLINIC',sign:['WALK-IN CLINIC','#ffffff','#d02a2a']},
+  cops:{tx0:244,tx1:258,ty1:10,floor:[120,124,132],wall:[170,178,196],name:'POLICE PRECINCT',sign:['POLICE','#1a2e5a','#ffffff']},
+  mall:{tx0:262,tx1:278,ty1:11,floor:[226,218,200],wall:[230,226,214],name:'HARBOR MALL',sign:['HARBOR MALL','#2a2a2a','#ffd36a']}};
+for(const k in ROOMS2){const q=ROOMS2[k],r={id:k,tx0:q.tx0,ty0:W+13,tx1:q.tx1,ty1:W+13+q.ty1,floor:q.floor,wall:q.wall,name:q.name,props:[]};
+  r.x0=r.tx0*T;r.y0=r.ty0*T;r.x1=r.tx1*T;r.y1=r.ty1*T;r.cx=(r.x0+r.x1)/2;r.cy=(r.y0+r.y1)/2;r.counter={x:r.cx,y:r.y0+T*2.4};
+  r.props.push({x:r.cx,y:r.y0+T*0.9,k:'rsign',text:q.sign[0],bg:q.sign[1],fg:q.sign[2],z:44,rad:30,ht:50});ROOMS[k]=r;}
+{const r=ROOMS.hosp;r.props.push({x:r.cx,y:r.y0+T*2.4,k:'rbox',hl:T*2.2,hw:T*0.45,z0:0,z1:15,c:[230,232,236],rad:80,ht:16},{x:r.cx,y:r.y0+T*2.1,k:'rbox',hl:T*2.2,hw:T*0.1,z0:15,z1:16.5,c:[200,40,40],rad:80,ht:17});
+  for(let i=0;i<3;i++)r.props.push({x:r.x0+T*(2+i*1.4),y:r.y1-T*2.4,k:'rbox',hl:T*0.55,hw:T*0.3,z0:0,z1:8,c:[70,140,170],rad:20,ht:10},{x:r.x1-T*(2+i*1.4),y:r.y1-T*2.4,k:'rbox',hl:T*0.55,hw:T*0.3,z0:0,z1:8,c:[70,140,170],rad:20,ht:10});
+  r.props.push({x:r.x1-T*1.6,y:r.y0+T*1.4,k:'rbox',hl:T*0.6,hw:T*0.9,z0:0,z1:7,c:[240,240,240],rad:30,ht:9},{x:r.x0+T*1.4,y:r.y0+T*1.3,k:'rbox',hl:T*0.3,hw:T*0.3,z0:0,z1:22,c:[90,170,90],rad:14,ht:22});}
+{const r=ROOMS.cops;r.props.push({x:r.cx,y:r.y0+T*2.4,k:'rbox',hl:T*2.6,hw:T*0.5,z0:0,z1:16,c:[70,60,52],rad:90,ht:18},{x:r.cx,y:r.y0+T*2.0,k:'rbox',hl:T*2.6,hw:T*0.08,z0:16,z1:30,c:[180,200,214],rad:90,ht:30});
+  for(let i=0;i<4;i++)r.props.push({x:r.x0+T*(2+i*1.2),y:r.y1-T*2.3,k:'rbox',hl:T*0.45,hw:T*0.35,z0:0,z1:8,c:[40,50,70],rad:16,ht:10});
+  r.props.push({x:r.x1-T*2.2,y:r.y1-T*2.6,k:'rbox',hl:T*0.9,hw:T*0.5,z0:0,z1:13,c:[110,90,70],rad:30,ht:14},{x:r.x0+T*1.2,y:r.y0+T*1.4,k:'rbox',hl:T*0.3,hw:T*0.6,z0:0,z1:26,c:[90,96,104],rad:20,ht:26});}
+{const r=ROOMS.mall;r.counter={x:r.cx,y:r.cy+T*0.6};const SH=[[200,60,80],[60,120,200],[60,170,110],[220,150,40]];
+  for(let i=0;i<4;i++){const x=r.x0+T*(2.2+i*3.6);r.props.push({x,y:r.y0+T*1.5,k:'rbox',hl:T*1.5,hw:T*0.5,z0:0,z1:30,c:SH[i],rad:60,ht:32},{x,y:r.y0+T*2.1,k:'rbox',hl:T*1.2,hw:T*0.15,z0:0,z1:12,c:[236,236,232],rad:50,ht:14});}
+  r.props.push({x:r.cx,y:r.cy+T*0.6,k:'rbox',hl:T*1.4,hw:T*0.5,z0:0,z1:14,c:[180,90,40],rad:56,ht:16},{x:r.cx,y:r.cy+T*0.2,k:'rbox',hl:T*1.4,hw:T*0.1,z0:24,z1:29,c:[250,210,90],rad:56,ht:30});
+  for(let i=-1;i<=1;i++)r.props.push({x:r.cx+i*T*2.6,y:r.y1-T*2.4,k:'rbox',hl:T*0.5,hw:T*0.5,z0:0,z1:9,c:[200,200,196],rad:20,ht:10});
+  for(const s of[-1,1])r.props.push({x:r.cx+s*T*5.6,y:r.cy+T,k:'rbox',hl:T*0.35,hw:T*0.35,z0:0,z1:24,c:[70,140,70],rad:14,ht:24});}
+const WALKIN=[];
+(function walkIns(){const mallAt=(()=>{const b=buildings.filter(q=>!q.outside&&q.st==='glass').sort((a,b)=>hyp(a.x-WPX*0.5,a.y-WPX*0.55)-hyp(b.x-WPX*0.5,b.y-WPX*0.55))[0];return b?{x:b.x+b.w/2,y:b.y+b.h/2}:{x:WPX*0.5,y:WPX*0.55};})();
+  for(const[id,p]of[['hosp',hospitalSpawn],['cops',policeSpawn],['mall',mallAt]]){if(!p)continue;const D={x:p.x,y:p.y};let S=null;try{S=liveOnLot(id,D,D);}catch(e){S=null;}
+    if(S){WALKIN.push(S);const q=ROOMS2[id];SIGNS.push({x:S.dx,y:S.Y1+2,text:q.sign[0],bg:q.sign[1],fg:q.sign[2],h:SH_H+12,on:()=>true});}}})();
+let walkCool=0;
+function walkInTick(dt){walkCool-=dt;if(walkCool>0||!ROOM||!ROOM.live||DLG.open||player.car)return;const r=ROOM.r;if(!r||!r.counter||!ROOMS2[ROOM.id])return;
+  if(dist2(player.x,player.y,r.counter.x,r.counter.y+T)>34*34)return;walkCool=5;
+  if(ROOM.id==='hosp')say([['Nurse','Take a seat... oh, you look bad. We can patch you up.']],null,[['PATCH ME UP $100',()=>{if(money>=100){addMoney(-100);player.hp=PMAX();note('Good as new. +full health');}else note('Not enough cash');}],['NO THANKS',()=>{},'no']]);
+  else if(ROOM.id==='cops'){const st=stars();if(st<=0){say([['Desk Sergeant','Something I can help you with, citizen?']],null,[['JUST LOOKING',()=>{},'no']]);return;}
+    const fee=st*400;say([['Desk Sergeant','Walking in here with '+st+' star'+(st>1?'s':'')+'? Bold. Pay the fine and we lose the paperwork.']],null,[['PAY $'+fee,()=>{if(money>=fee){addMoney(-fee);clearHeat();note('Fines paid. You are clean.');}else note('Not enough cash');}],['LEAVE',()=>{},'no']]);}
+  else if(ROOM.id==='mall')say([['Food court','What can I get you?']],null,[['PLATE LUNCH $12',()=>{if(money>=12){addMoney(-12);player.hp=Math.min(PMAX(),player.hp+30);note('Filling. +30 health');}}],['SHAVE ICE $4',()=>{if(money>=4){addMoney(-4);player.hp=Math.min(PMAX(),player.hp+8);note('Refreshing. +8 health');}}],['NOTHING',()=>{},'no']]);}
+{const f=cityTick;cityTick=function(dt){f(dt);walkInTick(dt);}}
