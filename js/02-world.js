@@ -261,7 +261,7 @@ function carTiles(c){if(c.t.heli&&(c.alt||0)>30)return;
     const ca=Math.cos(c.a),sa=Math.sin(c.a);let any=false;
     for(const q of CARPTS){
       const rx=ca*q[0]*hl-sa*q[1]*hw,ry=sa*q[0]*hl+ca*q[1]*hw,px=c.x+rx,py=c.y+ry,tx=Math.floor(px/T),ty=Math.floor(py/T);
-      const SOL=c.t.boat?boatSolid:(x,y)=>isSolid(tileAt(x,y))&&!garageSkip(c,x,y);
+      const SOL=c.t.boat?boatSolid:(x,y)=>(isSolid(tileAt(x,y))&&!garageSkip(c,x,y))||shopDoorTile(x,y);
       if(!SOL(tx,ty))continue;
       const cands=[[px-tx*T,-1,0],[tx*T+T-px,1,0],[py-ty*T,0,-1],[ty*T+T-py,0,1]].sort((a,b)=>a[0]-b[0]);
       let ch=cands[0];for(const k of cands)if(!SOL(tx+k[1],ty+k[2])){ch=k;break;}

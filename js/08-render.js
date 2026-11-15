@@ -35,6 +35,7 @@
 // Borrowed from Rust Belt Rally: the world is drawn into a small pixel buffer and scaled up with hard pixels.
 // The camera sits behind the player looking level at the horizon. The ground is ray-cast row by row into the
 // city tile map (Mode-7 style); buildings and cars are projected 3D boxes; people and props are billboards.
+let SHOPV=null; // the gun shop the camera or player is inside (08c-places.js)
 let lowc=document.createElement('canvas'),L3=lowc.getContext('2d');
 let FOC0=160,LW=320,LH=180,HW=160,HOR=72,FOC=160,SCL=1,OX=0,OY=0,lowImg=null,lowBuf=null,HALF=1,frameNo=0;
 const NEAR=5,BH=40;let HOR0=72,HORA=0;let FOG0=360,FOG1=1250,FOGN0=360,FOGN1=1250;
@@ -468,6 +469,7 @@ function drawBuilding(b,fg){
   if(b.st==='house'){drawHouse(b,fg,det);return;}
   if(b.st==='cont'){drawCont(b,fg);return;}
   if(b.st==='cath'){drawCath(b,fg);return;}
+  if(b.st==='gunshop'){drawShopOutside(b,fg);return;}
   const x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h,top=b.hg*BH,above=CZ>top;
   if(!above)roofStuff(b,top,fg,det);
   walls(b,x0,y0,x1,y1,0,top,fg,det,true);
@@ -1102,12 +1104,14 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   if(LIGHTK>0.02){const cand=[];for(const c of cars){if(c.wreck||!c.driver)continue;const d2=dist2(c.x,c.y,CX,CY);if(d2>700*700)continue;cand.push([d2,c]);}
     cand.sort((a,b)=>a[0]-b[0]);if(heli&&heli.fall<=0&&stars()>=5){const tg=player.car||player;heads.push([tg.x-60,tg.y,1,0,120,1]);}for(let i=0;i<Math.min(7,cand.length);i++){const c=cand[i][1],ca=Math.cos(c.a),sa=Math.sin(c.a);heads.push([c.x+ca*c.t.L/2,c.y+sa*c.t.L/2,ca,sa,c===player.car?300:200]);}}
   // underground (subway hall) or indoors: a dark ceiling instead of the sky and the far skyline
-  if(inHall(CX,CY)||(typeof roomAt==='function'&&roomAt(CX,CY))){L3.fillStyle='#1c1d20';L3.fillRect(0,0,LW,LH);L3.fillStyle='#26282c';for(let y=4;y<HOR;y+=9)L3.fillRect(0,y,LW,1);}
+  SHOPV=shopView();
+  if(inHall(CX,CY)||(typeof roomAt==='function'&&roomAt(CX,CY))||SHOPV){L3.fillStyle=SHOPV?'#2a2624':'#1c1d20';L3.fillRect(0,0,LW,LH);L3.fillStyle='#26282c';for(let y=4;y<HOR;y+=9)L3.fillRect(0,y,LW,1);}
   else{drawSky(top,bot,lightLvl,warm);farMarks();}
   renderGround(heads);
   // ---- flat things on the ground (drawn before anything stands on them) ----
   const R0=FOG1+60;
   const vis=(x,y,rad)=>{const dx=x-CX,dy=y-CY,f=dx*CC+dy*CS;if(f<-rad||f>R0)return false;const r=-dx*CS+dy*CC;return Math.abs(r)<=(f+rad)*HALF+rad*2;};
+  if(SHOPV)drawShopShell(SHOPV);
   if(inHall(CX,CY)){ZOFF=0;quad(HX0,HCY0,66,HX1,HCY0,66,HX1,HY1,66,HX0,HY1,66,'rgb(26,28,30)');}
   {const rm=roomAt(CX,CY);if(rm){ZOFF=0;quad(rm.x0,rm.y0,68,rm.x1,rm.y0,68,rm.x1,rm.y1,68,rm.x0,rm.y1,68,rm.id==='club'?'rgb(10,6,16)':'rgb(40,40,44)');}}
 
@@ -1123,7 +1127,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   if(ringing>=0&&!mission){const ph=phones[ringing];if(vis(ph.x,ph.y,40)){ZOFF=GH(ph.x,ph.y);const f=(game.t*1.2)%1;ring3(ph.x,ph.y,10+f*30,1,`rgba(255,214,0,${1-f})`,1.5);}}
   // ---- buildings, sorted far to near ----
   const vb=[];
-  if(!inHall(CX,CY)&&!roomAt(CX,CY))forCells(cl=>{for(const b of cl.b){
+  if(!inHall(CX,CY)&&!roomAt(CX,CY)&&!SHOPV)forCells(cl=>{for(const b of cl.b){
     const x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h;
     let fmin=1e9,fmax=-1e9;
     for(let i=0;i<4;i++){const f=((i&1?x1:x0)-CX)*CC+((i&2?y1:y0)-CY)*CS;if(f<fmin)fmin=f;if(f>fmax)fmax=f;}
@@ -1138,7 +1142,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   // ---- everything that stands up: slotted between buildings so walls hide what's behind them ----
   ITEMS.length=0;
   const HALLV=inHall(CX,CY),ROOMV=roomAt(CX,CY);
-  const add=(kind,o,x,y,rad,f,hgt,zb)=>{zb=zb||0;if(HALLV&&!inHall(x,y))return;if(ROOMV&&roomAt(x,y)!==ROOMV)return;if(!HALLV&&!ROOMV&&kind!==23&&(inHall(x,y)||roomAt(x,y)))return;const dx=x-CX,dy=y-CY;if(f==null)f=dx*CC+dy*CS;if(f<-rad||f>R0)return;if(f<34&&(kind===2||kind===3||kind===5||kind===13||kind===15))return;const r=-dx*CS+dy*CC;if(Math.abs(r)>(f+rad)*HALF+rad*2)return;
+  const add=(kind,o,x,y,rad,f,hgt,zb)=>{zb=zb||0;if(HALLV&&!inHall(x,y))return;if(SHOPV&&!(x>SHOPV.x0-4&&x<SHOPV.x1+4&&y>SHOPV.y0-4&&y<SHOPV.y1+4))return;if(ROOMV&&roomAt(x,y)!==ROOMV)return;if(!HALLV&&!ROOMV&&kind!==23&&(inHall(x,y)||roomAt(x,y)))return;const dx=x-CX,dy=y-CY;if(f==null)f=dx*CC+dy*CS;if(f<-rad||f>R0)return;if(f<34&&(kind===2||kind===3||kind===5||kind===13||kind===15))return;const r=-dx*CS+dy*CC;if(Math.abs(r)>(f+rad)*HALF+rad*2)return;
     const fc=Math.max(f,NEAR),k=FOC/fc,gz=GH(x,y),sx=HW+r*k,sw=rad*k,yb=HOR+(CZ-gz-zb)*k,yt=HOR+(CZ-gz-zb-(hgt||22))*k,ym=(yb+yt)/2;
     let slot=0;
     for(let i=vb.length-1;i>=0;i--){const b=vb[i];
@@ -1280,7 +1284,7 @@ function drawItem2(it){const o=it.o,fg=fogAt(it.f);{const ox=it.kind===9?o.b.x:o
     case 19:{if(!proj(o.x,o.y,0))break;BX=PX;BY=PY;BK=PK;const bob=Math.sin(game.t*3+o.x)*2,w=4+Math.abs(Math.sin(game.t*2+o.y))*2;bb(-w,5+bob,w,13+bob,lit([40,190,110],1,fg,true));bb(-w,8+bob,w,9.5+bob,lit([20,90,50],1,fg,true));glow(PX,PY-9*PK,5*PK,'#5fffb0',0.45);break;}
     case 17:ZOFF=o.z;drawHeli3(o,fg);break;
     case 18:sign3(o.x,o.y,30+Math.sin(game.t*4)*3,'TAXI STOP','#ffd600','#111111',10,fg);break;
-    case 14:if(o===player){if(game.state==='wasted'){flat(player.x,player.y,player.a,8,4.5,0.5,litH('#d9731f',1,fg));flat(player.x-Math.cos(player.a)*11,player.y-Math.sin(player.a)*11,player.a,3.5,3.5,0.7,litH('#e0ac69',1,fg));}else drawPed3(player,true,fg);}else drawCar3(o,fg);break;
+    case 14:if(o===player&&player.swim&&game.state!=='wasted'){swimDraw(fg);break;}if(o===player){if(game.state==='wasted'){flat(player.x,player.y,player.a,8,4.5,0.5,litH('#d9731f',1,fg));flat(player.x-Math.cos(player.a)*11,player.y-Math.sin(player.a)*11,player.a,3.5,3.5,0.7,litH('#e0ac69',1,fg));}else drawPed3(player,true,fg);}else drawCar3(o,fg);break;
     case 12:qSign(o.x,o.y,30+Math.sin(game.t*4)*3,'DROP','#ffd600','#111111');break;
   }
 }

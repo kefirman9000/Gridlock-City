@@ -45,6 +45,114 @@ function slopeRail(ax,ay,az,bx,by,bz,h,rgb,fg){quad(ax,ay,az,bx,by,bz,bx,by,bz+h
 let pCool=0;
 
 // =====================================================================================================================
+// ---- Ammu-Nation, for real: a walk-in store on its lot instead of a sign that warps you to a back room ----
+// The walls are one tile thick (solid tiles); the floor inside is walkable, the door tile is open to people and closed
+// to cars. From outside it draws as a closed brick store (drawShopOutside). With the camera or the player inside, the
+// world pass draws only what's inside (SHOPV in 08-render.js): first the shell (floor, inner walls, ceiling, wall racks:
+// drawShopShell), then the counter, the clerk and the displays as ordinary props sorted by distance. Walk onto a glowing
+// pad in front of a display to buy that item.
+const SHOPS=[],SHOPDOOR=new Set(),SH_H=56;
+const shopDoorTile=(tx,ty)=>SHOPDOOR.has(ty*W+tx);
+const SHOPUSED=[];
+for(const g of GUNSHOPS){
+  // the nearest free parking lot to where the shop's sign was (the lots by the old spots are shared with other places);
+  // failing that a small park or plaza, paved over
+  const ax=g.x,ay=g.y,w=7,h=5,cands=[],free=(x0,y0)=>x0>1&&y0>1&&x0+9<W&&y0+9<W&&!(x0+8>=RIVX0-2&&x0<RIVX1+2)&&!SHOPUSED.some(u=>Math.abs(u[0]-x0)<9&&Math.abs(u[1]-y0)<9)&&!placeBusyRect((x0-1)*T,(y0-1)*T,(x0+9)*T,(y0+9)*T);
+  for(const l of lotBlocks){const x0=Math.round(l.x/T)-4,y0=Math.round(l.y/T)-4;let ok=true;for(let y=0;y<8&&ok;y++)for(let x=0;x<8;x++)if(map[(y0+y)*W+x0+x]!==LOT){ok=false;break;}
+    if(ok&&free(x0,y0))cands.push([hyp(l.x-ax,l.y-ay),x0,y0,l]);}
+  if(!cands.length)for(let i=0;i<NB*NB;i++){const k=BLOCKK[i],bx=i%NB,by=Math.floor(i/NB);if((k!=='park'&&k!=='plaza')||inCP(bx,by))continue;const x0=bx*P+5,y0=by*P+5;
+    if(districtAt((x0+4)*T,(y0+4)*T)==='OLD TOWN'||!free(x0,y0))continue;cands.push([hyp((x0+4)*T-ax,(y0+4)*T-ay)+400,x0,y0,null]);}
+  if(!cands.length)continue; // keeps the old walk-in-and-warp shop
+  cands.sort((p,q)=>p[0]-q[0]);const[,x0,y0,l]=cands[0];SHOPUSED.push([x0,y0]);if(l)lotBlocks.splice(lotBlocks.indexOf(l),1);
+  clearRect(x0*T-2,y0*T-2,(x0+8)*T+2,(y0+8)*T+2);
+  {const mm=mmc.getContext('2d');mm.fillStyle='rgb(82,84,90)';for(let y=0;y<8;y++)for(let x=0;x<8;x++){map[(y0+y)*W+x0+x]=LOT;PARKT[(y0+y)*W+x0+x]=0;}mm.fillRect(x0,y0,8,8);}
+  const sg=SIGNS.find(s=>s.text==='AMMU-NATION'&&s.x===g.x&&s.y===g.y),sx=x0+1,sy=y0;
+  const X0=sx*T,Y0=sy*T,X1=(sx+w)*T,Y1=(sy+h)*T,dtx=sx+3,dty=sy+h-1;
+  const b=lateBuilding({x:X0,y:Y0,w:w*T,h:h*T,hg:SH_H/BH,col:'#8a3a2e',st:'gunshop',kind:'gunshop',hollow:true},false);
+  const mm=mmc.getContext('2d');
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const tx=sx+x,ty=sy+y,edge=x===0||y===0||x===w-1||y===h-1,door=tx===dtx&&ty===dty;
+    map[ty*W+tx]=edge&&!door?BLD:WALK;mm.fillStyle=edge&&!door?'#26262c':'#8c8a84';mm.fillRect(tx,ty,1,1);}
+  SHOPDOOR.add(dty*W+dtx);
+  const S={b,x0:X0+T,y0:Y0+T,x1:X1-T,y1:Y1-T,X0,Y0,X1,Y1,dx:(dtx+0.5)*T,inside:false};b.shop=S;
+  g.x=S.dx;g.y=Y1+18;g.real=true;if(sg){sg.x=S.dx;sg.y=Y1+2;sg.h=SH_H+12;}
+  const cx=(S.x0+S.x1)/2,iy0=S.y0,iy1=S.y1;
+  props.push({x:cx,y:iy0+24,k:'scounter',hl:58,hw:6,rad:62,ht:20},{x:cx+14,y:iy0+11,k:'sclerk',rad:8,ht:30});
+  const pads=[[1,cx-48,iy0+40,cx-48,iy0+24,'counter'],[2,cx-24,iy0+40,cx-24,iy0+24,'counter'],[7,cx,iy0+40,cx,iy0+24,'counter'],[8,cx+24,iy0+40,cx+24,iy0+24,'counter'],[5,cx+48,iy0+40,cx+48,iy0+24,'counter'],
+    [0,S.x0+26,iy0+52,S.x0+9,iy0+52,'case'],[4,S.x0+26,iy0+68,S.x0+9,iy0+68,'case'],[6,S.x0+26,iy0+84,S.x0+9,iy0+84,'case'],
+    [9,S.x1-26,iy0+52,S.x1-9,iy0+52,'stand'],[3,S.x1-26,iy0+68,S.x1-9,iy0+68,'stand'],['ammo',S.x1-26,iy0+84,S.x1-9,iy0+84,'crates']];
+  for(const[it,x,y,mx,my,kind]of pads){const p={x,y,k:'spad',it,mx,my,kind,rad:16,ht:24,S};S.pads=S.pads||[];S.pads.push(p);props.push(p);}
+  SHOPS.push(S);}
+function shopAt(x,y,pad){for(const S of SHOPS)if(x>S.X0-pad&&x<S.X1+pad&&y>S.Y0-pad&&y<S.Y1+pad)return S;return null;}
+// which shop to draw from the inside: the one the player is standing in, or the one the camera is in
+function shopView(){if(MIRROR)return null;const pl=!player.car&&!player.riding&&(player.jz||0)<SH_H-14?shopAt(player.x,player.y,-T*0.2):null;if(pl)return pl;
+  const S=shopAt(CX,CY,0);return S&&CZ-S.b.base<SH_H?S:null;}
+function shopCam(){if(player.car)return;const S=shopAt(player.x,player.y,-T*0.2);if(!S||(player.jz||0)>SH_H-14)return;
+  cam.x=clamp(cam.x,S.x0+4,S.x1-4);cam.y=clamp(cam.y,S.y0+4,S.y1-4);}
+const IN=(c,k,fg)=>lit(c,k,fg*0.3,true); // indoor light: not darkened by night outside
+function drawShopShell(S){const b=S.b;ZOFF=b.base;const x0=S.x0,y0=S.y0,x1=S.x1,y1=S.y1,top=SH_H-2,fg=0,wall=[206,198,180],ez=CZ-ZOFF;
+  quad(x0,y0,0.2,x1,y0,0.2,x1,y1,0.2,x0,y1,0.2,IN([150,146,138],0.95,fg));
+  for(let x=x0+16;x<x1;x+=16)quad(x-0.4,y0,0.3,x+0.4,y0,0.3,x+0.4,y1,0.3,x-0.4,y1,0.3,IN([128,124,118],1,fg));
+  for(let y=y0+16;y<y1;y+=16)quad(x0,y-0.4,0.3,x1,y-0.4,0.3,x1,y+0.4,0.3,x0,y+0.4,0.3,IN([128,124,118],1,fg));
+  if(ez<top)quad(x0,y0,top,x1,y0,top,x1,y1,top,x0,y1,top,IN([86,80,74],1,fg));
+  if(ez<top)for(const lx of[x0+40,(x0+x1)/2,x1-40])quad(lx-12,(y0+y1)/2-3,top-0.3,lx+12,(y0+y1)/2-3,top-0.3,lx+12,(y0+y1)/2+3,top-0.3,lx-12,(y0+y1)/2+3,top-0.3,IN([255,250,226],1.1,fg));
+  const wq=(ax,ay,bx,by,z0,z1,c,k)=>quad(ax,ay,z0,bx,by,z0,bx,by,z1,ax,ay,z1,IN(c,k,fg));
+  if(CY>y0){wq(x0,y0,x1,y0,0,top,wall,0.86);wq(x0+20,y0+0.4,x1-20,y0+0.4,20,48,[150,110,70],0.9); // pegboard behind the counter
+    const guns=[[20,1.2],[16,1],[24,1.6],[26,1.4],[22,2.6],[12,0.9]];guns.forEach(([l,t],i)=>{const gx=x0+34+i*((x1-x0-68)/5);for(const z of[28,40])wq(gx-l/2,y0+0.6,gx+l/2,y0+0.6,z,z+t*1.6,[34,34,38],1);});
+    wq(x0+60,y0+0.6,x1-60,y0+0.6,50,53,[200,40,30],1.1);}
+  if(CY<y1){const d0=S.dx-T/2,d1=S.dx+T/2;wq(x0,y1,d0,y1,0,top,wall,0.8);wq(d1,y1,x1,y1,0,top,wall,0.8);wq(d0,y1,d1,y1,36,top,wall,0.8);
+    wq(d0+2,y1,d1-2,y1,0,34,LIGHTK>0.3?[40,50,78]:[200,220,232],1);wq(S.dx-0.6,y1-0.1,S.dx+0.6,y1-0.1,0,34,[60,60,66],1);
+    wq(x0+8,y1-0.3,d0-8,y1-0.3,12,34,LIGHTK>0.3?[30,36,60]:[184,206,222],1);wq(d1+8,y1-0.3,x1-8,y1-0.3,12,34,LIGHTK>0.3?[30,36,60]:[184,206,222],1);}
+  if(CX>x0){wq(x0,y1,x0,y0,0,top,wall,0.78);wq(x0+0.4,y0+50,x0+0.4,y0+80,24,44,[236,226,190],1);}
+  if(CX<x1){wq(x1,y0,x1,y1,0,top,wall,0.82);wq(x1-0.4,y0+50,x1-0.4,y0+80,24,44,[200,40,30],1);}}
+function drawShopOutside(b,fg){ZOFF=b.base;const S=b.shop,x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h,brick=[138,62,48];
+  obox((x0+x1)/2,(y0+y1)/2,0,b.w/2,b.h/2,0,SH_H,brick,[96,92,88],fg);
+  obox((x0+x1)/2,(y0+y1)/2,0,b.w/2+0.5,b.h/2+0.5,SH_H-3,SH_H,[170,160,146],[96,92,88],fg);
+  if(CY>y1){const night=LIGHTK>0.2,gl=night?lit([255,214,150],0.9,fg,true):lit([40,50,66],1,fg),d0=S.dx-14,d1=S.dx+14;
+    const fq=(ax,bx,z0,z1,c)=>quad(ax,y1+0.4,z0,bx,y1+0.4,z0,bx,y1+0.4,z1,ax,y1+0.4,z1,c);
+    fq(x0+10,d0-8,10,36,gl);fq(d1+8,x1-10,10,36,gl);fq(d0,d1,0,36,night?lit([255,230,180],0.8,fg,true):lit([30,36,46],1,fg));
+    const neon=lit([255,60,50],1,fg,night);for(const[a,c]of[[x0+10,d0-8],[d1+8,x1-10]]){fq(a,c,34,35.5,neon);fq(a,c,10,11.5,neon);}
+    obox((x0+x1)/2,y1+5,0,b.w/2-6,5,38,40,[200,40,34],[230,60,50],fg);
+    for(const[a,c]of[[x0+10,d0-8],[d1+8,x1-10]])for(let x=a+10;x<c-6;x+=22)fq(x,x+12,18,24,night?lit([60,20,20],1,fg,true):lit([20,20,22],1,fg));}}
+function gunItemModel(it,x,y,z,fg){const dark=[34,34,38];
+  if(it==='ammo'){for(const[dx,dy,dz]of[[0,-5,0],[0,5,0],[0,0,7]])obox(x+dx,y+dy,0,6,4.5,z+dz,z+dz+7,[86,96,56],[110,120,70],fg);return;}
+  const n=GUNSTOCK[it][0];
+  if(it===9){obox(x,y,0,2,2,z,z+14,[60,60,64],null,fg);obox(x,y,0,3.5,5,z+14,z+26,[50,70,96],[60,80,106],fg);obox(x,y,0,2.2,2.2,z+26,z+31,[200,196,186],null,fg);return;}
+  if(it===3){obox(x,y,0,3,3,z,z+14,[160,40,30],[190,60,40],fg);obox(x-5,y,0,4,1,z+10,z+12,dark,null,fg);return;}
+  if(it===0){obox(x,y,PI/2,8,0.9,z,z+1.8,[150,110,64],null,fg);return;}
+  if(it===4){for(const d of[-3,0,3])obox(x,y+d,0,1,1,z,z+5,[60,120,60],null,fg);return;}
+  if(it===6){for(const d of[-3,0,3])obox(x,y+d,0,1.4,1.4,z,z+2.8,[86,96,56],null,fg);return;}
+  const L={1:6,2:8,5:10,7:9,8:11}[it]||6;obox(x,y,0,L,0.9,z,z+2,it===5?[86,96,56]:dark,null,fg);obox(x-L*0.4,y,0,1.2,0.8,z-2,z,dark,null,fg);}
+function shopProp(o,fg){const E=(c)=>c; // shop props are lit from inside
+  switch(o.k){
+    case 'scounter':obox(o.x,o.y,0,o.hl,o.hw,0,15,[110,76,48],[170,150,120],fg*0.3,null,null,true);obox(o.x,o.y+o.hw-0.5,0,o.hl-2,0.6,2,13,[90,60,40],null,fg*0.3,null,null,true);
+      obox(o.x-o.hl+14,o.y,0,6,4,15,22,[40,40,44],[60,60,66],fg*0.3,null,null,true);return true; // the till
+    case 'sclerk':{const sk=[214,170,130];obox(o.x,o.y,0,3.2,4.6,0,13,[40,44,60],null,fg*0.3,null,null,true);obox(o.x,o.y,0,3.4,5,13,23,[86,104,62],null,fg*0.3,null,null,true);
+      obox(o.x,o.y,0,2.6,2.6,23,28.5,sk,[90,60,40],fg*0.3,null,null,true);obox(o.x,o.y+0.4,0,3,3,28.5,30,[160,30,30],null,fg*0.3,null,null,true);return true;}
+    case 'spad':{const it=o.it,p=it==='ammo'?400:Math.round(GUNSTOCK[it][1]*gunDiscount()),can=money>=p,near=o.S.near===o;
+      if(o.kind==='case'){obox(o.mx,o.my,0,6,7,0,10,[96,70,50],[200,220,226],fg*0.3,null,null,true);gunItemModel(it,o.mx,o.my,10,fg*0.3);}
+      else if(o.kind==='stand'||o.kind==='crates'){if(o.kind==='stand'&&it!==9)obox(o.mx,o.my,0,5,5,0,8,[70,70,76],[110,110,116],fg*0.3,null,null,true);gunItemModel(it,o.mx,o.my,o.kind==='stand'&&it!==9?8:0,fg*0.3);}
+      else gunItemModel(it,o.mx,o.my-1,15,fg*0.3);
+      const pulse=0.75+0.25*Math.sin(game.t*4+o.x);flat(o.x,o.y,0,6,6,0.4,lit(can?[60,230,110]:[230,70,60],pulse,0,true));
+      if(near)sign3(o.x,o.y,22,(it==='ammo'?'AMMO REFILL':GUNSTOCK[it][0].toUpperCase())+'  $'+p.toLocaleString(),'#1a1a1a',can?'#7dff8a':'#ff6a5a',3.2,fg);return true;}}
+  return false;}
+function buyStock(i){const[n,p0,w0,a]=GUNSTOCK[i],p=Math.round(p0*gunDiscount());
+  say([['Clerk',n+'. $'+p.toLocaleString()+', cash only.']],null,[['BUY $'+p.toLocaleString(),()=>{if(money<p){note('Not enough cash');return;}addMoney(-p);sfx('pickup');
+    let w=w0;if(w==='bat')w=BATIDX();if(w==='gren')w=GRENIDX();if(w==='rifle')w=WIDX('Assault Rifle');if(w==='sniper')w=WIDX('Sniper Rifle');
+    if(w<0){player.armor=100;note('Body armor on');}else{player.ammo[w]=(player.ammo[w]||0)+a;player.w=w;note(WEAPONS[w].name+' ready');}}],['NO THANKS',()=>{},'no']]);}
+function buyAmmo(){const got=[];let cost=0;
+  for(const i of[1,2,3,4,5,6,7,8]){let w=GUNSTOCK[i][2];if(w==='gren')w=GRENIDX();if(w==='rifle')w=WIDX('Assault Rifle');if(w==='sniper')w=WIDX('Sniper Rifle');
+    if(w>=0&&player.ammo[w]>0&&player.ammo[w]!==Infinity){got.push([w,GUNSTOCK[i][3]]);cost+=Math.round(GUNSTOCK[i][1]*0.4);}}
+  cost=Math.round(Math.max(150,cost)*gunDiscount());
+  if(!got.length){say([['Clerk','You don\'t have anything to load. Buy a gun first.']]);return;}
+  say([['Clerk','A box for everything you\'re carrying: $'+cost.toLocaleString()+'.']],null,[['REFILL $'+cost.toLocaleString(),()=>{if(money<cost){note('Not enough cash');return;}addMoney(-cost);sfx('pickup');
+    for(const[w,a]of got)player.ammo[w]+=a;note('Ammo topped up');}],['NO THANKS',()=>{},'no']]);}
+function shopTick(){const S=shopAt(player.x,player.y,-T*0.2),inside=!!S&&!player.car&&(player.jz||0)<SH_H-14;
+  for(const s of SHOPS){const was=s.inside;s.inside=inside&&s===S;if(s.inside&&!was)note('Clerk: Welcome to Ammu-Nation. Step up to anything you like');}
+  if(S){let bd=34*34;S.near=null;for(const p of S.pads){const d=dist2(player.x,player.y,p.x,p.y);if(d<bd){bd=d;S.near=p;}}}
+  if(!inside||pCool>0||DLG.open)return;
+  for(const p of S.pads)if(dist2(player.x,player.y,p.x,p.y)<8*8){pCool=3;if(p.it==='ammo')buyAmmo();else buyStock(p.it);return;}}
+
+// =====================================================================================================================
 // ---- the parking garage: drive up the outside ramps to a second level and the roof, then off the stunt jump ----
 // Layout on one 8x8 parking lot (tiles, from the lot's NW corner):  R1 ground ramp x0-2 y0-5 rising south to the first
 // deck A (x0-6 y5-8, 48 up); R2 climbs east along A to the roof level (96): the landing L (x6-8 y5-8) and the roof B
@@ -252,7 +360,7 @@ function farMarks(){const C=CATH;if(!C)return;const b=C.b;let fmin=1e9;for(let i
   obox(C.tx,C.ty,0,22,22,60,176,STONE,STONE2,fg);spire(C.tx,C.ty,fg,true);}
 
 // ---- props from this file (drawProp3 hands over anything it doesn't know) ----
-function placesProp(o,fg){switch(o.k){
+function placesProp(o,fg){if(shopProp(o,fg))return;switch(o.k){
   case 'gramp':{const r=o.r;ZOFF=o.base;wedge(r.x,r.y,r.a,r.hl,r.hw,0,r.h0,r.h1,[150,148,142],[124,124,126],fg,0);
     const ca=Math.cos(r.a),sa=Math.sin(r.a),xr=r.x-r.hw+1.5;slopeRail(xr,r.y-r.hl,r.h0,xr,r.y+r.hl,r.h1,7,[156,154,148],fg);
     for(let i=1;i<5;i++){const f=-r.hl+i*r.hl*0.4,zz=r.h0+(r.h1-r.h0)*(f+r.hl)/(2*r.hl)+0.3;flat(r.x+ca*f,r.y+sa*f,r.a,4,0.9,zz,lit([226,214,120],1,fg));}return;}
@@ -296,7 +404,7 @@ let GFlx=null,GFly=null;
 function garageFeet(){const G=GARAGE;if(!G||player.car||player.riding||dist2(player.x,player.y,G.cx,G.cy)>G.r2){GFlx=null;return;}
   const z=GH(player.x,player.y)+(player.jz||0),r=G.S[0],ca=Math.cos(r.a),sa=Math.sin(r.a),dx=player.x-r.x,dy=player.y-r.y,f=dx*ca+dy*sa,l=-dx*sa+dy*ca;
   if(GFlx!=null&&Math.abs(f)<r.hl&&Math.abs(l)<r.hw&&G.base+r.h0+(r.h1-r.h0)*(f+r.hl)/(2*r.hl)>z+9){player.x=GFlx;player.y=GFly;return;}GFlx=player.x;GFly=player.y;}
-function placesTick(dt){pCool-=dt;turnstileTick(dt);garageFeet();
+function placesTick(dt){pCool-=dt;turnstileTick(dt);garageFeet();shopTick();
   if(FISH){FISH.t-=dt;if(player.car||hyp(player.x-FISH.x,player.y-FISH.y)>26){FISH=null;note('You reel in early. Nothing on the line');}
     else if(FISH.t<=0){FISH=null;fishCatch();pCool=1.5;}return;}
   if(pCool>0||player.car||DLG.open||game.state!=='play')return;
@@ -313,3 +421,46 @@ function placesTick(dt){pCool-=dt;turnstileTick(dt);garageFeet();
   if(CATH&&near(CATH.door.x,CATH.door.y,22)){pCool=5;const s=stars();
     say([['Priest',s?'Trouble follows you, child. Confession is $'+(s*150)+'.':'Peace be with you. Light a candle?']],null,
       (s&&s<=2?[['CONFESS $'+(s*150),buy(s*150,()=>{heat=0;showBig('ABSOLVED','The cops lose interest','#ffe8a0',2);})]]:[]).concat([['LIGHT A CANDLE $5',buy(5,heal(15))],['LEAVE',()=>{},'no']]));}}
+
+// =====================================================================================================================
+// ---- moving around on foot: swimming, and pulling yourself up onto ledges ----
+// Swimming: any water tile can be swum (circleTiles lets people through water now); you swim at under half speed with your
+// head and shoulders out, can't use weapons, and climb out where the bank is low or by pulling up (below). Diving in
+// from a height doesn't hurt. Called from the on-foot update right after circleTiles.
+const waterAt=(x,y)=>tileAt(Math.floor(x/T),Math.floor(y/T))===WATER;
+let SWlx=0,SWly=0,swimTold=false;
+function swimPost(dt){
+  if(player.car||player.riding||player.climb||player.mantle){player.swim=false;SWlx=player.x;SWly=player.y;return;}
+  const g=GH(player.x,player.y),inW=waterAt(player.x,player.y);
+  if(player.swim){
+    if(!inW){const sz=player.swimZ;if(g<=sz+4){player.swim=false;player.jz=0;player.jv=0;player.peak=0;} // a low bank or a beach: just walk out
+      else{player.x=SWlx;player.y=SWly;player.vx*=0.3;player.vy*=0.3;}} // too high: pull yourself up (mantlePre) or find a lower spot
+    if(player.swim){const sz=waterZ(player.x,player.y);player.swimZ=sz;player.jz=sz-g-13+Math.sin(game.t*3)*0.7;player.jv=0;player.peak=player.jz;
+      if(player.x<-300||player.y<-300||player.x>WPX+300||player.y>WPX+300){player.x=SWlx;player.y=SWly;note('Too far out. Swim back to shore');}
+      if(hyp(player.vx,player.vy)>30&&R()<dt*8)puff(player.x+rr(-4,4),player.y+rr(-4,4),rr(-20,20),rr(-20,20),0.5,rr(2,3),'#dcecff','smoke');}}
+  else if(inW){const sz=waterZ(player.x,player.y);if(player.jz<=sz-g+3){
+    const fall=Math.max(0,-(player.jv||0));player.swim=true;player.swimZ=sz;player.jz=sz-g-13;player.jv=0;player.peak=player.jz;
+    for(let k=0;k<(fall>150?14:5);k++)puff(player.x+rr(-6,6),player.y+rr(-6,6),rr(-70,70),rr(-70,70),rr(.4,.8),rr(3,6),'#e4f0ff','smoke');
+    sfx('door',0.3);if(!swimTold){swimTold=true;note('Swimming: you can\'t use weapons in the water. Climb out where the bank is low');}}}
+  SWlx=player.x;SWly=player.y;}
+function swimDraw(fg){const g=GH(player.x,player.y),surf=(player.swimZ!=null?player.swimZ:waterZ(player.x,player.y))-g;ZOFF=g;
+  if(!proj(player.x,player.y,surf))return;const yl=PY;
+  L3.save();L3.beginPath();L3.rect(0,0,LW,yl);L3.clip();ZOFF=g;drawPed3(player,true,fg);L3.restore();
+  ZOFF=g;const r=6+Math.sin(game.t*3)*1;flat(player.x,player.y,0,r,r*0.85,surf+0.2,`rgba(225,238,255,${0.4*(1-fg)})`);}
+// Pulling up: jump (or swim) into something whose top is just out of step reach (a low roof, a deck, a wall top, a car
+// roof, the pier, a high river bank) and you grab the edge and climb onto it. Hooked into climbPre / climbPost.
+function mantlePre(fwd){if(player.mantle)return true;
+  if(player.car||player.riding||player.climb||fwd<0.5||game.state!=='play')return false;
+  if(!(player.jv!==0||player.swim)||player.jv<-320)return false; // in the air (not falling hard) or in the water
+  const ca=Math.cos(player.body),sa=Math.sin(player.body),z0=GH(player.x,player.y)+(player.jz||0),reach=player.swim?46:30;
+  for(const d of[9,14]){const px=player.x+ca*d,py=player.y+sa*d,gp=GH(px,py),top=gp+footFloor(px,py,z0+reach-gp-8)[0];
+    if(top<=z0+7||top>z0+reach)continue;if(waterAt(px,py)&&top<gp+2)continue; // nothing but water there
+    const qx=player.x+ca*(d+10),qy=player.y+sa*(d+10),gq=GH(qx,qy),fq=footFloor(qx,qy,top-gq-4)[0];if(Math.abs(gq+fq-top)>4)continue; // room to stand
+    const t=tileAt(Math.floor(qx/T),Math.floor(qy/T));if(t===TREE)continue;if(t===WATER&&fq<1)continue;
+    if(t===BLD){const b=bldAt(qx,qy);if(!b||Math.abs(roofAbs(b,qx,qy)-top)>5)continue;}
+    player.mantle={t0:game.t,x0:player.x,y0:player.y,z0,x1:qx,y1:qy,z1:top};player.vx=player.vy=0;player.jv=0;player.swim=false;sfx('door',0.35);return true;}
+  return false;}
+function mantlePost(){const M=player.mantle;if(!M)return;const k=Math.min(1,(game.t-M.t0)/0.36),up=1-(1-Math.min(1,k/0.6))**2,fw=clamp((k-0.35)/0.65,0,1);
+  player.x=lerp(M.x0,M.x1,fw);player.y=lerp(M.y0,M.y1,fw);player.jz=M.z0+(M.z1+0.5-M.z0)*up-GH(player.x,player.y);
+  player.jv=0;player.vx=player.vy=0;player.peak=player.jz;player.moving=false;
+  if(k>=1){player.mantle=null;player.jz=footFloor(player.x,player.y,player.jz+2)[0];player.wasGrounded=true;}}

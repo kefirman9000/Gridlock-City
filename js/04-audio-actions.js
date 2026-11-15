@@ -125,6 +125,7 @@ function exitCar(force){
   c.driver=null;c.traffic=true;player.car=null;player.body=c.a;player.a=c.a;sfx('door');unseatCrew(c);
 }
 function playerFire(){
+  if(player.swim){return;}
   if(ACT&&ACT.kind==='rc'){rcBoom();return;}
   const w=WEAPONS[player.w];
   if(player.cool>0||player.ammo[player.w]<=0)return;
@@ -314,7 +315,7 @@ function footFloor(x,y,z){if(z==null)z=1e9;let fl=0,on=null,lad=false,fe=false;
   FOOT_LADDER=lad;FOOT_FE=fe;
   for(const c of cars){const dx=x-c.x,dy=y-c.y;if(dx*dx+dy*dy>3600)continue;const ca=Math.cos(c.a),sa=Math.sin(c.a),f=dx*ca+dy*sa,l=-dx*sa+dy*ca;
     if(Math.abs(f)<c.t.L/2-1&&Math.abs(l)<c.t.Wd/2){const h=carRoof(c)+(c.az||0);if(h>fl&&h<=z+8){fl=h;on=c;}}}
-  {const b=bldAt(x,y);if(b){const h=roofAbs(b,x,y)-GH(x,y)+0.5;if(h>fl&&h<=z+8){fl=h;on=null;}}}
+  {const b=bldAt(x,y);if(b&&!(b.hollow&&z<b.hg*BH-12)){const h=roofAbs(b,x,y)-GH(x,y)+0.5;if(h>fl&&h<=z+8){fl=h;on=null;}}}
   for(let i=0;i<train.cars;i++){const p=trainCar(i),dx=x-p.x,dy=y-p.y;if(dx*dx+dy*dy>2700)continue;const ca=Math.cos(p.a),sa=Math.sin(p.a),f=dx*ca+dy*sa,l=-dx*sa+dy*ca;
     if(Math.abs(f)<44&&Math.abs(l)<12){const h=EL_H+26.5;if(h>fl&&h<=z+8){fl=h;on={vx:ca*train.v,vy:sa*train.v};}}}
   for(const r of RAMPS){const dx=x-r.x,dy=y-r.y;if(dx*dx+dy*dy>2500)continue;const ca=Math.cos(r.a),sa=Math.sin(r.a),f=dx*ca+dy*sa,l=-dx*sa+dy*ca;

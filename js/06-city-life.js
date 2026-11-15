@@ -39,7 +39,7 @@ function updateRooms(dt){roomCool-=dt;if(roomCool>0||player.car||DLG.open||game.
     if(ROOM.id==='safe'&&dist2(player.x,player.y,r.bed.x,r.bed.y)<46*46){roomCool=3;player.hp=PMAX();game.paused=true;menuShow('pause');openPanel('save');note('Health restored');}
     if(ROOM.id==='club'&&dist2(player.x,player.y,r.bar.x-T,r.bar.y)<40*40){roomCool=6;say([['Bartender','What can I get you?']],null,[['SODA $5',()=>{if(money>=5){addMoney(-5);player.hp=Math.min(PMAX(),player.hp+10);note('Refreshing. +10 health');}}],['VIP ROUND $200',()=>{if(money>=200){addMoney(-200);for(let g=0;g<3;g++)addRespect(g,0.3);note('Word gets around. Every gang likes you a little more.');}}],['NOTHING',()=>{},'no']]);}
     return;}
-  for(const g of GUNSHOPS)if(dist2(g.x,g.y,player.x,player.y)<34*34){enterRoom('ammu',{x:g.x,y:g.y+40});return;}
+  for(const g of GUNSHOPS)if(!g.real&&dist2(g.x,g.y,player.x,player.y)<34*34){enterRoom('ammu',{x:g.x,y:g.y+40});return;}
   for(const sh of SAFEHOUSES)if(sh.owned&&stars()===0&&dist2(sh.x,sh.y,player.x,player.y)<34*34){enterRoom('safe',{x:sh.x,y:sh.y+40});shCool=4;return;}
   if(dist2(CLUB.x,CLUB.y,player.x,player.y)<34*34){if(!clubOpen()){note('The Neon Lotus opens at night');roomCool=4;return;}enterRoom('club',{x:CLUB.x,y:CLUB.y+40});}}
 
@@ -640,7 +640,7 @@ function updateEscapes(dt){resprayCool-=dt;const c=player.car;if(!c||stars()===0
 function carSwapEscape(c){if(stars()>0&&seenT>1.2&&c!==lastCarSwap){const s=stars();heat=TH[Math.max(0,s-1)]+1;radioMsg('DISPATCH: Suspect switched vehicles. We\'re looking for the wrong car.');note('You switched cars out of sight: one star less');}lastCarSwap=c;}
 // ---------- climbing ladders: push toward the wall to go up, pull back to go down, jump to let go ----------
 let climbIn=0;
-function climbPre(fwd,dt){const L=player.climb;
+function climbPre(fwd,dt){if(mantlePre(fwd))return true;const L=player.climb;
   if(!L){if(player.car||player.riding||game.state!=='play'||fwd<0.3)return false;
     for(const q of LADDERS){if(Math.abs(q.x-player.x)>40||Math.abs(q.y-player.y)>40)continue;const rx=player.x-q.x,ry=player.y-q.y,o=rx*q.nx+ry*q.ny,sl=Math.abs(rx*q.dx+ry*q.dy);if(sl>9)continue;
       const topRel=q.top-GH(q.px,q.py),facing=Math.cos(player.body)*q.nx+Math.sin(player.body)*q.ny;
@@ -652,7 +652,7 @@ function climbPre(fwd,dt){const L=player.climb;
   if(player.climbZ>=topRel){player.climb=null;player.x=L.x-L.nx*14;player.y=L.y-L.ny*14;player.jz=topRel+0.5;player.jv=0;player.peak=player.jz;return true;}
   if(player.climbZ<=0){player.climb=null;player.jz=0;player.jv=0;player.peak=0;player.x=L.px+L.nx*4;player.y=L.py+L.ny*4;return true;}
   return true;}
-function climbPost(){const L=player.climb;if(!L)return;player.x=L.px;player.y=L.py;player.jz=player.climbZ;player.jv=0;player.vx=player.vy=0;player.peak=player.jz;
+function climbPost(){mantlePost();const L=player.climb;if(!L)return;player.x=L.px;player.y=L.py;player.jz=player.climbZ;player.jv=0;player.vx=player.vy=0;player.peak=player.jz;
   player.body=player.a=Math.atan2(-L.ny,-L.nx);player.moving=Math.abs(climbIn)>0.1;}
 // ================= v4.12 (part 2): DINER, GYM, PAWN SHOP, ROOFTOP PLANKS AND RUNS, COLLECTIBLES, RAIN AND NIGHT, COUNTRYSIDE =================
 // ---------- three new places to walk into ----------

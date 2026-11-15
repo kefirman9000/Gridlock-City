@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.3.0
+- Ammu-Nation is a walk-in store on its own lot (moved to the nearest free lot): storefront outside; counter, clerk, racks, displays and buy pads inside; ammo refill. The view switches to the inside when you (or the camera) are in it.
+- Swimming in any water; no fall damage into water; climbing out at low shores.
+- Pulling up onto ledges, low roofs, decks and car roofs when you jump (or swim) into them.
+
 ## v5.2.0
 - A drivable parking garage (outside ramps to a second deck and the roof, parapets, and a rooftop kicker that counts as a unique stunt jump).
 - The South Beach pier: a boardwalk over the beach water with food stands and a fishing spot at the end.

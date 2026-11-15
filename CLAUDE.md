@@ -15,6 +15,8 @@ Key presses pass through its capture listener first, which rewrites `e.code` to 
 `js/08c-places.js` (v5.2) holds the parking garage, the South Beach pier, the Old Town cathedral and the subway concourse's turnstiles and booth.
 They are placed after the city is built (`lateBuilding` adds a building after the renderer's setup) and hook in through `garageSkip`/`garageCar`/`garageFloor`
 (car decks: cars ride `GARAGE.S` surfaces, parapets stop them at deck edges), `drawCath`, `garageWall`/`garageRoof`, `placesProp`, `farMarks` and `placesTick`.
+Since v5.3 it also holds the walk-in Ammu-Nation stores (`SHOPS`; `SHOPV` in the world pass draws only the inside: `drawShopShell`, then props), swimming
+(`swimPost` after the on-foot `circleTiles`, `swimDraw`; on foot, water tiles are passable) and pulling up onto ledges (`mantlePre`/`mantlePost`, run from `climbPre`/`climbPost`).
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).

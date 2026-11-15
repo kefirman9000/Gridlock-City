@@ -80,7 +80,7 @@ function update(dt){
       if(mouse.turn){player.body+=mouse.turn*0.006*(OPT.msens||1);mouse.turn=0;}
       player.body+=clamp(turn,-1.5,1.5)*2.8*dt;}
       // sprint: hold SHIFT (or click the left stick, or push the touch stick all the way)
-      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.35:1),sp=fwd<0?115:run?245:168,mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
+      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.35:1),sp=(player.swim?0.45:1)*(fwd<0?115:run?245:168),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
       player.vx=lerp(player.vx,mx*sp,Math.min(1,dt*14));player.vy=lerp(player.vy,my*sp,Math.min(1,dt*14));
       const ox0=player.x,oy0=player.y;player.x+=player.vx*dt;player.y+=player.vy*dt;
       {let[fl,onCar]=footFloor(player.x,player.y,player.jz);
@@ -95,10 +95,10 @@ function update(dt){
         if(player.jv===0&&player.wasGrounded&&player.jz>fl+0.6&&player.jz-fl<=8.5){player.jz=fl;}
         player.wasGrounded=player.jv===0&&player.jz<=fl+0.6;
         if(player.jv!==0||player.jz>fl+0.6){player.peak=Math.max(player.peak||0,player.jz);player.jz+=player.jv*dt;player.jv-=640*dt;if(player.jz<=fl&&player.jv<=0){player.jz=fl;player.jv=0;
-            const drop=(player.peak||0)-fl;if(drop>110&&game.state==='play'){hurtPlayer(Math.round((drop-110)*0.45));sfx('crash',0.4);if(drop>200)note('Ouch. That was a long way down');}player.peak=fl;}}
+            const drop=(player.peak||0)-fl;if(drop>110&&game.state==='play'&&tileAt(Math.floor(player.x/T),Math.floor(player.y/T))!==WATER){hurtPlayer(Math.round((drop-110)*0.45));sfx('crash',0.4);if(drop>200)note('Ouch. That was a long way down');}player.peak=fl;}}
         else{if(fl>player.jz&&fl-player.jz<=8.5)player.jz=fl;player.peak=player.jz;}} // step up as far as footFloor looks (z+8)
-      circleTiles(player,7,player.jz>4,player.jz);
-      player.moving=m>0.1&&player.jz<=0;
+      circleTiles(player,7,true,player.jz);swimPost(dt); // water is swimmable now (swimPost in 08c-places.js)
+      player.moving=m>0.1&&(player.jz<=0||player.swim);
       if(player.moving){const a0=player.anim;player.anim+=dt*m*13;if(Math.floor(a0/PI)!==Math.floor(player.anim/PI))sfx('step',run?1.3:1);}
       if(mouse.used&&!touchMode){const [wx,wy]=aimPoint();player.a=Math.atan2(wy-player.y,wx-player.x);}
       else player.a=lerpAng(player.a,player.body,Math.min(1,dt*14));
@@ -222,7 +222,7 @@ function update(dt){
         }
       }
     }
-    circleTiles(player,7,player.jz>4,player.jz);
+    circleTiles(player,7,true,player.jz);
   }
   // bust timer
   if(game.state==='play'){
@@ -424,7 +424,7 @@ function update(dt){
       if(hi){const tt=tileAt(Math.floor(qx/T),Math.floor(qy/T));if(tt===TREE)continue;const bb=bldAt(qx,qy);if(bb&&roofAbs(bb,qx,qy)<camZ-6)continue;}
       dd=Math.max(24,s2-10);break;}}
     cam.dist=lerp(cam.dist,dd,Math.min(1,dt*(dd<cam.dist?16:2.5)));cam.h=lerp(cam.h,Math.max(10,hgt),Math.min(1,dt*(cam.pidle<0.3?14:3)));
-    cam.x=player.x-ca*cam.dist;cam.y=player.y-sa*cam.dist;{const gz=GH(player.x,player.y)+(player.riding?EL_H+6:player.car?(player.car.az||0)*0.85:(player.jz||0)>18?player.jz-6:(player.jz||0)*0.4);cam.gz=cam.gz==null?gz:lerp(cam.gz,gz,Math.min(1,dt*(player.car&&player.car.air>0?9:5)));}}
+    cam.x=player.x-ca*cam.dist;cam.y=player.y-sa*cam.dist;shopCam();{const gz=GH(player.x,player.y)+(player.riding?EL_H+6:player.car?(player.car.az||0)*0.85:(player.jz||0)>18?player.jz-6:(player.jz||0)*0.4);cam.gz=cam.gz==null?gz:lerp(cam.gz,gz,Math.min(1,dt*(player.car&&player.car.air>0?9:5)));}}
   updateAudio();
 }
 let starFlash=0,sprayCool=0,curZone=-2,zoneBanner=null,radioBanner=null;
