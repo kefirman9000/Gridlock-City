@@ -31,21 +31,21 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.6
+- **Rampages:** a red skull hidden in every district starts a timed rampage with its own weapon and target. Finish them all for the stats screen.
+- **Taxi back:** fail a mission far from where it started and $50 gets you a cab back to retry it.
+- **Businesses:** buy the diner, the gym, the pawn shop, the arcade or the bar at the office desk inside. They earn every day and you collect from the till when you visit.
+- **Threads clothes store:** walk in downtown and change your look; it knocks a star off your wanted level.
+- **Bar games:** darts and pool at The Corner Tap, for small bets.
+- **Tuning:** spray shops add an engine tune and sport handling, and you pick the paint colour.
+- **Photo mode:** in the pause menu; free camera, six looks and a save button.
+- **Roadblocks:** smash through one at speed for a payout.
+
 ## What's new in v5.5
 - **Cars fall apart like in GTA III.** Each end and side of a car keeps its own damage: a battered front or back leaves the bumper hanging and then knocks it off, a smashed front pops the bonnet, and a hit on the side springs that door open. A spray shop fixes it all.
 - **Street life.** Rear-end someone and they may get out and come for you (and drag you out if you sit there). A crash draws a crowd of gawkers. People stop to chat in pairs. Park with music on and people nearby dance along or tell you to turn it down.
 - **Money-makers.** Safehouse garages hold three cars. Every so often the docks page you for one particular car: bring it in clean before the deadline for well over its export price.
 - Shops, safehouses, helipads and mission markers each get their own spot instead of piling up, and shop doors are visible on the street.
-
-## What's new in v5.4.2
-- *v5.4.6:* shops, safehouses, helipads and mission markers no longer pile up in one square; shop doors are visible on the street.
-- *v5.4.5:* trees and props behind your car no longer get drawn over it.
-- *v5.4.4:* a normal refresh now picks up a new version straight away.
-- *v5.4.3:* fixed a parked car beside a building sometimes being drawn on top of your car.
-- **GTA III-style crashes.** Car-on-car hits are bouncier, cars glance and slide off each other instead of sticking, and an off-centre hit spins the car you hit (T-bone a car and it goes round). Parked cars are no heavier than moving ones, so you can shove them out of the way. Damage still follows weight, but a light vehicle no longer bursts into flames from a tap.
-- **Lighter bikes.** Hit a motorbike and its rider is thrown over your hood, lands, and gets back up (or doesn't, at high speed); the bike falls on its side and skids away. The same happens to you if something big hits you on a bike. Shooting a rider off also leaves the bike lying down.
-
-Older release notes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

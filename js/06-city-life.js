@@ -262,9 +262,9 @@ let cheatBuf='';
 window.addEventListener('keydown',e=>{if(!game.started||e.key.length!==1||e.target&&e.target.tagName==='INPUT')return;cheatBuf=(cheatBuf+e.key.toUpperCase()).slice(-16);for(const k in CHEATS)if(cheatBuf.endsWith(k)){cheatBuf='';if(DLG.open)dlgClose();tryCheat(k);break;}},true);
 // ---------- GTA-style retry after a failed mission ----------
 let RETRY=null;
-function offerRetry(m){if(!m||!m.def||m.def===FINALE&&false)return;RETRY={def:m.def,opts:m.opts,g:m.g};}
+function offerRetry(m){if(!m||!m.def||m.def===FINALE&&false)return;RETRY={def:m.def,opts:m.opts,g:m.g,start:m.start};}
 function updateRetry(){if(!RETRY||DLG.open||mission||game.state!=='play'||game.paused)return;const r=RETRY;RETRY=null;
-  say([['','Mission failed. Try again?']],null,[['RETRY',()=>{if(r.opts&&r.opts.race){if(player.car)startRace(r.opts.race);else note('You need a car to race');return;}runMission(r.def,r.opts);mission.g=r.g;}],['NOT NOW',()=>{},'no']]);}
+  say([['','Mission failed. Try again?']],null,[['RETRY',()=>{if(r.opts&&r.opts.race){if(player.car)startRace(r.opts.race);else note('You need a car to race');return;}runMission(r.def,r.opts);mission.g=r.g;}],...(r.start&&!(r.opts&&r.opts.race)&&hyp(player.x-r.start.x,player.y-r.start.y)>400?[['TAXI BACK $50',()=>tripSkip(r)]]:[]),['NOT NOW',()=>{},'no']]);}
 // ---------- new traffic: city buses, limos, ice cream vans ----------
 CT.bus={name:'City Bus',L:98,Wd:30,max:330,acc:200,grip:12,turn:1.9,hp:320,mass:3.4,cols:['#d8a020','#2a6ad8','#e0e0e0'],bus:true};
 CT.limo={name:'Stretch',L:76,Wd:25,max:420,acc:300,grip:11,turn:2.2,hp:150,mass:1.8,cols:['#111111','#f0f0f0'],limo:true};

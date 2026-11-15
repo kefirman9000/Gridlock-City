@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js` and `js/08c-places.js` between 08 and 09), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js` and `js/08d-life.js` between 08 and 09), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -17,6 +17,10 @@ They are placed after the city is built (`lateBuilding` adds a building after th
 (car decks: cars ride `GARAGE.S` surfaces, parapets stop them at deck edges), `drawCath`, `garageWall`/`garageRoof`, `placesProp`, `farMarks` and `placesTick`.
 Since v5.3 it also holds the walk-in Ammu-Nation stores (`SHOPS`; `SHOPV` in the world pass draws only the inside: `drawShopShell`, then props), swimming
 (`swimPost` after the on-foot `circleTiles`, `swimDraw`; on foot, water tiles are passable) and pulling up onto ledges (`mantlePre`/`mantlePost`, run from `climbPre`/`climbPost`).
+
+`js/08d-life.js` (v5.6) holds rampages, taxi back (`tripSkip`), businesses (`BIZ`, `STATS.biz`), the Threads clothes store (`OUTFITS`, `plook()` colours the player),
+bar games on a timing bar (`timingStart`/`lifeHUD`), the spray shop's tuning (`applyUp`, `renderShop`), photo mode and roadblock busting. It wraps
+`placesTick`, `placesProp`, `frenzyHit`, `freeCam`/`freeCamTick` rather than editing them.
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).

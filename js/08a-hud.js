@@ -60,7 +60,7 @@ function objectiveTarget(){
 }
 function drawHUD(){
   const sc=clamp(Math.min(VW,VH)/700,0.65,1.25);
-  drawScreenRain(sc);extrasHUD(sc);
+  drawScreenRain(sc);extrasHUD(sc);lifeHUD(sc);
   // hurt vignette
   if(player.hurt>0){const g=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.3,VW/2,VH/2,Math.max(VW,VH)*0.7);g.addColorStop(0,'rgba(255,0,0,0)');g.addColorStop(1,`rgba(255,0,0,${player.hurt})`);ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);}
   // ---- GTA III-style cluster, top right: weapon icon, clock, health and armor, money, wanted stars ----

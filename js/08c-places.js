@@ -54,34 +54,36 @@ let pCool=0;
 const SHOPS=[],SHOPDOOR=new Set(),SH_H=56;
 const shopDoorTile=(tx,ty)=>SHOPDOOR.has(ty*W+tx);
 const SHOPUSED=[];
-for(const g of GUNSHOPS){
-  // the nearest free parking lot to where the shop's sign was (the lots by the old spots are shared with other places);
-  // failing that a small park or plaza, paved over
-  const ax=g.x,ay=g.y,w=7,h=5,cands=[],free=(x0,y0)=>x0>1&&y0>1&&x0+9<W&&y0+9<W&&!(x0+8>=RIVX0-2&&x0<RIVX1+2)&&!SHOPUSED.some(u=>Math.abs(u[0]-x0)<9&&Math.abs(u[1]-y0)<9)&&!placeBusyRect((x0-1)*T,(y0-1)*T,(x0+9)*T,(y0+9)*T);
+// a walk-in store on the nearest free parking lot to (ax,ay) (failing that a small park or plaza, paved over);
+// kind 'gun' (Ammu-Nation) or 'clothes' (08d-life.js). Returns the store, or null if there was nowhere to put it
+function buildStore(ax,ay,kind,col){
+  const w=7,h=5,cands=[],free=(x0,y0)=>x0>1&&y0>1&&x0+9<W&&y0+9<W&&!(x0+8>=RIVX0-2&&x0<RIVX1+2)&&!SHOPUSED.some(u=>Math.abs(u[0]-x0)<9&&Math.abs(u[1]-y0)<9)&&!placeBusyRect((x0-1)*T,(y0-1)*T,(x0+9)*T,(y0+9)*T);
   for(const l of lotBlocks){const x0=Math.round(l.x/T)-4,y0=Math.round(l.y/T)-4;let ok=true;for(let y=0;y<8&&ok;y++)for(let x=0;x<8;x++)if(map[(y0+y)*W+x0+x]!==LOT){ok=false;break;}
     if(ok&&free(x0,y0))cands.push([hyp(l.x-ax,l.y-ay),x0,y0,l]);}
   if(!cands.length)for(let i=0;i<NB*NB;i++){const k=BLOCKK[i],bx=i%NB,by=Math.floor(i/NB);if((k!=='park'&&k!=='plaza')||inCP(bx,by))continue;const x0=bx*P+5,y0=by*P+5;
     if(districtAt((x0+4)*T,(y0+4)*T)==='OLD TOWN'||!free(x0,y0))continue;cands.push([hyp((x0+4)*T-ax,(y0+4)*T-ay)+400,x0,y0,null]);}
-  if(!cands.length)continue; // keeps the old walk-in-and-warp shop
+  if(!cands.length)return null;
   cands.sort((p,q)=>p[0]-q[0]);const[,x0,y0,l]=cands[0];SHOPUSED.push([x0,y0]);if(l)lotBlocks.splice(lotBlocks.indexOf(l),1);
   clearRect(x0*T-2,y0*T-2,(x0+8)*T+2,(y0+8)*T+2);
   {const mm=mmc.getContext('2d');mm.fillStyle='rgb(82,84,90)';for(let y=0;y<8;y++)for(let x=0;x<8;x++){map[(y0+y)*W+x0+x]=LOT;PARKT[(y0+y)*W+x0+x]=0;}mm.fillRect(x0,y0,8,8);}
-  const sg=SIGNS.find(s=>s.text==='AMMU-NATION'&&s.x===g.x&&s.y===g.y),sx=x0+1,sy=y0;
-  const X0=sx*T,Y0=sy*T,X1=(sx+w)*T,Y1=(sy+h)*T,dtx=sx+3,dty=sy+h-1;
-  const b=lateBuilding({x:X0,y:Y0,w:w*T,h:h*T,hg:SH_H/BH,col:'#8a3a2e',st:'gunshop',kind:'gunshop',hollow:true},false);
+  const sx=x0+1,sy=y0,X0=sx*T,Y0=sy*T,X1=(sx+w)*T,Y1=(sy+h)*T,dtx=sx+3,dty=sy+h-1;
+  const b=lateBuilding({x:X0,y:Y0,w:w*T,h:h*T,hg:SH_H/BH,col,st:'gunshop',kind:'gunshop',hollow:true},false);
   const mm=mmc.getContext('2d');
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const tx=sx+x,ty=sy+y,edge=x===0||y===0||x===w-1||y===h-1,door=tx===dtx&&ty===dty;
     map[ty*W+tx]=edge&&!door?BLD:WALK;mm.fillStyle=edge&&!door?'#26262c':'#8c8a84';mm.fillRect(tx,ty,1,1);}
   SHOPDOOR.add(dty*W+dtx);
-  const S={b,x0:X0+T,y0:Y0+T,x1:X1-T,y1:Y1-T,X0,Y0,X1,Y1,dx:(dtx+0.5)*T,inside:false};b.shop=S;
-  g.x=S.dx;g.y=Y1+18;g.real=true;if(sg){sg.x=S.dx;sg.y=Y1+2;sg.h=SH_H+12;}
-  const cx=(S.x0+S.x1)/2,iy0=S.y0,iy1=S.y1;
-  props.push({x:cx,y:iy0+24,k:'scounter',hl:58,hw:6,rad:62,ht:20},{x:cx+14,y:iy0+11,k:'sclerk',rad:8,ht:30});
+  const S={b,kind,x0:X0+T,y0:Y0+T,x1:X1-T,y1:Y1-T,X0,Y0,X1,Y1,dx:(dtx+0.5)*T,inside:false,pads:[]};b.shop=S;
+  props.push({x:(S.x0+S.x1)/2,y:S.y0+24,k:'scounter',hl:58,hw:6,rad:62,ht:20},{x:(S.x0+S.x1)/2+14,y:S.y0+11,k:'sclerk',rad:8,ht:30,S});
+  SHOPS.push(S);return S;}
+for(const g of GUNSHOPS){
+  const sg=SIGNS.find(s=>s.text==='AMMU-NATION'&&s.x===g.x&&s.y===g.y),S=buildStore(g.x,g.y,'gun','#8a3a2e');
+  if(!S)continue; // keeps the old walk-in-and-warp shop
+  g.x=S.dx;g.y=S.Y1+18;g.real=true;if(sg){sg.x=S.dx;sg.y=S.Y1+2;sg.h=SH_H+12;}
+  const cx=(S.x0+S.x1)/2,iy0=S.y0;
   const pads=[[1,cx-48,iy0+40,cx-48,iy0+24,'counter'],[2,cx-24,iy0+40,cx-24,iy0+24,'counter'],[7,cx,iy0+40,cx,iy0+24,'counter'],[8,cx+24,iy0+40,cx+24,iy0+24,'counter'],[5,cx+48,iy0+40,cx+48,iy0+24,'counter'],
     [0,S.x0+26,iy0+52,S.x0+9,iy0+52,'case'],[4,S.x0+26,iy0+68,S.x0+9,iy0+68,'case'],[6,S.x0+26,iy0+84,S.x0+9,iy0+84,'case'],
     [9,S.x1-26,iy0+52,S.x1-9,iy0+52,'stand'],[3,S.x1-26,iy0+68,S.x1-9,iy0+68,'stand'],['ammo',S.x1-26,iy0+84,S.x1-9,iy0+84,'crates']];
-  for(const[it,x,y,mx,my,kind]of pads){const p={x,y,k:'spad',it,mx,my,kind,rad:16,ht:24,S};S.pads=S.pads||[];S.pads.push(p);props.push(p);}
-  SHOPS.push(S);}
+  for(const[it,x,y,mx,my,kind]of pads){const p={x,y,k:'spad',it,mx,my,kind,rad:16,ht:24,S};S.pads.push(p);props.push(p);}}
 function shopAt(x,y,pad){for(const S of SHOPS)if(x>S.X0-pad&&x<S.X1+pad&&y>S.Y0-pad&&y<S.Y1+pad)return S;return null;}
 // which shop to draw from the inside: the one the player is standing in, or the one the camera is in
 function shopView(){if(MIRROR)return null;const pl=!player.car&&!player.riding&&(player.jz||0)<SH_H-14?shopAt(player.x,player.y,-T*0.2):null;if(pl)return pl;
@@ -96,6 +98,7 @@ function drawShopShell(S){const b=S.b;ZOFF=b.base;const x0=S.x0,y0=S.y0,x1=S.x1,
   if(ez<top)quad(x0,y0,top,x1,y0,top,x1,y1,top,x0,y1,top,IN([86,80,74],1,fg));
   if(ez<top)for(const lx of[x0+40,(x0+x1)/2,x1-40])quad(lx-12,(y0+y1)/2-3,top-0.3,lx+12,(y0+y1)/2-3,top-0.3,lx+12,(y0+y1)/2+3,top-0.3,lx-12,(y0+y1)/2+3,top-0.3,IN([255,250,226],1.1,fg));
   const wq=(ax,ay,bx,by,z0,z1,c,k)=>quad(ax,ay,z0,bx,by,z0,bx,by,z1,ax,ay,z1,IN(c,k,fg));
+  if(S.kind==='clothes'){clothesShell(S,wq,top,wall);return;}
   if(CY>y0){wq(x0,y0,x1,y0,0,top,wall,0.86);wq(x0+20,y0+0.4,x1-20,y0+0.4,20,48,[150,110,70],0.9); // pegboard behind the counter
     const guns=[[20,1.2],[16,1],[24,1.6],[26,1.4],[22,2.6],[12,0.9]];guns.forEach(([l,t],i)=>{const gx=x0+34+i*((x1-x0-68)/5);for(const z of[28,40])wq(gx-l/2,y0+0.6,gx+l/2,y0+0.6,z,z+t*1.6,[34,34,38],1);});
     wq(x0+60,y0+0.6,x1-60,y0+0.6,50,53,[200,40,30],1.1);}
@@ -104,14 +107,14 @@ function drawShopShell(S){const b=S.b;ZOFF=b.base;const x0=S.x0,y0=S.y0,x1=S.x1,
     wq(x0+8,y1-0.3,d0-8,y1-0.3,12,34,LIGHTK>0.3?[30,36,60]:[184,206,222],1);wq(d1+8,y1-0.3,x1-8,y1-0.3,12,34,LIGHTK>0.3?[30,36,60]:[184,206,222],1);}
   if(CX>x0){wq(x0,y1,x0,y0,0,top,wall,0.78);wq(x0+0.4,y0+50,x0+0.4,y0+80,24,44,[236,226,190],1);}
   if(CX<x1){wq(x1,y0,x1,y1,0,top,wall,0.82);wq(x1-0.4,y0+50,x1-0.4,y0+80,24,44,[200,40,30],1);}}
-function drawShopOutside(b,fg){ZOFF=b.base;const S=b.shop,x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h,brick=[138,62,48];
+function drawShopOutside(b,fg){ZOFF=b.base;const S=b.shop,x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h,brick=S.kind==='clothes'?[74,92,118]:[138,62,48];
   obox((x0+x1)/2,(y0+y1)/2,0,b.w/2,b.h/2,0,SH_H,brick,[96,92,88],fg);
   obox((x0+x1)/2,(y0+y1)/2,0,b.w/2+0.5,b.h/2+0.5,SH_H-3,SH_H,[170,160,146],[96,92,88],fg);
   if(CY>y1){const night=LIGHTK>0.2,gl=night?lit([255,214,150],0.9,fg,true):lit([40,50,66],1,fg),d0=S.dx-14,d1=S.dx+14;
     const fq=(ax,bx,z0,z1,c)=>quad(ax,y1+0.4,z0,bx,y1+0.4,z0,bx,y1+0.4,z1,ax,y1+0.4,z1,c);
     fq(x0+10,d0-8,10,36,gl);fq(d1+8,x1-10,10,36,gl);fq(d0,d1,0,36,night?lit([255,230,180],0.8,fg,true):lit([30,36,46],1,fg));
-    const neon=lit([255,60,50],1,fg,night);for(const[a,c]of[[x0+10,d0-8],[d1+8,x1-10]]){fq(a,c,34,35.5,neon);fq(a,c,10,11.5,neon);}
-    obox((x0+x1)/2,y1+5,0,b.w/2-6,5,38,40,[200,40,34],[230,60,50],fg);
+    const neon=lit(S.kind==='clothes'?[120,200,255]:[255,60,50],1,fg,night);for(const[a,c]of[[x0+10,d0-8],[d1+8,x1-10]]){fq(a,c,34,35.5,neon);fq(a,c,10,11.5,neon);}
+    obox((x0+x1)/2,y1+5,0,b.w/2-6,5,38,40,S.kind==='clothes'?[40,120,180]:[200,40,34],S.kind==='clothes'?[70,150,210]:[230,60,50],fg);
     for(const[a,c]of[[x0+10,d0-8],[d1+8,x1-10]])for(let x=a+10;x<c-6;x+=22)fq(x,x+12,18,24,night?lit([60,20,20],1,fg,true):lit([20,20,22],1,fg));}}
 function gunItemModel(it,x,y,z,fg){const dark=[34,34,38];
   if(it==='ammo'){for(const[dx,dy,dz]of[[0,-5,0],[0,5,0],[0,0,7]])obox(x+dx,y+dy,0,6,4.5,z+dz,z+dz+7,[86,96,56],[110,120,70],fg);return;}
@@ -128,7 +131,7 @@ function shopProp(o,fg){const E=(c)=>c; // shop props are lit from inside
       obox(o.x-o.hl+14,o.y,0,6,4,15,22,[40,40,44],[60,60,66],fg*0.3,null,null,true);return true; // the till
     case 'sclerk':{const sk=[214,170,130];obox(o.x,o.y,0,3.2,4.6,0,13,[40,44,60],null,fg*0.3,null,null,true);obox(o.x,o.y,0,3.4,5,13,23,[86,104,62],null,fg*0.3,null,null,true);
       obox(o.x,o.y,0,2.6,2.6,23,28.5,sk,[90,60,40],fg*0.3,null,null,true);obox(o.x,o.y+0.4,0,3,3,28.5,30,[160,30,30],null,fg*0.3,null,null,true);return true;}
-    case 'spad':{const it=o.it,p=it==='ammo'?400:Math.round(GUNSTOCK[it][1]*gunDiscount()),can=money>=p,near=o.S.near===o;
+    case 'spad':{if(o.S.kind==='clothes'){clothesPad(o,fg);return true;}const it=o.it,p=it==='ammo'?400:Math.round(GUNSTOCK[it][1]*gunDiscount()),can=money>=p,near=o.S.near===o;
       if(o.kind==='case'){obox(o.mx,o.my,0,6,7,0,10,[96,70,50],[200,220,226],fg*0.3,null,null,true);gunItemModel(it,o.mx,o.my,10,fg*0.3);}
       else if(o.kind==='stand'||o.kind==='crates'){if(o.kind==='stand'&&it!==9)obox(o.mx,o.my,0,5,5,0,8,[70,70,76],[110,110,116],fg*0.3,null,null,true);gunItemModel(it,o.mx,o.my,o.kind==='stand'&&it!==9?8:0,fg*0.3);}
       else gunItemModel(it,o.mx,o.my-1,15,fg*0.3);
@@ -147,10 +150,10 @@ function buyAmmo(){const got=[];let cost=0;
   say([['Clerk','A box for everything you\'re carrying: $'+cost.toLocaleString()+'.']],null,[['REFILL $'+cost.toLocaleString(),()=>{if(money<cost){note('Not enough cash');return;}addMoney(-cost);sfx('pickup');
     for(const[w,a]of got)player.ammo[w]+=a;note('Ammo topped up');}],['NO THANKS',()=>{},'no']]);}
 function shopTick(){const S=shopAt(player.x,player.y,-T*0.2),inside=!!S&&!player.car&&(player.jz||0)<SH_H-14;
-  for(const s of SHOPS){const was=s.inside;s.inside=inside&&s===S;if(s.inside&&!was)note('Clerk: Welcome to Ammu-Nation. Step up to anything you like');}
+  for(const s of SHOPS){const was=s.inside;s.inside=inside&&s===S;if(s.inside&&!was)note(s.kind==='clothes'?'Clerk: Have a look around. Step up to anything you like':'Clerk: Welcome to Ammu-Nation. Step up to anything you like');}
   if(S){let bd=34*34;S.near=null;for(const p of S.pads){const d=dist2(player.x,player.y,p.x,p.y);if(d<bd){bd=d;S.near=p;}}}
   if(!inside||pCool>0||DLG.open)return;
-  for(const p of S.pads)if(dist2(player.x,player.y,p.x,p.y)<8*8){pCool=3;if(p.it==='ammo')buyAmmo();else buyStock(p.it);return;}}
+  for(const p of S.pads)if(dist2(player.x,player.y,p.x,p.y)<8*8){pCool=3;if(S.kind==='clothes')buyOutfit(p.it);else if(p.it==='ammo')buyAmmo();else buyStock(p.it);return;}}
 
 // =====================================================================================================================
 // ---- the parking garage: drive up the outside ramps to a second level and the roof, then off the stunt jump ----

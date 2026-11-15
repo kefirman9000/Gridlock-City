@@ -778,12 +778,12 @@ function drawPed3(p,isPl,fg){
   if(p.injured){flat(p.x,p.y,0.6,8,4.5,0.5,litH(p.col,1,fg));flat(p.x-Math.cos(0.6)*11,p.y-Math.sin(0.6)*11,0.6,3.5,3.5,0.7,litH(p.skin||'#e0ac69',1,fg));if(proj(p.x,p.y,16+Math.sin(game.t*4)*2)&&Math.floor(game.t*3)%2){const s=Math.max(2,4*PK);L3.fillStyle='#ff2a2a';L3.fillRect(R2(PX-s/3),R2(PY-s),Math.max(1,R2(s*0.66)),R2(s*2));L3.fillRect(R2(PX-s),R2(PY-s/3),R2(s*2),Math.max(1,R2(s*0.66)));}if(!MIRROR){p._b=[PX-6*PK,PY-6*PK,PX+6*PK,PY+2*PK];p._f=PF;p._fr=frameNo;}return;}
   const jz=isPl?player.jz||0:(p.jz||0);
   if(proj(p.x,p.y,0)){if(!isPl&&!MIRROR){p._b=[PX-6*PK,PY-25*PK,PX+6*PK,PY];p._f=PF;p._fr=frameNo;}
-    if(PK*24<2.2){L3.fillStyle=litH(isPl?'#d9731f':p.col,1,fg);L3.fillRect(R2(PX),R2(PY-2),1,2);return;}
+    if(PK*24<2.2){L3.fillStyle=litH(isPl?plook().b:p.col,1,fg);L3.fillRect(R2(PX),R2(PY-2),1,2);return;}
     L3.fillStyle=`rgba(0,0,0,${0.28*(1-fg)})`;L3.fillRect(R2(PX-4*PK),R2(PY-1.2*PK),R2(8*PK),Math.max(1,R2(1.8*PK)));}
   else return;
   ZOFF+=jz;
   const a=p.a,ca=Math.cos(a),sa=Math.sin(a),at=(f,r)=>[p.x+ca*f-sa*r,p.y+sa*f+ca*r];
-  const body=rgbOf(isPl?'#d9731f':(p.flash>0?'#ffffff':p.col)),skin=rgbOf(p.skin||'#e0ac69'),pants=isPl?[44,52,80]:PANTS[(p.id||0)%PANTS.length];
+  const body=rgbOf(isPl?plook().b:(p.flash>0?'#ffffff':p.col)),skin=rgbOf(p.skin||'#e0ac69'),pants=isPl?plook().p:PANTS[(p.id||0)%PANTS.length];
   const hair=p.cop?rgbOf(p.kind==='swat'?'#15171c':p.kind==='fbi'?'#202020':(p.kind==='armytruck'||p.kind==='tank')?'#3d4a22':'#1b2a55'):rgbOf(p.hair||'#222');
   const sw=p.moving?Math.sin(p.anim):0,armed=isPl?!(SCENE.on||WEAPONS[player.w].fist):p.gun,lod=PK<0.7;
   const parts=[];const P=(f,r,hl,hw,z0,z1,c,top)=>{const[x,y]=at(f,r);parts.push([(x-CX)*CC+(y-CY)*CS,z0,x,y,hl,hw,z1,c,top]);};

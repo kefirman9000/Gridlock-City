@@ -2,6 +2,17 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.6.0
+- Rampages: a red skull hidden in every district, each with its own weapon, target and time limit; completed ones count towards your stats and pay more each time.
+- Taxi back: after a failed mission far from where it began, $50 takes you to the start and runs it again.
+- Businesses: buy the Blue Plate Diner, Iron Works Gym, Lucky Pawn, Pixel Palace or The Corner Tap from the office desk inside; each day's takings wait in the till (up to five days) until you visit.
+- Threads, a walk-in clothes store downtown: eight outfits on mannequins; a new look knocks a star off your wanted level.
+- Darts and pool at The Corner Tap, played on a timing bar for small bets.
+- Spray shops add an engine tune and sport handling, and the respray lets you pick the colour.
+- Photo mode from the pause menu: free camera, no HUD, six looks (1-6) and P to save a picture.
+- Smashing through a police roadblock at speed pays out and keeps the combo going.
+- Code: js/08d-life.js.
+
 ## v5.5.2
 - Like GTA III / Vice City, you can start story missions, replays, races, RC Wreckers, off-road runs and vigilante/taxi/ambulance/fire duty while wanted, and starting one calls off the chase (stars cleared, cops back to patrol, the chopper heads home). The docks and the safehouse door still want you clean.
 
