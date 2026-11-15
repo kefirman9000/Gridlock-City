@@ -1,7 +1,7 @@
 // Gridlock City service worker: lets the installed app start and play with no connection.
 // Same-origin files are network-first (so a new version shows up as soon as you're online) with the cache as
 // the fallback; Google Fonts are cache-first. Bump CACHE on every release (see CLAUDE.md, "Releasing").
-const CACHE = 'gridlock-v5.4.3';
+const CACHE = 'gridlock-v5.4.4';
 const ASSETS = [
   './',
   './index.html',
@@ -55,8 +55,10 @@ self.addEventListener('fetch', (e) => {
 
   if (url.origin !== self.location.origin) return;
   // the update check asks GitHub directly; version.json from our own site is fine to cache
+  // 'no-cache' revalidates with the server every time (a cheap 304 when nothing changed); a plain fetch let the browser
+  // reuse GitHub Pages' 10-minute HTTP cache, so a refresh right after an update still loaded the old files
   e.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then((res) => {
         if (res && res.ok) {
           const copy = res.clone();

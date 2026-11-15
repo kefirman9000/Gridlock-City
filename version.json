@@ -1,4 +1,4 @@
 {
-  "version": "5.4.3",
-  "notes": "Fix: a car parked next to a building could be drawn on top of your car when you pulled up behind it."
+  "version": "5.4.4",
+  "notes": "Updates now show up on a normal refresh (the game no longer reuses the browser's 10-minute cached copies of its files)."
 }
