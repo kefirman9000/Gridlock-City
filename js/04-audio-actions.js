@@ -218,7 +218,7 @@ function playerFire(){
   if(w.kind==='b'||w.kind==='r')panicAround(player.x,player.y,260);
   let copNear=false;for(const c of cars)if(c.driver==='cop'&&dist2(c.x,c.y,player.x,player.y)<420*420)copNear=true;
   for(const p of peds)if(p.cop&&!p.gone&&dist2(p.x,p.y,player.x,player.y)<380*380)copNear=true;
-  if(copNear&&copWitness(player.x,player.y))crime(0,1);
+  if(copNear&&copWitness(player.x,player.y)&&!underFire())crime(0,1);
   if(player.ammo[player.w]<=0){player.w=0;note('Out of ammo');}
 }
 function swapWeapon(dir){dir=dir||1;for(let i=1;i<=WEAPONS.length;i++){const n=((player.w+i*dir)%WEAPONS.length+WEAPONS.length)%WEAPONS.length;if(player.ammo[n]>0||WEAPONS[n].fist){if(n!==player.w){player.w=n;note(WEAPONS[n].name);}return;}}}

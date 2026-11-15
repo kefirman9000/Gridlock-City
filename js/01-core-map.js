@@ -102,8 +102,17 @@
 //  F6. Per-tile arrays (map, BMAP, BRT, SHOPDOOR, ARRT...) cover the city only. Check 0<=tx<W and 0<=ty<W before
 //      indexing ty*W+tx: off the map it wraps onto a real tile somewhere else (a shop door at the west edge once
 //      stopped the Dodo taking off out at the airstrip).
+//
+// G. BALANCE: trouble should always have a way out
+//  G1. Every fight ends. Wanted stars fade when unseen; angry gang members give up when you leave; no enemy is spawned
+//      with an endless anger timer, and nothing re-spawns attackers every couple of minutes.
+//  G2. Grudges heal. Gang respect drifts back toward neutral while nobody is fighting you; one incident or one story
+//      job never turns a gang into permanent shoot-on-sight.
+//  G3. Self-defence isn't a crime. Shooting back at (or killing) someone who is shooting at you doesn't bring the
+//      police; hitting bystanders or cops still does. One incident raises the wanted level by one star at most.
+//  G4. New enemies or chases say why they're happening (a note, a WANTED reason, a radio line).
 // =====================================================================================================================
-const VERSION='5.19.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.20.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -793,7 +802,7 @@ function zoneOf(x,y){const bx=Math.floor(x/T/P),by=Math.floor(y/T/P);const H=NB/
 const respect=[0,0,0];
 const rivalOf=g=>(g+1)%3;
 function addRespect(g,n){respect[g]=clamp(respect[g]+n,-5,5)}
-function respectLabel(g){const r=respect[g];return r>=3?'They love you':r>=1?'They like you':r>-2?'They don\'t know you yet':r>-4?'They want you dead':'Shoot on sight'}
+function respectLabel(g){const r=respect[g];return r>=3?'They love you':r>=1?'They like you':r>-2?'They don\'t know you yet':r>-3?'They don\'t like you':r>-4?'They want you dead':'Shoot on sight'}
 function makeGang(p,g){p.gang=g;p.col=GANGS[g].col;p.hp=40;}
 const combo={n:0,t:0};
 function chaos(){combo.n=Math.min(9,combo.n+1);combo.t=4.5;}

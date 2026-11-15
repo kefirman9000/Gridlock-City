@@ -31,15 +31,15 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.20
+- **Fewer endless fights**: gang grudges heal over time, gangs only shoot on sight when they really hate you (and their cars only hunt you at the very bottom), killing gang members costs less respect, and angry gangs give up once you've left.
+- **Self-defence**: shooting back at a gang that's shooting at you doesn't bring the police.
+- **Turf**: gangs try to take a block back every 7 to 12 minutes instead of every 3, and the attackers give up after a minute.
+
 ## What's new in v5.19
 - **Walk-in shops**: every shop with a neon sign is a real place you can walk into: diners, pizza and noodle places, cafes, bars and clubs, corner stores and delis, pawn shops, bowling, plus a hotel (rest and save), a tattoo parlour and a laundromat (clean clothes lose a one-star wanted level).
 - **Trees** block only at the trunk, for you and for cars. **Every roof** can be stood on, out on the island too.
 - **Fixes**: no sheer cliffs beside the beltway, no streaks on riverbanks, no glow squares on parked cars, clean crosswalks, the camera stays out of trees and hills, boxcars have wheels, COPS BEHIND moved off your car, a taxi crash and a Dodo that couldn't take off on some cities.
-
-## What's new in v5.18
-- **Story contacts** with their own jobs, each a letter on the radar and a marker where they stand: **Maya Cruz** (R), a reporter building the case against Captain Marlowe; **Paulie** (P), Vince's nephew, with driving work; and your cousin **Nico** (N), with jobs out on the island. They text you when they have work.
-- **New kinds of jobs**: tail a car without being seen, timed pickups, a race up the Pali road, a boat run to the North Shore, and stealing the Dodo for a cargo drop.
-- **A choice in the finale**: after the ambush, call Vince, call Mother Lin, or go alone. Each plays out and ends differently.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

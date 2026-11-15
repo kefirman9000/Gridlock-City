@@ -55,6 +55,8 @@ The finale ends at a choice step: `finBranch(k)` replaces the rest of `mission.s
 v5.19 (end of 08g): walk-in shops (`WALKSHOPS`, built with `liveRoom` behind a sidewalk door; `b.enterW` is the sign word, drawn over the door by the neon `walls` wrapper, which no longer signs any other building;
 `WSHOP` maps sign words to room ids; new rooms hotel/tattoo/laundry in `ROOMS2`, handled by a `walkInTick` wrapper). `carTrunks` (wraps `carTiles`) and the TREE branch in `circleTiles` make trees block at the trunk only.
 `bldAt` is wrapped with `BGR`, a lookup covering every building (outside ones too). In 08-render: a slope limiter after `ringRoad` (land beside TTYPE 10 cells within 7 per cell) and steep faces drawn with `face` (no glints, darker).
+v5.20 (end of 08g): `underFire()` (a gang member shot at you in the last 4 s; set by a `gangAttack` wrapper) makes firing back and killing attackers self-defence (no crime);
+`gangCalm` heals negative respect over time and clears anger once you leave. Hostility thresholds: peds at respect <= -3, gang cars at <= -4. See DESIGN RULES G.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

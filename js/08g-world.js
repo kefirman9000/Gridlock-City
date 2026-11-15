@@ -612,3 +612,15 @@ SGRID=null;
   if(ROOM.id==='hotel')say([['Desk clerk','Welcome to '+r.name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())+'. A room for the night?']],null,[['ROOM FOR THE NIGHT $60',()=>{if(money>=60){addMoney(-60);player.hp=PMAX();game.paused=true;menuShow('pause');openPanel('save');note('Rested. Health restored');}else note('Not enough cash');}],['NO THANKS',()=>{},'no']]);
   else if(ROOM.id==='tattoo')say([['Tattoo artist','Walk-ins welcome. Something to make the Saints think twice?']],null,[['GET INKED $120',()=>{if(money>=120){addMoney(-120);STATS.ink=(STATS.ink||0)+1;note('Fresh ink ('+STATS.ink+'). Looking tougher');}else note('Not enough cash');}],['MAYBE LATER',()=>{},'no']]);
   else say([['Attendant','Wash and dry? Nobody recognises a man in clean clothes.']],null,[['WASH YOUR CLOTHES $8',()=>{if(money>=8){addMoney(-8);if(stars()===1){clearHeat();note('Fresh clothes. The cops lose your description');}else note('Fresh and clean');}else note('Not enough cash');}],['NO',()=>{},'no']]);};}
+
+// ================= v5.20: gangs and police that let you breathe =================
+// underFire(): a gang member has been shooting at you in the last few seconds (firing back is self-defence, not a crime for the cops).
+let GFIRE=-99;function underFire(){return game.t-GFIRE<4;}
+{const f=gangAttack;gangAttack=function(p,tg,d,dt){f(p,tg,d,dt);if(tg===player||tg===player.car)GFIRE=game.t;}}
+// Respect drifts back toward neutral while nobody is fighting you (about +0.5 a minute), so one bad day doesn't mean war forever;
+// angry gang members give up once you've left (500 px), and a gang that cools off past "want you dead" tells you so.
+function gangCalm(dt){if(game.state!=='play')return;const fight=underFire()||stars()>0;
+  for(let g=0;g<respect.length;g++){if(respect[g]>=0||fight)continue;const was=respect[g];respect[g]=Math.min(0,respect[g]+dt*0.008);
+    if(was<=-3&&respect[g]>-3)note(GANGS[g].name+' have cooled off. They won\'t shoot on sight now');}
+  for(const p of peds)if(p.gang!=null&&p.angry>0&&dist2(p.x,p.y,player.x,player.y)>500*500)p.angry=0;}
+{const f=cityTick;cityTick=function(dt){f(dt);gangCalm(dt);}}

@@ -200,8 +200,9 @@ function updateTurf(dt){const owned=Object.keys(TURF);
   if(turfWave){turfWave.t-=dt;const left=turfWave.list.filter(q=>!q.gone).length;
     if(!left){note('Turf defended!');addMoney(300);turfWave=null;}
     else if(turfWave.t<=0){delete TURF[turfWave.bi];note(GANGS[turfWave.g].name+' took their block back');for(const q of turfWave.list)q.target=false;turfWave=null;}}
-  else if(owned.length&&!mission&&game.state==='play'){turfWaveT-=dt;if(turfWaveT<=0){turfWaveT=rr(150,240);const bi=+pick(owned),bx=bi%NB,by=Math.floor(bi/NB),cx=(bx*P+9)*T,cy=(by*P+9)*T;
-      if(dist2(cx,cy,player.x,player.y)>1400*1400)return;const g=TURF[bi].g,list=[];for(let i=0;i<4;i++){const q=walkNear(cx,cy,200),e=makePed(q.x,q.y,false);makeGang(e,g);e.angry=999;e.target=true;e.hp=50;pedPickNext(e);list.push(e);}
+  else if(owned.length&&!mission&&game.state==='play'){turfWaveT-=dt;if(turfWaveT<=0){turfWaveT=rr(420,720); // v5.20: a counterattack every 7-12 minutes, not every 3
+      const bi=+pick(owned),bx=bi%NB,by=Math.floor(bi/NB),cx=(bx*P+9)*T,cy=(by*P+9)*T;
+      if(dist2(cx,cy,player.x,player.y)>1400*1400)return;const g=TURF[bi].g,list=[];for(let i=0;i<4;i++){const q=walkNear(cx,cy,200),e=makePed(q.x,q.y,false);makeGang(e,g);e.angry=60;e.target=true;e.hp=50;pedPickNext(e);list.push(e);}
       turfWave={bi,g,list,t:90};showBig('TURF UNDER ATTACK',GANGS[g].name+' want their block back','#c07cff',2.4);}}}
 // ---------- stunt trials at the construction site ----------
 const STUNT=(()=>{const s={x:LM.site.x-80,y:LM.site.y+150};SIGNS.push({x:s.x,y:s.y,text:'STUNT TRIAL',bg:'#ffc21a',fg:'#111111',h:36,on:()=>true});return s;})();
@@ -511,7 +512,7 @@ function makeCrew(p,bi){p.crew=true;p.gang=null;p.col=CREW_COL;p.hp=CREWUP.armor
   const bx=bi%NB,by=Math.floor(bi/NB);p.homeX=(bx*P+9)*T;p.homeY=(by*P+9)*T;}
 const isAlly=p=>!!p&&!p.gone&&(p.crew||p.follow||(p.gang!=null&&respect[p.gang]>=3&&!(p.angry>0)));
 function crewHostile(q){if(q.gone||q.injured||q.crew||q.follow)return false;
-  return(q.cop&&q.state==='cop'&&stars()>0)||(q.gang!=null&&!isAlly(q)&&(q.angry>0||respect[q.gang]<=-2))||(q.target&&!q.cop&&q.gang==null&&!q.busker&&!q.boss&&!!mission)||(q.thief&&q.state==='flee');}
+  return(q.cop&&q.state==='cop'&&stars()>0)||(q.gang!=null&&!isAlly(q)&&(q.angry>0||respect[q.gang]<=-3))||(q.target&&!q.cop&&q.gang==null&&!q.busker&&!q.boss&&!!mission)||(q.thief&&q.state==='flee');}
 function crewTarget(x,y,r){let best=null,bd=r*r;
   for(const q of peds){if(!crewHostile(q))continue;const d=dist2(q.x,q.y,x,y);if(d<bd&&los(x,y,q.x,q.y)){bd=d;best=q;}}
   if(stars()>0)for(const c of cars){if(c.wreck||c.driver!=='cop'||c===player.car)continue;const d=dist2(c.x,c.y,x,y);if(d<bd&&los(x,y,c.x,c.y)){bd=d;best=c;}}

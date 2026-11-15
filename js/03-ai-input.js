@@ -124,7 +124,7 @@ function updatePed(p,dt){
   if(p.fare){p.vx=p.vy=0;if(player.car)p.a=Math.atan2(player.car.y-p.y,player.car.x-p.x);return;}
   if(p.gang!=null){
     if(p.angry>0)p.angry-=dt;
-    if((p.angry>0||respect[p.gang]<=-2)&&game.state==='play'){const tg=player.car||player,d=hyp(tg.x-p.x,tg.y-p.y);
+    if((p.angry>0||respect[p.gang]<=-3)&&game.state==='play'){const tg=player.car||player,d=hyp(tg.x-p.x,tg.y-p.y);
       if(d<340&&los(p.x,p.y,tg.x,tg.y)){gangAttack(p,tg,d,dt);return;}}
     p.gun=false;
   }

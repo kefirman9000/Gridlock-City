@@ -2,6 +2,12 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.20.0
+- Gangs: killing a member costs 0.4 respect (0.2 during a story job; was 0.7). Members shoot on sight at -3 (was -2) and gang cars hunt you at -4 (was -3); a new label "They don't like you" sits between. Respect below zero drifts back toward neutral (about +0.5 a minute) while you're not wanted and nobody is shooting at you, with a note when a gang stops shooting on sight. Angry members give up once you're 500 away.
+- Police: firing back at, or killing, a gang member who is shooting at you is self-defence: it no longer counts as a crime, even with a cop watching. Hitting bystanders or cops still does.
+- Turf: counterattacks on blocks you've taken come every 7 to 12 minutes (was every 2.5 to 4), and the attackers' anger runs out after a minute instead of never.
+- New DESIGN RULES section G (balance).
+
 ## v5.19.0
 - Walk-in shops: 34 of the city's buildings become shops you can walk into (live rooms behind a door on their sidewalk), each with its neon sign over the door: diner, pizza, noodles and cafe (food), bar, club and live music (drinks and bar games), liquor, 24 hrs, deli and quik mart (the store), pawn and checks cashed, bowling, plus three new rooms: the hotel (a room for the night: rest and save), the tattoo parlour and the laundromat (clean clothes clear a one-star wanted level). Neon business signs now appear only on places you can enter.
 - Trees block only at the trunk (a small circle), for people and cars; cars that hit a trunk bounce off and take damage.

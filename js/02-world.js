@@ -70,7 +70,7 @@ function hand(c){
 function carGear(c){const H=hand(c),v=hyp(c.vx,c.vy)/(GT*TICK);return v>H.g3s?3:v>H.g2s?2:1;}
 function driveCar(c,thr,steer,hb,dt){if(c.t.plane){planeDrive(c,thr,steer,hb,dt);return;}if(c.t.rc){rcDrive(c,thr,steer,hb,dt);return;}if(c.t.heli){heliDrive(c,thr,steer,hb,dt);return;}
   if(c.air>0){c.skid=false;return;} // airborne: no grip, no steering
-  if((c.driver==='ai'||c.driver==='cop')&&!c.t.tank&&!(c.ai&&c.ai.mode==='chase')&&!(c.gang!=null&&respect[c.gang]<=-3))return driveCarAI(c,thr,steer,hb,dt);
+  if((c.driver==='ai'||c.driver==='cop')&&!c.t.tank&&!(c.ai&&c.ai.mode==='chase')&&!(c.gang!=null&&respect[c.gang]<=-4))return driveCarAI(c,thr,steer,hb,dt);
   const t=c.t;c.driven=true;
   if(t.tank){ // tanks pivot on the spot
     const ca=Math.cos(c.a),sa=Math.sin(c.a);let vf=c.vx*ca+c.vy*sa;
@@ -413,7 +413,7 @@ function pedPickNext(p){
 }
 function panicAround(x,y,r){
   const r2=r*r;
-  for(const p of peds)if(!p.cop&&!p.crew&&!p.follow&&!(p.gang!=null&&(p.angry>0||respect[p.gang]<=-2||respect[p.gang]>=3))&&dist2(p.x,p.y,x,y)<r2){p.state='flee';p.panic=rr(4,8);p.fx=x;p.fy=y;}
+  for(const p of peds)if(!p.cop&&!p.crew&&!p.follow&&!(p.gang!=null&&(p.angry>0||respect[p.gang]<=-3||respect[p.gang]>=3))&&dist2(p.x,p.y,x,y)<r2){p.state='flee';p.panic=rr(4,8);p.fx=x;p.fy=y;}
   for(const c of cars)if(c.driver==='ai'&&c.ai&&dist2(c.x,c.y,x,y)<r2*0.6)c.ai.cruise=Math.max(c.ai.cruise,260);
 }
 // GTA III-style drops: people you take down leave cash; cops and gang members leave their gun
@@ -454,11 +454,12 @@ function killPed(p,by,fvx,fvy,burnt){
   const body={k:'body',x:p.x,y:p.y,a:p.a,col:burnt?'#1a1612':p.col,skin:burnt?'#1a1612':p.skin,hair:p.hair,cop:p.cop};
   if(fvx||fvy)flyers.push({b:body,vx:fvx,vy:fvy,va:rr(-12,12),t:0.55});
   else{addMark({k:'blood',x:p.x,y:p.y,r:rr(9,14)});addMark(body);}
-  if(p.gang!=null&&by==='player'){addRespect(p.gang,-0.7);addRespect(rivalOf(p.gang),0.35);chaos();if(frenzy&&frenzy.kind==='gang')frenzyHit();}
+  const selfDef=p.gang!=null&&(p.gun||p.angry>0); // v5.20: they were shooting at you
+  if(p.gang!=null&&by==='player'){addRespect(p.gang,mission?-0.2:-0.4);addRespect(rivalOf(p.gang),0.25);chaos();if(frenzy&&frenzy.kind==='gang')frenzyHit();}
   if(p.target&&mission&&mission.type==='turf'){mission.left--;if(mission.left>0)note(mission.left+' left');}
   if(nearPlayer(p.x,p.y,800))sfx('splat',0.8);
   panicAround(p.x,p.y,220);
-  if(by==='player'){crime(p.cop?500:p.gang!=null?1:100,copWitness(p.x,p.y)?1:0);}
+  if(by==='player'&&!selfDef){crime(p.cop?500:p.gang!=null?1:100,copWitness(p.x,p.y)?1:0);}
   if(p.car&&p.car.copsOut>0)p.car.copsOut--;
 }
 
