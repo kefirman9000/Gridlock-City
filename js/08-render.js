@@ -498,6 +498,7 @@ function roofStuff(b,top,fg,det){
 const BILLC=[[220,60,50],[40,120,200],[240,190,40],[60,170,90],[200,80,170],[240,120,40]];
 function roofProps(b,x0,y0,x1,y1,z,fg){
   if(b.st==='garage'){garageRoof(b,fg);return;}
+  if(b.elev)elevRoof(b,z,fg);
   const cx=(x0+x1)/2,cy=(y0+y1)/2;
   if(b.wt){const wx=x0+(x1-x0)*0.3,wy=y0+(y1-y0)*0.35;obox(wx,wy,0,6,0.8,z,z+9,[50,40,34],null,fg);obox(wx,wy,0,0.8,6,z,z+9,[50,40,34],null,fg);obox(wx,wy,0,7,7,z+9,z+24,[112,80,54],[84,62,46],fg);}
   if(b.ant){obox(cx,cy,0,1.2,1.2,z,z+46,[150,150,155],null,fg);if(proj(cx,cy,z+46))glow(PX,PY,2*PK,'#ff3030',0.3+0.6*(Math.floor(game.t*1.5)%2));}
@@ -788,6 +789,30 @@ function drawPed3(p,isPl,fg){
   const sw=p.moving?Math.sin(p.anim):0,armed=isPl?!(SCENE.on||WEAPONS[player.w].fist):p.gun,lod=PK<0.7;
   const parts=[];const P=(f,r,hl,hw,z0,z1,c,top)=>{const[x,y]=at(f,r);parts.push([(x-CX)*CC+(y-CY)*CS,z0,x,y,hl,hw,z1,c,top]);};
   if(lod){P(0,0,2,4,0,18,body);P(0,0,2.4,2.4,18,23.5,skin,hair);}
+  else if(PK>=1.05&&!MIRROR){
+    // close up: thighs and shins with bending knees, shoes, a belt, waist and chest, arms with elbows and hands, a neck and a face.
+    // Walking swings arms against legs; running adds stride, a forward lean and bent elbows; standing still, they breathe.
+    const spd=isPl?hyp(player.vx||0,player.vy||0):hyp(p.vx||0,p.vy||0),run=clamp((spd-130)/110,0,1),amp=p.moving?0.8+run*0.55:0;
+    const ph=p.anim||0,s1=Math.sin(ph)*amp,air=isPl&&jz>3&&(player.jv||0)!==0&&!player.swim,crouch=isPl&&!!player.cover,mant=isPl&&!!player.mantle;
+    const bob=p.moving?Math.abs(Math.cos(ph))*0.9*amp:Math.sin(game.t*2.1+(p.id||0))*0.2;
+    const hip=crouch?5.6:air?8.4:9-bob*0.35,lean=run*1.5+(crouch?1.6:0),shoe=[30,28,28],belt=mixA(pants,[0,0,0],0.4),sleeve=mixA(body,[0,0,0],0.1);
+    for(const side of[-1,1]){const sw2=air?0.9*side:crouch?0.4:s1*side,lift=air?2.6+side:Math.max(0,-sw2)*1.7,kneeF=air?2.4:crouch?3:sw2*2.3,footF=air?1:crouch?1.2:sw2*3.3,kz=Math.max(lift+1,hip*0.5+lift*0.5);
+      P(kneeF*0.5,side*1.65,1.3,1.2,kz,hip,pants);P(footF*0.65+kneeF*0.35,side*1.65,1.15,1.08,lift+1,kz,pants);P(footF+0.8,side*1.65,1.9,1.2,lift,lift+1.15,shoe,mixA(shoe,[255,255,255],0.15));}
+    P(lean*0.25,0,2,3.45,hip-0.6,hip+0.9,belt);P(lean*0.4,0,1.85,3.3,hip+0.9,hip+4.6,body);P(lean*0.65,0,2.15,4.05,hip+4.6,hip+9,body,mixA(body,[255,255,255],0.1));
+    const sh=hip+8.4,L=lean*0.65;
+    if(mant){for(const side of[-1,1]){P(L+1.2,side*4.2,1,1,sh,sh+4,sleeve);P(L+1.8,side*4.2,0.9,0.9,sh+4,sh+5.4,skin);}}
+    else if(armed){P(L+2.4,3.5,1.7,0.95,sh-1.7,sh,sleeve);P(L+5.4,3.5,1.7,0.85,sh-1.5,sh-0.2,sleeve);P(L+7.3,3.5,0.75,0.8,sh-1.5,sh-0.3,skin);
+      P(L+8.6,3.5,isPl&&player.w===5?1:2.1,0.6,sh-1.1,sh+0.4,[22,22,24]);if(isPl&&player.w===5)P(L+1.6,4,7.6,1.4,sh+0.3,sh+3,[64,84,44]);
+      P(L+3,0.4,2.4,0.85,sh-2,sh-0.7,sleeve);P(L+5.6,1.8,0.7,0.7,sh-1.9,sh-0.8,skin);}
+    else if(p.fare||p.waving){P(L,-4.5,1,1,sh-7,sh,sleeve);const wv=Math.sin(game.t*8)*1.3;P(L+wv*0.4,4.5,1,1,sh,sh+6+wv,sleeve);P(L+wv*0.5,4.5,0.85,0.85,sh+6+wv,sh+7.3+wv,skin);}
+    else for(const side of[-1,1]){const as=crouch?0.8:-s1*side*1.1;
+      P(as*1.1+L,side*4.45,1,1,sh-4.2,sh,sleeve);P(as*2.3+L+run*0.9,side*4.5,0.95,0.95,sh-7.2+run*1.7,sh-4.2,sleeve);P(as*2.8+L+run*1.3,side*4.5,0.85,0.85,sh-8.4+run*2,sh-7.2+run*1.7,skin);}
+    const hx=lean*0.8,hz=sh+1.3;P(hx,0,0.95,0.95,sh,hz+0.3,skin);P(hx,0,2.35,2.3,hz,hz+5,skin,hair);
+    for(const e of[-0.95,0.95])P(hx+2.3,e,0.12,0.38,hz+2.6,hz+3.3,[28,24,22]);P(hx+2.45,0,0.2,0.4,hz+1.6,hz+2.4,mixA(skin,[0,0,0],0.12));
+    if(p.cop){P(hx+0.3,0,2.75,2.75,hz+3.9,hz+5.9,hair);P(hx+2.9,0,0.9,2.4,hz+3.9,hz+4.5,hair);}
+    else if(p.hat&&!isPl)P(hx,0,2.9,2.9,hz+4.4,hz+6.6,rgbOf(p.hat),mixA(rgbOf(p.hat),[255,255,255],0.15));
+    else P(hx-0.5,0,2.2,2.55,hz+3,hz+5.6,hair,hair);
+  }
   else{
     P(sw*2.2,-1.7,1.4,1.3,Math.max(0,sw)*1.4,9,pants);P(-sw*2.2,1.7,1.4,1.3,Math.max(0,-sw)*1.4,9,pants);
     P(0,0,1.9,3.8,9,18,body,mixA(body,[255,255,255],0.1));

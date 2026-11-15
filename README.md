@@ -31,21 +31,19 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.8
+- **Cab rides:** press F at a taxi to ride to your waypoint, SPACE skips the trip; or call one from the phone.
+- **Weapon wheel (hold X)** and **cover (Z)**, plus **witnesses** who have to reach a phone before small crimes count.
+- **Walk-in safehouses**, **elevators** to the tallest roofs and a **rooftop helipad**.
+- **The bank job** from Rosa, **busier streets**, **phone messages and a mechanic**, **car styling** (neon, tint, chrome, spoiler).
+- **Completion list**, **chess, a batting cage and bowling**, **city sounds**, and a **river ferry**.
+- **Smarter traffic** (no more cars stuck at dead ends and T-junctions) and **a more detailed character** with proper walk and run animation.
+
 ## What's new in v5.7
 - **Walk into everything:** the diner, gym, pawn shop, arcade, bar, 24/7s, bank and the Neon Lotus are real interiors in their buildings, no loading. Rob the 24/7, crack the vault and shoot pool right there on the street.
 - **A more natural city:** crooked side streets cut across blocks at odd angles like the old parts of Manhattan, and some streets are now pedestrian plazas with seating and trees.
 - **Map and waypoints:** MAP in the pause menu; click to set a waypoint and a beacon marks it in the city.
 - **More radio voices:** every DJ and host sounds different, and each caller and ad is a new voice.
-
-## What's new in v5.6
-- **Rampages:** a red skull hidden in every district starts a timed rampage with its own weapon and target. Finish them all for the stats screen.
-- **Taxi back:** fail a mission far from where it started and $50 gets you a cab back to retry it.
-- **Businesses:** buy the diner, the gym, the pawn shop, the arcade or the bar at the office desk inside. They earn every day and you collect from the till when you visit.
-- **Threads clothes store:** walk in downtown and change your look; it knocks a star off your wanted level.
-- **Bar games:** darts and pool at The Corner Tap, for small bets.
-- **Tuning:** spray shops add an engine tune and sport handling, and you pick the paint colour.
-- **Photo mode:** in the pause menu; free camera, six looks and a save button.
-- **Roadblocks:** smash through one at speed for a payout.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

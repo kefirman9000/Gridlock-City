@@ -121,8 +121,8 @@ function update(dt){
       if(tbtn.gas.on)thr=1;if(tbtn.rev.on)thr=-1;
       if(pad.on&&(pad.gas>0.04||pad.brake>0.04||pad.lx)){thr=pad.gas-pad.brake;if(Math.abs(thr)<0.04)thr=0;st=clamp(pad.lx*1.1,-1,1);}
       const hb=!!(kd.Space||tbtn.brake.on);
-      driveCar(c,thr,st,hb,dt);
-      if(mouse.down||kd.KeyK||kd.ControlLeft||kd.ControlRight||tbtn.fire.on||(aimJoy.active&&hyp(aimJoy.x,aimJoy.y)>0.6)){if(c.t.fire)waterCannon(dt);else playerFire();}
+      if(c.cab)cabTick(c,dt);else driveCar(c,thr,st,hb,dt);
+      if(!c.cab&&(mouse.down||kd.KeyK||kd.ControlLeft||kd.ControlRight||tbtn.fire.on||(aimJoy.active&&hyp(aimJoy.x,aimJoy.y)>0.6))){if(c.t.fire)waterCannon(dt);else playerFire();}
     }
   }else{
     game.timer-=dt;
@@ -275,6 +275,7 @@ function update(dt){
   const despR=viewR+800;
   cars=cars.filter(c=>{
     if(c===player.car||c.vip)return true;
+    if(c.stuckOut)return false;
     const d2=dist2(c.x,c.y,player.x,player.y);
     if(c.wreck&&c.wreckT>40&&d2>(viewR+100)**2)return false;
     if(c.driver==='cop'&&c.ai&&c.ai.mode==='chase'&&heat>0&&d2<2600*2600)return true;

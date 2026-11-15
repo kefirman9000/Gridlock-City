@@ -1,6 +1,14 @@
 // ================= AI =================
+// turning round at a dead end: out of sight it just happens; in view it's a slow, tight turn
+function aiUturn(c,ai){const nd=(ai.dir+2)&3;ai.dir=nd;ai.turn=-1;
+  if(dist2(c.x,c.y,player.x,player.y)>460*460){c.a=nd*PI/2;c.vx=c.vy=0;c.va=0;}else ai.ut=2.6;}
 function aiLane(c,dt){
   const ai=c.ai;
+  if(ai.ut>0){ai.ut-=dt;const diff=angDiff(ai.dir*PI/2,c.a);if(Math.abs(diff)<0.3)ai.ut=0;driveCar(c,hyp(c.vx,c.vy)>70?-0.4:0.7,diff>0?1:-1,false,dt);return;}
+  // watchdog: a traffic car that hasn't got anywhere in a while picks a fresh road, and one stuck out of sight is cleared away
+  ai.wd=ai.wd||{x:c.x,y:c.y,t:0};ai.wd.t+=dt;
+  if(ai.wd.t>9){const moved=hyp(c.x-ai.wd.x,c.y-ai.wd.y);ai.wd={x:c.x,y:c.y,t:0};
+    if(moved<40&&c.driver==='ai'&&!c.vip&&tlStopDist(c)==null){if(c.traffic&&dist2(c.x,c.y,player.x,player.y)>480*480){c.stuckOut=true;return;}laneFromHere(c);c.ai.revT=1.1;c.ai.pass=3;return;}}
   const tx=Math.floor(c.x/T),ty=Math.floor(c.y/T);
   if(tx>=0&&ty>=0&&tx<W&&ty<W&&tx%P<4&&ty%P<4){
     const ix=Math.floor(tx/P),iy=Math.floor(ty/P),key=ix*100+iy;
@@ -11,7 +19,8 @@ function aiLane(c,dt){
       if(ok(d))opts.push(d,d,d);
       if(ok((d+1)&3))opts.push((d+1)&3);
       if(ok((d+3)&3))opts.push((d+3)&3);
-      let nd=opts.length?pick(opts):d;if(ai.follow&&opts.length){let bd=1e18;for(const o of opts){const dd=dist2((ix+DX[o])*PT,(iy+DY[o])*PT,ai.follow.x,ai.follow.y);if(dd<bd){bd=dd;nd=o;}}}
+      if(!opts.length){aiUturn(c,ai);return;} // a dead end: turn round instead of nosing into the wall forever
+      let nd=pick(opts);if(ai.follow&&opts.length){let bd=1e18;for(const o of opts){const dd=dist2((ix+DX[o])*PT,(iy+DY[o])*PT,ai.follow.x,ai.follow.y);if(dd<bd){bd=dd;nd=o;}}}
       if(nd!==d){ai.turn=nd;ai.sw=nd===1?(ix*P+1)*T:nd===3?(ix*P+3)*T:nd===0?(iy*P+3)*T:(iy*P+1)*T;}
       else ai.turn=-1;
     }

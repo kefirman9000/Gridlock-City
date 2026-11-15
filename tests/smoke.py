@@ -37,7 +37,7 @@ CHECKS = {
     'tow truck hooks a car': """()=>{let s=null;for(let i=0;i<80&&!s;i++)s=laneSpotNear(player.x+rr(-600,600),player.y+rr(-600,600));const a=s.dir*PI/2;
         const tw=makeCar('tow',s.x,s.y,a);const o=makeCar('sedan',s.x-Math.cos(a)*(tw.t.L/2+30),s.y-Math.sin(a)*(tw.t.L/2+30),a);player.car=tw;tw.driver='player';tw.ai=null;
         towToggle(tw);const ok=tw.towing===o;tw.towing=null;o.towedBy=null;exitCar(true);return ok||'not hooked'}""",
-    'remapped key drives the action': """()=>{setKey('KeyF','KeyX');const ok=KEYREV.KeyX==='KeyF'&&KEYREV.KeyF==='Unbound';OPT.keys={};buildKeyRev();return (ok&&KEYREV.KeyF==='KeyF')||'remap table wrong'}""",
+    'remapped key drives the action': """()=>{setKey('KeyF','KeyJ');const ok=KEYREV.KeyJ==='KeyF'&&KEYREV.KeyF==='Unbound';OPT.keys={};buildKeyRev();return (ok&&KEYREV.KeyF==='KeyF')||'remap table wrong'}""",
     'unique stunt jump pays once': """()=>{if(!USJ.length)return 'no unique jumps';let tried=0; // traffic can block one run-up, so try a few ramps
         for(const r of USJ.slice(0,5)){tried++;const ca=Math.cos(r.a),sa=Math.sin(r.a),c=makeCar('sports',r.x-ca*120,r.y-sa*120,r.a);
           player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;c.vx=ca*520;c.vy=sa*520;keys.KeyW=true;for(let i=0;i<60&&!(c.air>0);i++)update(1/60);

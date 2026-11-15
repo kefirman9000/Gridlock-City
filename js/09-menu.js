@@ -66,7 +66,7 @@ function applySave(s){if(s&&s.seed!=null&&s.seed!==SAVE_SEED)setTimeout(()=>{pag
 const fmtPlay=t=>{t=Math.floor(t/60);return Math.floor(t/60)+'h '+String(t%60).padStart(2,'0')+'m'};
 const slotSummary=s=>s?`$${(s.money||0).toLocaleString()} · ${(s.pkg||[]).filter(Boolean).length}/${PACKAGES.length} packages · ${fmtPlay(s.play||0)} played<br><small>${new Date(s.ts).toLocaleString()}</small>`:'<i>Empty</i>';
 function menuItems(){
-  if(menuMode==='pause')return[['RESUME',()=>togglePause()],['MAP',()=>{togglePause();BIGMAP=true;}],['MISSIONS',()=>openPanel('missions')],['SAVE GAME',()=>openPanel('save')],['LOAD GAME',()=>openPanel('load')],['STATS',()=>openPanel('stats')],['PHOTO MODE',()=>photoMode()],['CHEATS',()=>openPanel('cheats')],['OPTIONS',()=>openPanel('options')],['CONTROLS',()=>openPanel('controls')],['QUIT TO TITLE',()=>quitTitle()]];
+  if(menuMode==='pause')return[['RESUME',()=>togglePause()],['MAP',()=>{togglePause();BIGMAP=true;}],['MISSIONS',()=>openPanel('missions')],['SAVE GAME',()=>openPanel('save')],['LOAD GAME',()=>openPanel('load')],['STATS',()=>openPanel('stats')],['PHOTO MODE',()=>photoMode()],['COMPLETION',()=>showCompletion()],['CHEATS',()=>openPanel('cheats')],['OPTIONS',()=>openPanel('options')],['CONTROLS',()=>openPanel('controls')],['QUIT TO TITLE',()=>quitTitle()]];
   const any=latestSave();
   return[...(any?[['CONTINUE',()=>loadFrom(any.s)]]:[]),['NEW GAME',()=>newGame()],['LOAD GAME',()=>openPanel('load')],['OPTIONS',()=>openPanel('options')],['CONTROLS',()=>openPanel('controls')]];
 }

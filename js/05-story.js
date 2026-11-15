@@ -274,6 +274,7 @@ function stepNext(){const m=mission;if(!m||m.type!=='story')return;m.si++;m.ring
       m.items=items;break;}
     case 'heat':crime(0,s.stars);setTimeout(stepNext,0);break;
     case 'lose':break;
+    case 'until':if(s.start)s.start();break;
     case 'eltrain':st.spawned=false;st.after=-1;st.start=train.at;break;
     case 'jump':lastJumpAir=0;break;
     case 'boat':{if(player.car&&player.car.t.boat){setTimeout(stepNext,0);break;}let b=null,bd=1e18;for(const c of cars)if(c.t.boat&&!c.wreck&&!c.driver){const d=dist2(c.x,c.y,player.x,player.y);if(d<bd){bd=d;b=c;}}
@@ -282,6 +283,7 @@ function stepNext(){const m=mission;if(!m||m.type!=='story')return;m.si++;m.ring
 function storyTick(dt){const m=mission;if(DLG.open)return;const s=m.steps[m.si];if(!s)return;const st=s.st,pc=player.car;
   if(m.cd>0){m.cd-=dt;const n=Math.ceil(m.cd);if(n!==m.cdn){m.cdn=n;showBig(n>0?String(n):'GO!','','#ffd600',0.8);sfx(n>0?'ring':'pass',0.5);}if(pc){pc.vx*=0.8;pc.vy*=0.8;}m.clock=0;return;}
   if(m.opts.race)m.clock+=dt;
+  if(s.k==='until'){if(s.fail&&s.fail()){storyFail(s.failMsg||'');return;}if(s.cond())stepNext();return;}
   switch(s.k){
     case 'steal':if(st.c.wreck||st.c.burn>=0){storyFail('The car was wrecked');return;}if(pc===st.c)stepNext();break;
     case 'drive':{

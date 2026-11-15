@@ -2,6 +2,24 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.8.0
+- Cab rides: press F at a taxi to ride to your waypoint (or steal it); the cab drives itself through traffic, SPACE skips the trip, and you pay at the end. Call a cab from the phone.
+- Weapon wheel: hold X, point at a weapon (or press 1-9) and let go; time slows while it's open.
+- Cover: press Z beside a wall or a car to crouch; most hits miss until you fire.
+- Witnesses: when you aren't wanted, small crimes only count if someone sees and gets to a phone (5 s); stop them or get out of sight.
+- Walk-in safehouses: each is a small house on its lot; the door opens once it's yours and the cops aren't on you.
+- Elevators in the tallest towers take you to the roof; one roof has a helipad with a chopper. Helicopters can land on and take off from roofs.
+- The bank job: call Rosa to plan it: case the bank, steal and park a getaway car, crack the vault, lose the cops ($22,000).
+- Busier streets: people hail cabs and the cab pulls over for them, delivery trucks double-park with their hazards on, garbage trucks in the morning.
+- Phone: messages from the bosses when they have work (with a waypoint) and from the docks, a mechanic who brings your garage cars, a cab.
+- Car styling at the spray shops: neon underglow, window tint, chrome wheels, a rear spoiler.
+- Completion list in the pause menu; 100% pays $1,000,000 and never-ending ammo.
+- Chess tables in the parks, a batting cage in Central Park, bowling lanes in the Pixel Palace.
+- City sound: footsteps by surface, gulls and ship horns by the water, birds or crickets in parks, horns downtown, a siren that rises as cops close in.
+- A river ferry between landings on both banks: ride across or take the wheel.
+- Smarter traffic: cars U-turn at dead ends instead of nosing into the wall, and any car stuck for a while finds a new road (or is cleared away out of sight).
+- A more detailed character up close: knees, elbows, hands, shoes, a neck and a face; a walk and run cycle with body bob and lean, idle breathing, a jump tuck and a crouch.
+
 ## v5.7.0
 - Live interiors, GTA V style: the diner, gym, pawn shop, arcade, bar, both 24/7s, the bank and the Neon Lotus are inside real buildings you walk straight into; no separate area or fade. Where the building behind a door was too small, the place gets its own building there; where that couldn't fit, it moves to a nearby lot with its door, sign and map icon. Everything inside (counters, robberies, the vault, bar games, the business office, the dance floor) works as before. The club's door only opens at night.
 - A less formulaic street plan: seven crooked side streets cut through blocks at odd angles (narrower than Broadway, buildings trimmed back to wedges along them), and five short street segments closed to cars as pedestrian plazas with planters, benches, umbrellas and trees. The main grid, traffic network and every story location are unchanged.

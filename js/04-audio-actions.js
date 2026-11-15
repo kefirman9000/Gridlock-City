@@ -88,7 +88,9 @@ function updateAudio(){
   else eng.g.gain.setTargetAtTime(0,t,0.1);
   let sd=1e9;if(heat>0)for(const c of cars)if(c.ai&&c.ai.mode==='chase')sd=Math.min(sd,hyp(c.x-player.x,c.y-player.y));
   siren.g.gain.setTargetAtTime(heat>0&&!muted?clamp(1-sd/1000,0,1)*0.05:0,t,0.15);
-  siren.o.frequency.setTargetAtTime(720+260*Math.sin(game.t*4.2),t,0.02);
+  {let dop=1;if(heat>0){let bc=null,bd=1e18;for(const c of cars)if(c.ai&&c.ai.mode==='chase'){const d=dist2(c.x,c.y,player.x,player.y);if(d<bd){bd=d;bc=c;}}
+    if(bc){const o=player.car||player,dx=o.x-bc.x,dy=o.y-bc.y,dl=Math.sqrt(bd)||1,vr=((bc.vx-(o.vx||0))*dx+(bc.vy-(o.vy||0))*dy)/dl;dop=clamp(1+vr/1400,0.8,1.25);}} // closing in: higher, pulling away: lower
+   siren.o.frequency.setTargetAtTime((720+260*Math.sin(game.t*4.2))*dop,t,0.02);}
   squeal.g.gain.setTargetAtTime(player.car&&player.car.skid&&!player.car.t.boat&&!muted&&game.state==='play'?0.045:0,t,0.05);
   const ron=(!!player.car||(ROOM&&ROOM.id==='club'))&&game.state==='play'&&RADIO[radio.st].kind!=='off'&&!muted&&!game.paused;
   radioG.gain.setTargetAtTime(ron?0.3:0,t,0.15);if(ron)radioTick();
@@ -122,7 +124,7 @@ function exitCar(force){
   const ca=Math.cos(c.a),sa=Math.sin(c.a),off=c.t.Wd/2+12;
   const cands=[[c.x+sa*off,c.y-ca*off],[c.x-sa*off,c.y+ca*off],[c.x+ca*(c.t.L/2+12),c.y+sa*(c.t.L/2+12)],[c.x-ca*(c.t.L/2+12),c.y-sa*(c.t.L/2+12)]];
   let spot=cands[0];for(const s of cands)if(!solidPx(s[0],s[1])){spot=s;break;}
-  if((c.az||0)>12){const want=c.az;for(const s of cands)if(Math.abs(footFloor(s[0],s[1],want+6)[0]-want)<14){spot=s;break;}player.jz=footFloor(spot[0],spot[1],want+6)[0];player.jv=0;} // up on a deck
+  if((c.t.heli?(c.alt||0):(c.az||0))>12){const want=c.t.heli?c.alt:c.az;for(const s of cands)if(Math.abs(footFloor(s[0],s[1],want+6)[0]-want)<14){spot=s;break;}player.jz=footFloor(spot[0],spot[1],want+6)[0];player.jv=0;} // up on a deck
   player.x=spot[0];player.y=spot[1];player.vx=c.vx*0.3;player.vy=c.vy*0.3;
   c.driver=null;c.traffic=true;player.car=null;player.body=c.a;player.a=c.a;sfx('door');unseatCrew(c);
 }

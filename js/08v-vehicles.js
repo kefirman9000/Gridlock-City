@@ -61,7 +61,10 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     obox(c.x,c.y,ta,13,11,15,24,tc,mixA(col,[255,255,255],.1),fg);
     return;
   }
-  obox(c.x,c.y,a,hl*0.86,hw*0.98,0,5,BLACK,null,fg); // wheels
+  const U=c.up||{};
+  if(U.neon&&!c.wreck){const nc=U.neon===true?'#ff3ad0':U.neon;flat(c.x,c.y,a,hl+5,hw+5,0.25,nc);if(proj(c.x,c.y,1))glow(PX,PY,(hl+8)*PK,nc,LIGHTK>0.2?0.55:0.25);} // neon underglow
+  obox(c.x,c.y,a,hl*0.86,hw*0.98,0,5,U.chrome?[178,182,190]:BLACK,null,fg); // wheels (chrome if fitted)
+  if(c.hazard&&!c.wreck&&Math.floor(game.t*2.5)%2)for(const e of[-1,1])for(const s of[-1,1]){const x=c.x+Math.cos(a)*hl*0.95*e-Math.sin(a)*hw*0.8*s,y=c.y+Math.sin(a)*hl*0.95*e+Math.cos(a)*hw*0.8*s;if(proj(x,y,7))glow(PX,PY,3*PK,'#ffa020',0.9);}
   let fv;
   // two-box vehicles: draw whichever box is farther from the camera first, so the near one covers it
   const front=(CX-c.x)*ca+(CY-c.y)*sa>0;
@@ -89,7 +92,10 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     const roof=c.gang!=null&&!c.wreck?rgbOf(GANGS[c.gang].col):(t.police&&!c.wreck?[18,18,20]:c.roofc&&!c.wreck?c.roofc:mixA(col,[255,255,255],.1));
     if(c.stripe&&!c.wreck)obox(c.x,c.y,a,hl+0.1,hw*0.17,bz,bz+0.3,c.stripe,c.stripe,fg);
     const cx2=c.x-ca*hl*0.12,cy2=c.y-sa*hl*0.12;
-    obox(cx2,cy2,a,hl*(low?0.4:0.48),hw*0.84,bz,cz,c.wreck?[20,20,20]:GLASS,roof,fg);
+    const spoil=()=>{if(!U.spoiler||c.wreck)return;const sx=c.x-ca*hl*0.86,sy=c.y-sa*hl*0.86;for(const e of[-1,1])obox(sx-sa*hw*0.6*e,sy+ca*hw*0.6*e,a,0.8,0.8,bz,bz+4,[30,30,34],null,fg);obox(sx,sy,a,2.4,hw*0.95,bz+4,bz+5.2,col,mixA(col,[255,255,255],0.15),fg);};
+    if(front)spoil();
+    obox(cx2,cy2,a,hl*(low?0.4:0.48),hw*0.84,bz,cz,c.wreck?[20,20,20]:U.tint?[24,28,34]:GLASS,roof,fg);
+    if(!front)spoil();
     if(!c.wreck){
       if(t.police){const on=(c.ai&&(c.ai.mode==='chase'||c.ai.pursuit))||(c.driver==='player'&&heat>0),ph=Math.floor(game.t*8)%2;
         obox(cx2+(-sa)*hw*0.4,cy2+ca*hw*0.4,a,3,hw*0.38,cz,cz+2.5,on&&ph?[255,40,40]:[120,20,20],null,fg);

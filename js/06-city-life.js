@@ -119,8 +119,8 @@ CT.heli={name:'Sparrow',L:44,Wd:16,max:520,acc:300,grip:10,turn:2.4,hp:160,mass:
 const HELIPADS=[];
 for(const[bx,by]of[[15,13],[2,6]]){const l=nearestLot((bx*P+9)*T,(by*P+9)*T);if(!l)continue;const c=makeCar('heli',l.x,l.y,0);c.alt=0;HELIPADS.push({x:l.x,y:l.y});SIGNS.push({x:l.x,y:l.y-50,text:'HELIPAD',bg:'#c9a23a',fg:'#111111',h:30,on:()=>true});}
 function heliDrive(c,thr,steer,hb,dt){c.alt=c.alt||0;const pl=c===player.car;c.rot=(c.rot||0)+dt*(c.driver?34:0);
-  if(pl){const up=kd.Space||tbtn.brake.on,dn=kd.ShiftLeft||kd.ShiftRight||tbtn.nos.on;if(up)c.alt=Math.min(240,c.alt+95*dt);else if(dn)c.alt=Math.max(0,c.alt-110*dt);}
-  else if(!c.driver)c.alt=Math.max(0,c.alt-60*dt);
+  if(pl){const up=kd.Space||tbtn.brake.on,dn=kd.ShiftLeft||kd.ShiftRight||tbtn.nos.on;if(up)c.alt=Math.min(240,c.alt+95*dt);else if(dn)c.alt=Math.max(heliFloor(c),c.alt-110*dt);}
+  else if(!c.driver)c.alt=Math.max(heliFloor(c),c.alt-60*dt);
   const flying=c.alt>6,ca=Math.cos(c.a),sa=Math.sin(c.a);
   if(flying){c.a+=steer*2.3*dt;c.va=0;const want=thr*(thr>0?c.t.max:c.t.max*0.35);let vf=c.vx*ca+c.vy*sa;vf=lerp(vf,want,Math.min(1,dt*1.1));
     const vl=(-c.vx*sa+c.vy*ca)*Math.exp(-2.5*dt);c.vx=ca*vf-sa*vl;c.vy=sa*vf+ca*vl;c.driven=true;
