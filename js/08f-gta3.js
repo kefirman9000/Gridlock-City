@@ -201,12 +201,18 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   ai.pi=ringNear(P,ai.pi|0,c.x,c.y);const i=ai.pi,dir=ai.dir,last=P.length-1;
   // the end of a road: back into town, or onto the beltway
   if((dir>0&&i>=last-1)||(dir<0&&i<=1)){
+    if(P.farm){if(P.ns){const r=FARMR[dir>0?2:0];ringJoin(c,r.id,r.jI,R()<0.5?1:-1);return;}
+      if(dir>0){ai.dir=-1;c.vx*=0.2;c.vy*=0.2;return;} // the end of the dirt road: turn round
+      c.ai.mode='lane';laneFromHere(c);return;}
     if(ai.pth===0||(ai.pth>0&&dir<0)){c.ai.mode='lane';laneFromHere(c);return;}
     ringJoin(c,0,P.ringI,R()<0.5?1:-1);return;}
+  // farm crossroads: now and then turn onto the north-south lane, or off it onto the middle road
+  if(P.farm&&!P.ns&&Math.abs(i-P.jI)<=1&&ai.lastX!==P.id){ai.lastX=P.id;if(R()<0.3){const N2=FARMR.ns;ringJoin(c,N2.id,P.row===0?0:P.row===2?N2.length-1:N2.midI,P.row===0?1:P.row===2?-1:(R()<0.5?1:-1));c.ai.lastX=N2.id;return;}}
+  if(P.ns&&Math.abs(i-P.midI)<=1&&ai.lastX!==-2){ai.lastX=-2;if(R()<0.3){const r=FARMR[1];ringJoin(c,r.id,r.jI,R()<0.5?1:-1);c.ai.lastX=r.id;return;}}
   // on the beltway: now and then take a spur into town
   if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<0.35){ringJoin(c,k,S.length-1,-1);return;}}}}
-  const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=14,gx=q.x-uy*lo,gy=q.y+ux*lo;
-  const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);
+  const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=P.lo||14,gx=q.x-uy*lo,gy=q.y+ux*lo;
+  const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=P.farm?Math.min(ai.cruise,130):ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);
   // ease off on the bends
   {const a=P[clamp(i+dir*6,0,last)],b=P[clamp(i+dir*14,0,last)];const bend=Math.abs(angDiff(Math.atan2(b.uy,b.ux),Math.atan2(a.uy,a.ux)));if(bend>0.25)target=Math.min(target,200-bend*160);}
   const fx=Math.cos(c.a),fy=Math.sin(c.a),D=c.t.L/2+22+spd*0.45,hw=c.t.Wd/2;let blocked=false;
@@ -216,14 +222,23 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   const vf=c.vx*fx+c.vy*fy;let thr=vf<target-10?1:vf>target+15?-1:0.15;if(target===0)thr=vf>5?-1:0;
   if(target>0&&spd<12){ai.stuckT+=dt;if(ai.stuckT>2.5){ai.revT=1;ai.stuckT=0;}}else ai.stuckT=0;if(ai.revT>0){ai.revT-=dt;thr=-1;steer=-steer;}
   driveCar(c,thr,steer,false,dt);}
+// the dirt farm roads: three running east along city streets (dead ends: cars turn round at the far end), joined by a north-south lane
+const FARMR=[];
+(function farmPaths(){const ys=[3,9,15].map(iy=>(iy*P+2)*T),mk=(pts)=>{let s=0;return pts.map((q,i)=>{if(i)s+=hyp(q[0]-pts[i-1][0],q[1]-pts[i-1][1]);const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],l=hyp(b[0]-a[0],b[1]-a[1])||1;return{x:q[0],y:q[1],s,ux:(b[0]-a[0])/l,uy:(b[1]-a[1])/l,h:GH(q[0],q[1])};});};
+  const roads=ys.map((y,k)=>{const pts=[];for(let x=WPX+8;x<=WPX+1070;x+=24)pts.push([x,y]);const R2=mk(pts);R2.farm=true;R2.node=[NB,[3,9,15][k]];R2.dead=true;R2.lo=10;R2.row=k;R2.jI=Math.round((640-8)/24);return R2;});
+  const ns=[];for(let y=ys[0];y<=ys[2];y+=24)ns.push([WPX+640,y]);const N2=mk(ns);N2.farm=true;N2.ns=true;N2.lo=10;N2.midI=Math.round((ys[1]-ys[0])/24);
+  for(const r of roads){r.id=RING.paths.length;RING.paths.push(r);FARMR.push(r);}N2.id=RING.paths.length;RING.paths.push(N2);FARMR.ns=N2;})();
 // city traffic passing the street end of a spur sometimes takes it out to the beltway
 const RINGNODE=new Map();
 function ringTraffic(dt){if(!RING.paths.length)return;
-  if(!RINGNODE.size)for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];RINGNODE.set(S.node+'',{k,x:(S.node[0]*P+2)*T,y:(S.node[1]*P+2)*T});}
+  if(!RINGNODE.size)for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(!S.node)continue;const key=S.node+'',o=RINGNODE.get(key)||{ks:[],x:(S.node[0]*P+2)*T,y:(S.node[1]*P+2)*T};o.ks.push(k);RINGNODE.set(key,o);}
   for(const c of cars){if(!c.ai||c.ai.mode!=='lane'||c.driver!=='ai'||!c.traffic||c.vip)continue;const ix=Math.round((c.x/T-2)/P),iy=Math.round((c.y/T-2)/P),n=RINGNODE.get(ix+','+iy);
-    if(!n||dist2(c.x,c.y,n.x,n.y)>34*34){continue;}if(c.ai.ringNode===n.k)continue;c.ai.ringNode=n.k;if(R()<0.4)ringJoin(c,n.k,0,1);}
-  // the beltway's own traffic, while you're near it
+    if(!n||dist2(c.x,c.y,n.x,n.y)>34*34){continue;}if(c.ai.ringNode===n)continue;c.ai.ringNode=n;if(R()<0.4)ringJoin(c,pick(n.ks),0,1);}
+  // the beltway's own traffic, while you're near it (and a few pickups and trucks out on the farm roads)
   ringTraffic.t=(ringTraffic.t||0)-dt;if(ringTraffic.t>0)return;ringTraffic.t=1.5;
+  if(player.x>WPX-200&&player.x<WPX+1300&&player.y>200&&player.y<WPX-200){let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&RING.paths[c.ai.pth].farm)n++;
+    if(n<4)for(let tries=0;tries<10;tries++){const all=FARMR.concat([FARMR.ns]),r=pick(all),i=Math.floor(rr(3,r.length-3)),q=r[i],dir=R()<0.5?1:-1,x=q.x-q.uy*dir*10,y=q.y+q.ux*dir*10,d2=dist2(x,y,player.x,player.y);
+      if(d2<450*450||d2>1300*1300)continue;if(!camSees(x,y)&&!carNear(x,y,120)){const c=makeCar(pick(['pickup','pickup','truck','van'].filter(t=>CT[t])),x,y,Math.atan2(q.uy*dir,q.ux*dir));if(c){c.traffic=true;c.driver='ai';ringJoin(c,r.id,i,dir);c.ai.cruise=rr(90,130);}break;}}}
   const R0=RING.paths[0];let near=null,bd=1e18;for(let i=0;i<R0.length;i+=6){const d=dist2(R0[i].x,R0[i].y,player.x,player.y);if(d<bd){bd=d;near=i;}}
   if(bd>1400*1400)return;let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&dist2(c.x,c.y,player.x,player.y)<1300*1300)n++;if(n>=6)return;
   for(let tries=0;tries<6;tries++){const i=clamp(near+(R()<0.5?-1:1)*Math.floor(rr(30,48)),2,R0.length-3),q=R0[i],dir=R()<0.5?1:-1,x=q.x-q.uy*dir*14,y=q.y+q.ux*dir*14;

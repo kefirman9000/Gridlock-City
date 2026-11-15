@@ -21,8 +21,35 @@ function startGame(){
   ringT=rr(35,60);
   showBig('GRIDLOCK CITY','','#ffcc00',3);
 }
+// ---- error log: every error the game hits (in a frame, or anywhere on the page) is kept, with where you were and what was going on,
+// and survives a reload; the pause menu's ERROR LOG shows it with COPY and DOWNLOAD so it can be sent on ----
+const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('gc_errlog')||'[]');}catch(_){return[];}})();
+function errLogAdd(e,src){try{const m=String(e&&e.message||e||'?').slice(0,300),stack=String(e&&e.stack||'').split('\n').slice(0,7).map(l=>l.trim().replace(/^.*\/(js\/[\w-]+\.js)/,'$1')).join(' | ');
+  const last=ERRLOG[ERRLOG.length-1];if(last&&last.m===m&&last.stack===stack){last.n=(last.n||1)+1;last.lastT=new Date().toISOString();}
+  else{const pc=player&&player.car;ERRLOG.push({t:new Date().toISOString(),v:VERSION,src:src||'',m,stack,n:1,
+    ctx:{state:game&&game.state,mission:(typeof mission!=='undefined'&&mission&&mission.def&&mission.def.title)||'',stars:typeof stars==='function'?stars():0,
+      x:Math.round(player.x),y:Math.round(player.y),car:pc?pc.type:'',frenzy:typeof frenzy!=='undefined'&&frenzy?frenzy.title:'',room:typeof ROOM!=='undefined'&&ROOM?ROOM.id:'',
+      clock:+(clock||0).toFixed(3),cars:cars.length,peds:peds.length}});}
+  while(ERRLOG.length>60)ERRLOG.shift();localStorage.setItem('gc_errlog',JSON.stringify(ERRLOG));}catch(_){}}
+window.addEventListener('error',ev=>errLogAdd(ev.error||ev.message,'page'));
+window.addEventListener('unhandledrejection',ev=>errLogAdd(ev.reason,'promise'));
+function errReport(){const head=['Gridlock City error log','version '+VERSION,'exported '+new Date().toISOString(),'city seed '+(localStorage.getItem('gc_city_seed')||'?'),
+    'browser '+navigator.userAgent,'screen '+innerWidth+'x'+innerHeight+' @'+(devicePixelRatio||1),'entries '+ERRLOG.length,''];
+  return head.concat(ERRLOG.map((r,i)=>'#'+(i+1)+'  '+r.t+(r.n>1?'  (x'+r.n+', last '+r.lastT+')':'')+'  v'+r.v+'  ['+r.src+']\n  '+r.m+'\n  at '+r.stack+'\n  '+JSON.stringify(r.ctx))).join('\n');}
+function showErrLog(){let el=document.getElementById('errlog');if(!el){el=document.createElement('div');el.id='errlog';document.body.appendChild(el);}
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:60;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eee';
+  const txt=errReport(),b='padding:8px 14px;margin:6px 6px 0 0;cursor:pointer';
+  el.innerHTML='<div style="background:#16171b;border:2px solid #ffd24a;border-radius:10px;padding:16px 18px;width:min(760px,94vw)"><h2 style="margin:0 0 6px;color:#ffd24a;font-family:\'Pixelify Sans\',monospace">ERROR LOG</h2>'+
+    '<p style="margin:0 0 8px;color:#aaa;font-size:13px">'+(ERRLOG.length?ERRLOG.length+' problem'+(ERRLOG.length>1?'s':'')+' recorded. Copy or download this and send it over.':'Nothing has gone wrong. If the game glitches, it will be recorded here.')+'</p>'+
+    '<textarea id="errTxt" readonly style="width:100%;height:46vh;background:#0c0d10;color:#cfd;border:1px solid #333;font:12px monospace;white-space:pre"></textarea>'+
+    '<div><button id="errCopy" style="'+b+'">COPY</button><button id="errDl" style="'+b+'">DOWNLOAD .TXT</button><button id="errClr" style="'+b+'">CLEAR</button><button id="errX" style="'+b+'">CLOSE</button><span id="errMsg" style="color:#7dff8a;font-size:13px"></span></div></div>';
+  const ta=el.querySelector('#errTxt'),msg=el.querySelector('#errMsg');ta.value=txt;
+  el.querySelector('#errCopy').onclick=()=>{const ok=()=>msg.textContent='Copied.';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(ok,()=>{ta.select();document.execCommand('copy');ok();});else{ta.select();document.execCommand('copy');ok();}};
+  el.querySelector('#errDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ta.value],{type:'text/plain'}));a.download='gridlock-errors-v'+VERSION+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);msg.textContent='Saved.';};
+  el.querySelector('#errClr').onclick=()=>{ERRLOG.length=0;try{localStorage.removeItem('gc_errlog');}catch(_){}ta.value=errReport();msg.textContent='Cleared.';};
+  el.querySelector('#errX').onclick=()=>el.remove();}
 let last=performance.now(),LOOPERR={n:0,shown:''};
-function loopErr(e){LOOPERR.n++;const m=String(e&&e.message||e),at=String(e&&e.stack||'').split('\n')[1]||'';console.error(e);
+function loopErr(e){LOOPERR.n++;errLogAdd(e,'frame');const m=String(e&&e.message||e),at=String(e&&e.stack||'').split('\n')[1]||'';console.error(e);
   if(m!==LOOPERR.shown){LOOPERR.shown=m;try{note('Glitch caught: '+m.slice(0,80)+' '+(at.match(/js\/[\w-]+\.js:\d+/)||[''])[0]);}catch(_){}}}
 function frame(now){
   pollPad();mlTick();{const n2=performance.now();cutTick(Math.min(0.05,(n2-(SCENE.lt||n2))/1000));SCENE.lt=n2;}
@@ -69,7 +96,7 @@ function applySave(s){if(s&&s.seed!=null&&s.seed!==SAVE_SEED)setTimeout(()=>{pag
 const fmtPlay=t=>{t=Math.floor(t/60);return Math.floor(t/60)+'h '+String(t%60).padStart(2,'0')+'m'};
 const slotSummary=s=>s?`$${(s.money||0).toLocaleString()} · ${(s.pkg||[]).filter(Boolean).length}/${PACKAGES.length} packages · ${fmtPlay(s.play||0)} played<br><small>${new Date(s.ts).toLocaleString()}</small>`:'<i>Empty</i>';
 function menuItems(){
-  if(menuMode==='pause')return[['RESUME',()=>togglePause()],['MAP',()=>{togglePause();BIGMAP=true;}],['MISSIONS',()=>openPanel('missions')],['SAVE GAME',()=>openPanel('save')],['LOAD GAME',()=>openPanel('load')],['STATS',()=>openPanel('stats')],['PHOTO MODE',()=>photoMode()],['COMPLETION',()=>showCompletion()],['CHEATS',()=>openPanel('cheats')],['OPTIONS',()=>openPanel('options')],['CONTROLS',()=>openPanel('controls')],['QUIT TO TITLE',()=>quitTitle()]];
+  if(menuMode==='pause')return[['RESUME',()=>togglePause()],['MAP',()=>{togglePause();BIGMAP=true;}],['MISSIONS',()=>openPanel('missions')],['SAVE GAME',()=>openPanel('save')],['LOAD GAME',()=>openPanel('load')],['STATS',()=>openPanel('stats')],['PHOTO MODE',()=>photoMode()],['COMPLETION',()=>showCompletion()],['CHEATS',()=>openPanel('cheats')],['OPTIONS',()=>openPanel('options')],['CONTROLS',()=>openPanel('controls')],[ERRLOG.length?'ERROR LOG ('+ERRLOG.length+')':'ERROR LOG',()=>showErrLog()],['QUIT TO TITLE',()=>quitTitle()]];
   const any=latestSave();
   return[...(any?[['CONTINUE',()=>loadFrom(any.s)]]:[]),['NEW GAME',()=>newGame()],['LOAD GAME',()=>openPanel('load')],['OPTIONS',()=>openPanel('options')],['CONTROLS',()=>openPanel('controls')]];
 }

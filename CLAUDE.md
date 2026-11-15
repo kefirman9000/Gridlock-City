@@ -45,6 +45,7 @@ the ring road (`RING.paths`, `ringRoad` in 08-render, after `COAST`) joins the c
 centre-line point (`RDP` entries are `{p:path,i:point}`, up to two roads per cell via `RDI2`); `roadLat()` gives the exact per-pixel distance. Traffic drives the ring and spurs in AI mode `ring` (`aiRing` in 08f; spurs know `ringI` and `node`). Note `reachAll()` starts at node 0,0, which the rounded corner removes.
 
 The frame loop in 09 catches errors from `update`/`render` (`loopErr` shows 'Glitch caught: ...'), so one bad frame no longer stops the game.
+Errors are kept in `ERRLOG` (localStorage `gc_errlog`, last 60, with context) and shown by `showErrLog()` (pause menu ERROR LOG). The farm roads are traffic-only paths in `RING.paths` too (`FARMR`, `farm:true`, not carved).
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).

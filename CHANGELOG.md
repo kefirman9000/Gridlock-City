@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.14.2
+- Traffic out in the countryside follows the roads: besides the beltway and its spurs, pickups and trucks drive the dirt farm roads east of town, keep to their side, turn round at the far end, sometimes turn onto the north-south farm lane, and head back into the city along the streets. City traffic at the three east street ends sometimes heads out to the farms.
+- ERROR LOG in the pause menu (just above QUIT TO TITLE; it shows how many problems were recorded). Every error the game hits is kept with the version, time, where you were and what was going on (mission, wanted level, car, rampage, room), and survives reloads. COPY or DOWNLOAD .TXT to send it on; CLEAR to empty it.
+
 ## v5.14.1
 - Traffic on the beltway: cars drive it in the right-hand lane, slow for bends and for whatever's ahead, and turn off down the spurs into town; city traffic passing a spur's street end sometimes heads out onto it. The spurs are real connections now, not paths to nowhere.
 - Smooth road edges: the beltway and spurs are drawn from their exact centre lines per pixel (they were stepped and jagged), the junctions where spurs meet the beltway are clean (no grey wedge), and the ground beyond the gravel shoulder is the land's own colour.
