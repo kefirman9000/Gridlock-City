@@ -40,6 +40,12 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 #menu .mmPanel .ctl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}#menu .mmPanel .ctl b{color:#ffcc00;font-weight:600;white-space:nowrap}
 @media (max-width:760px){#menu{background:rgba(4,4,8,.8)}#menu .mmPanel{position:fixed;left:4vw;right:4vw;top:5vh;width:auto;margin:0}}
 
+#loading{position:fixed;inset:0;z-index:9999;background:#0d0e12;display:flex;align-items:center;justify-content:center;transition:opacity .35s}
+.ldBox{width:min(420px,80vw);text-align:center;font-family:system-ui,sans-serif}
+.ldTitle{font:900 clamp(28px,7vw,52px) "Arial Black",Impact,system-ui;color:#ffd600;letter-spacing:2px;text-shadow:3px 3px 0 #000,0 0 18px rgba(255,214,0,.35);margin-bottom:22px}
+.ldBar{height:10px;background:#22242c;border:2px solid #000;border-radius:3px;overflow:hidden}
+#ldFill{height:100%;width:0;background:linear-gradient(90deg,#ff9a2e,#ffd600);transition:width .15s}
+#ldMsg{margin-top:12px;color:#b8bcc8;font-size:14px}
 </style>
 </head>
 <body>
@@ -49,7 +55,7 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 <div class="logo">GRIDLOCK<span>CITY</span></div>
 <div class="tag" id="tagline">Steal cars. Answer payphones. Lose the cops.</div>
 <nav id="mmNav"></nav>
-<div class="foot"><span id="verTxt">v5.22.0</span> &middot; <button id="updBtn">Check for updates</button> &middot; <a href="https://github.com/sponsors/kefirman9000" target="_blank" rel="noopener">&#128156; Sponsor</a><br><button id="instBtn">&#128242; Install as an app</button><div id="upd"></div></div>
+<div class="foot"><span id="verTxt">v5.23.0</span> &middot; <button id="updBtn">Check for updates</button> &middot; <a href="https://github.com/sponsors/kefirman9000" target="_blank" rel="noopener">&#128156; Sponsor</a><br><button id="instBtn">&#128242; Install as an app</button><div id="upd"></div></div>
 </div>
 <div class="mmPanel" id="mmPanel"></div>
 <button id="play" style="display:none">PLAY</button>
@@ -87,23 +93,17 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 <b>Controller</b><span>Left stick move/steer · RT gas · LT brake · A jump/handbrake · Y car · RB fire · right stick aim · LB weapon · X horn · B look back · L3 sprint/nitro · D-pad up radio, down phone · Back map · Start pause</span>
 </div></div>
 </div></div>
-<script src="js/01-core-map.js"></script>
-<script src="js/02-world.js"></script>
-<script src="js/03-ai-input.js"></script>
-<script src="js/04-audio-actions.js"></script>
-<script src="js/05-story.js"></script>
-<script src="js/06-city-life.js"></script>
-<script src="js/06r-radio.js"></script>
-<script src="js/07-camera-update.js"></script>
-<script src="js/08-render.js"></script>
-<script src="js/08v-vehicles.js"></script>
-<script src="js/08a-hud.js"></script>
-<script src="js/08b-extras.js"></script>
-<script src="js/08c-places.js"></script>
-<script src="js/08d-life.js"></script>
-<script src="js/08e-more.js"></script>
-<script src="js/08f-gta3.js"></script>
-<script src="js/08g-world.js"></script>
-<script src="js/09-menu.js"></script>
+<div id="loading"><div class="ldBox"><div class="ldTitle">GRIDLOCK CITY</div><div class="ldBar"><div id="ldFill"></div></div><div id="ldMsg">Loading...</div></div></div>
+<script>
+// v5.23 loading screen: the scripts load one after another (in order, sharing one global scope as before), and the page gets a chance
+// to draw between them, so the progress bar moves instead of the screen sitting blank while the city is built.
+(function(){const L=['js/01-core-map.js','js/02-world.js','js/03-ai-input.js','js/04-audio-actions.js','js/05-story.js','js/06-city-life.js','js/06r-radio.js','js/07-camera-update.js','js/08-render.js','js/08v-vehicles.js','js/08a-hud.js','js/08b-extras.js','js/08c-places.js','js/08d-life.js','js/08e-more.js','js/08f-gta3.js','js/08g-world.js','js/09-menu.js'],MSG={0:'Laying out the streets',3:'Hiring the traffic',4:'Writing the story',5:'Filling the sidewalks',8:'Raising the skyline and the island',11:'Opening the shops',14:'Waking up the city',17:'Almost there'};
+  const fill=document.getElementById('ldFill'),msg=document.getElementById('ldMsg');let i=0;
+  function next(){if(i>=L.length){window.GC_READY=true;const ld=document.getElementById('loading');ld.style.opacity='0';setTimeout(()=>ld.remove(),350);return;}
+    if(MSG[i])msg.textContent=MSG[i]+'...';const s=document.createElement('script');s.src=L[i];
+    s.onload=()=>{i++;fill.style.width=Math.round(i/L.length*100)+'%';requestAnimationFrame(()=>setTimeout(next,0));};
+    s.onerror=()=>{msg.textContent='Could not load '+L[i]+'. Check your connection and reload.';msg.style.color='#ff7070';};document.body.appendChild(s);}
+  requestAnimationFrame(()=>setTimeout(next,0));})();
+</script>
 </body>
 </html>

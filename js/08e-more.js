@@ -144,7 +144,7 @@ function busyTick(dt){busyT-=dt;
 // ---- 9. the phone: texts from your contacts, a mechanic who brings your garage cars, a cab, and Rosa's bank job ----
 const TEXTS=[];let textSeen=null,orderSeen=null;
 function textMsg(from,body,at){TEXTS.unshift({from,body,at,t:game.t});if(TEXTS.length>8)TEXTS.pop();pager(from+': '+body);}
-function textsTick(){const avail=BOSSES.map(b=>!!storyAvail(b.g));if(textSeen){BOSSES.forEach((b,i)=>{if(avail[i]&&!textSeen[i])textMsg(b.name,'Got work for you. Come see me.',b.mk);});}textSeen=avail;
+function textsTick(){if(game.t<7)return;const avail=BOSSES.map(b=>!!storyAvail(b.g));if(textSeen){BOSSES.forEach((b,i)=>{if(avail[i]&&!textSeen[i])textMsg(b.name,'Got work for you. Come see me.',b.mk);});}textSeen=avail;
   if(typeof ORDER!=='undefined'){if(ORDER&&ORDER!==orderSeen)textMsg('Dock foreman','Paying $'+ORDER.pay.toLocaleString()+' for a '+(CT[ORDER.type]?CT[ORDER.type].name:ORDER.type)+', delivered to the docks.',null);orderSeen=ORDER;}}
 function showTexts(){if(!TEXTS.length){say([['Phone','No messages.']]);return;}
   say([['Messages',TEXTS.slice(0,4).map(m=>m.from+': '+m.body).join('\n')]],null,TEXTS.filter(m=>m.at).slice(0,3).map(m=>['WAYPOINT: '+m.from.toUpperCase(),()=>{WAYPOINT={x:m.at.x,y:m.at.y};note('Waypoint set');}]).concat([['CLOSE',()=>{},'no']]));}

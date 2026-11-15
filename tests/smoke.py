@@ -94,7 +94,8 @@ def main():
         page = browser.new_page(viewport={'width': 1280, 'height': 720})
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.goto(URL)
-        page.wait_for_timeout(1500)
+        page.wait_for_function('window.GC_READY', timeout=60000)
+        page.wait_for_timeout(300)
         if errors:
             print('FAIL page load:', errors[:3]); sys.exit(1)
         page.evaluate('newGame()')

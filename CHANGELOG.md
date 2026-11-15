@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.23.0
+- Loading screen: index.html loads the 18 scripts one after another (same order and shared scope) and lets the page draw between them, with a progress bar and messages; `window.GC_READY` is set when everything has loaded (the tests wait for it).
+- The pager and phone-ring sounds are a soft triangle-wave chime (they were three sharp square-wave beeps at 2.2-2.6 kHz, which sounded like a horn when the dock foreman's order and Nico's intro arrived at the start); one at most every 1.5 s, and no texts during the first 7 s of play.
+
 ## v5.22.0
 - Audio: AI horns and the player's horn were wired straight to the speakers, skipping the master volume, so they played at about twice the level of everything else as raw square waves. Both now go through master; AI horns are low-passed, fall off with the square of distance (out to 600) and are limited to one every 0.4 s.
 - Audio: master now runs through a compressor (threshold -18 dB, 4:1) and a high-shelf cut (-5 dB above 2.8 kHz on touch devices, -2 dB elsewhere).

@@ -1,4 +1,4 @@
 {
-  "version": "5.22.0",
-  "notes": "Balanced audio (horns no longer blast, a compressor evens out peaks, effects and radio volume settings) and more phone camera work (tap to recenter, no circling when strafing)."
+  "version": "5.23.0",
+  "notes": "A loading screen with a progress bar while the city is built, and a soft chime for texts instead of the harsh beeps at the start."
 }

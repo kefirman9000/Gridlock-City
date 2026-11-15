@@ -12,7 +12,7 @@ with sync_playwright() as p:
     b=p.chromium.launch(executable_path=os.environ.get('CHROME','/usr/bin/google-chrome'),args=['--no-sandbox'])
     pg=b.new_page(viewport={'width':960,'height':600});errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto(ROOT);pg.wait_for_timeout(1000)
+    pg.goto(ROOT);pg.wait_for_function('window.GC_READY', timeout=60000)
     pg.evaluate("newGame()");pg.wait_for_timeout(1500)
     log=[]
     for i in range(N):

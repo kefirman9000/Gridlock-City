@@ -66,7 +66,7 @@ def main():
             pg.on('pageerror', lambda e: errs.append(str(e)))
             pg.goto((ROOT / 'index.html').as_uri()); pg.wait_for_timeout(400)
             pg.evaluate(f"()=>{{localStorage.setItem('gc_city_seed','{seed}');localStorage.removeItem('gc_errlog');}}")
-            pg.reload(); pg.wait_for_timeout(1500)
+            pg.reload(); pg.wait_for_function('window.GC_READY', timeout=60000); pg.wait_for_timeout(300)
             r = pg.evaluate(CHECK)
             fails = r['fails'] + ['F1: page error: ' + e for e in errs]
             print(f"seed {seed}: " + ('OK' if not fails else f'{len(fails)} problem(s)') + '  ' + json.dumps(r['info']))

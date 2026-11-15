@@ -98,7 +98,7 @@ function sfx(n,vol){vol=vol==null?1:vol;switch(n){
   case 'boom':noise(1.3,320,'lowpass',1.0*vol);tone(90,0.7,'sine',0.5*vol,30);break;
   case 'crash':noise(0.2,800,'lowpass',0.55*vol);break;
   case 'pickup':tone(660,0.08,'square',0.14);setTimeout(()=>tone(990,0.1,'square',0.14),70);break;
-  case 'ring':tone(1200,0.1,'square',0.07*vol);setTimeout(()=>tone(1500,0.1,'square',0.07*vol),120);setTimeout(()=>tone(1200,0.1,'square',0.07*vol),240);break;
+  case 'ring':tone(988,0.16,'triangle',0.09*vol);setTimeout(()=>tone(1319,0.2,'triangle',0.08*vol),140);break; // v5.23: a soft phone chime, not square beeps
   case 'pass':[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.18,'square',0.13),i*110));break;
   case 'fail':[392,330,262,196].forEach((f,i)=>setTimeout(()=>tone(f,0.25,'sawtooth',0.11),i*170));break;
   case 'door':noise(0.09,1100,'lowpass',0.35);break;
@@ -106,7 +106,7 @@ function sfx(n,vol){vol=vol==null?1:vol;switch(n){
   case 'hit':noise(0.05,3200,'highpass',0.2);noise(0.08,500,'lowpass',0.25*vol);tone(110,0.06,'sine',0.18*vol,60);break;
   case 'step':noise(0.035,900+Math.random()*500,'bandpass',0.07*vol,0.9);break;
   case 'sniper':noise(0.3,1400,'bandpass',0.9*vol,0.6);tone(120,0.25,'sine',0.35*vol,40);break;
-  case 'pager':tone(2200,0.05,'square',0.08);setTimeout(()=>tone(2200,0.05,'square',0.08),110);setTimeout(()=>tone(2600,0.07,'square',0.08),220);break;
+  case 'pager':{if(!AC)break;const t=AC.currentTime;if(t-(sfx.pgT||-9)<1.5)break;sfx.pgT=t;tone(880,0.14,'triangle',0.07*vol);setTimeout(()=>tone(1175,0.18,'triangle',0.06*vol),130);break;} // v5.23: one soft two-note chime, at most every 1.5 s
   case 'spray':noise(1.1,5000,'highpass',0.25);break;
   case 'deny':tone(180,0.25,'square',0.12);break;
   case 'shotgun':noise(0.3,1300,'lowpass',0.9*vol);tone(90,0.15,'square',0.2*vol,40);break;
