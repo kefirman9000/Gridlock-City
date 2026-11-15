@@ -337,7 +337,9 @@ function carPair(a,b){
     const fa=Math.min(2.5,mb/ma)*(a.t.bike?0.45:1),fb=Math.min(2.5,ma/mb)*(b.t.bike?0.45:1);
     damageCar(a,(imp-90)*0.06*fa*ka,by2);damageCar(b,(imp-90)*0.06*fb*kb,by2);
     crashFx(a,cx,cy,nx,ny,imp,b);
-    if(by2&&imp>200){if(a.driver==='ai'&&a.ai)a.ai.cruise=290;if(b.driver==='ai'&&b.ai)b.ai.cruise=290;}}
+    if(by2&&imp>200){if(a.driver==='ai'&&a.ai)a.ai.cruise=290;if(b.driver==='ai'&&b.ai)b.ai.cruise=290;}
+    if(by2&&imp<340){if(a.driver==='player')roadRage(b);else if(b.driver==='player')roadRage(a);}
+    if(imp>220&&dist2(cx,cy,player.x,player.y)<700*700)gawk(cx,cy);}
 }
 function damageCar(c,amt,by){
   if(c.wreck||amt<=0)return;

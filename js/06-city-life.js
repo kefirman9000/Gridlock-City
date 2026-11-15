@@ -365,7 +365,35 @@ function updateShouts(dt){shoutT-=dt;for(const p of peds)if(p.say&&p.say.t>0)p.s
 let alarm=null;
 function carAlarm(c){if(c.driver||c.t.boat||c.t.heli||R()>0.3)return;alarm={c,t:6};note('Car alarm!');for(const k of cars)if(k.driver==='cop'&&dist2(k.x,k.y,c.x,c.y)<500*500){crime(0,1);break;}}
 function updateAlarm(dt){if(!alarm)return;alarm.t-=dt;if(Math.floor(alarm.t*4)!==Math.floor((alarm.t+dt)*4))sfx('ring',0.25);if(alarm.t<=0||player.car!==alarm.c)alarm=null;}
-function extTick9(dt){updateShouts(dt);updateAlarm(dt);}
+function extTick9(dt){updateShouts(dt);updateAlarm(dt);pedLife(dt);}
+// ---------- v5.5: street life (GTA III) ----------
+// road rage: rear-end a civilian and they may get out and come for you (and pull you out if you sit there);
+// a crash draws a crowd of gawkers; people stop to chat in pairs; park with music on and they react to it.
+const RAGE=[];
+function roadRage(c){if(c.driver!=='ai'||c.gang!=null||c.special||c.vip||c.t.bus||c.t.police||c.t.bike||c.t.boat||c.target||RAGE.includes(c)||Math.random()>0.45)return;c.rageT=4;RAGE.push(c);}
+const GAWK=['Did you see that?!','Somebody call 911!','Oh my god!','That\'s gonna leave a mark.','Insurance is gonna love this.','Whoa!','Get it on video!'];
+function gawk(x,y){for(const p of peds){if(p.gone||p.cop||p.gang!=null||p.state==='flee'||p.brawl>0||p.target||p.follow||p.crew||dist2(p.x,p.y,x,y)>230*230||R()>0.45)continue;
+  p.a=Math.atan2(y-p.y,x-p.x);p.stagger=rr(1.5,3.2);if(R()<0.5&&!(p.say&&p.say.t>0))p.say={t:2,text:pick(GAWK)};}}
+const CHATS=[['Nice weather, huh?','For Gridlock? Sure.'],['Did you hear Chatter last night?','Marty\'s losing it.'],['You still owe me twenty.','Put it on my tab.'],
+  ['Is that your car?','Not anymore.'],['The El\'s late again.','The El is always late.'],['I saw a tank on the bridge.','Tuesday, then.'],['Meatloaf at the Blue Plate?','I\'d rather walk into traffic.'],
+  ['Who keeps jumping cars off the pier?','Some lunatic.'],['My cousin got a job at the docks.','Doing what?'],['You hear sirens?','I always hear sirens.']];
+const RADIOREACT={punk:['Turn that noise down!','Punk\'s not dead!','My ears!'],synth:['Ooh, I love this one.','Very eighties.','Turn it up!'],hiphop:['That bass!','Yo, that\'s hard.','Rattle them windows!']};
+let chatT=3,bopT=0;
+function pedLife(dt){if(game.state!=='play')return;
+  for(let i=RAGE.length-1;i>=0;i--){const c=RAGE[i];c.rageT-=dt;if(c.driver!=='ai'||c.wreck||c.rageT<=0||cars.indexOf(c)<0){RAGE.splice(i,1);continue;}
+    if(hyp(c.vx,c.vy)<40&&player.car&&dist2(c.x,c.y,player.x,player.y)<260*260){RAGE.splice(i,1);const p=ejectDriver(c,false);p.state='walk';startBrawl(p,14,player.car);p.say={t:2.2,text:pick(['You hit my car!','Get out of the car!','You\'re dead, pal!','Are you blind?!'])};}}
+  for(const p of peds)if(p.sayLater){p.sayLater.d-=dt;if(p.sayLater.d<=0){p.say={t:2,text:p.sayLater.text};p.sayLater=null;}}
+  // music: bob along (or complain) next to your parked car
+  bopT-=dt;const c=player.car,S=c&&RADIO[radio.st];
+  if(c&&S&&RADIOREACT[S.kind]&&hyp(c.vx,c.vy)<20&&radioNow(radio.st)===null)for(const p of peds){if(p.gone||p.cop||p.state==='flee'||p.brawl>0||(p.thrown>0))continue;
+    if(dist2(p.x,p.y,c.x,c.y)<75*75){p.bop=true;if(!p.thrown)p.jz=Math.abs(Math.sin(game.t*S.bpm/60*PI))*2.5;if(bopT<=0&&R()<0.3&&!(p.say&&p.say.t>0)){p.say={t:2,text:pick(RADIOREACT[S.kind])};bopT=4;}}
+    else if(p.bop){p.bop=false;if(!p.thrown)p.jz=0;}}
+  else for(const p of peds)if(p.bop){p.bop=false;if(!(p.thrown>0))p.jz=0;}
+  // two people stop to chat
+  chatT-=dt;if(chatT<=0){chatT=rr(2,4);
+    for(const p of peds){if(p.gone||p.cop||p.gang!=null||p.state!=='walk'||p.brawl>0||p.target||p.follow||p.crew||p.fare||p.stagger>0||dist2(p.x,p.y,player.x,player.y)>500*500||dist2(p.x,p.y,player.x,player.y)<60*60)continue;
+      const q=peds.find(o=>o!==p&&!o.gone&&!o.cop&&o.gang==null&&o.state==='walk'&&!(o.brawl>0)&&!o.target&&!o.follow&&!o.crew&&!o.fare&&!(o.stagger>0)&&dist2(o.x,o.y,p.x,p.y)<45*45);if(!q)continue;
+      const L=pick(CHATS),t=rr(3.5,5);p.a=Math.atan2(q.y-p.y,q.x-p.x);q.a=p.a+PI;p.stagger=t;q.stagger=t;p.say={t:1.8,text:L[0]};q.sayLater={d:1.9,text:L[1]};break;}}}
 
 // ---------- v5.1 landmarks: a TV tower downtown, a clock tower in Old Town, a Ferris wheel on South Beach ----------
 {const pickBlock=(want,fn)=>{let best=null,bd=1e18;for(let i=0;i<NB*NB;i++){if(BLOCKK[i]!==want)continue;const bx=i%NB,by=Math.floor(i/NB),d=fn(bx,by);if(d!=null&&d<bd){bd=d;best=[bx,by];}}return best;};
