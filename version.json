@@ -1,4 +1,4 @@
 {
-  "version": "5.10.0",
-  "notes": "Brake and reverse lights, tire smoke on burnouts and hard stops, exhaust backfires, cars that get dirty, glass shards on hard hits, parachutes out of helicopters, cop flashlights at night, low-sun glare and speed streaks."
+  "version": "5.10.1",
+  "notes": "The full map no longer gets stuck open: ESC, right-click, pausing or leaving the window closes it."
 }

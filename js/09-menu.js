@@ -1,7 +1,7 @@
 // ================= LOOP / MENU =================
 function togglePause(){
   if(game.state==='menu')return;
-  game.paused=!game.paused;
+  game.paused=!game.paused;if(game.paused)BIGMAP=false;
   if(game.paused)menuShow('pause');else hideMenu();
   if(game.paused&&AC&&AC.state==='running'&&eng){eng.g.gain.value=0;siren.g.gain.value=0;}
 }

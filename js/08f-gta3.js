@@ -145,3 +145,7 @@ const STREAKS=[];
     for(const s of STREAKS){s.t+=0.06;s.r+=0.06;const r1=s.r*R0,r2=(s.r+s.l)*R0,ca=Math.cos(s.a),sa=Math.sin(s.a);ctx.moveTo(VWc/2+ca*r1,VHc/2+sa*r1*0.7);ctx.lineTo(VWc/2+ca*r2,VHc/2+sa*r2*0.7);}
     ctx.stroke();ctx.restore();for(let i=STREAKS.length-1;i>=0;i--)if(STREAKS[i].r>1.1)STREAKS.splice(i,1);}else STREAKS.length=0;}}
 {const f=g3Tick;g3Tick=function(dt){f(dt);chuteTick(dt);}}
+
+// ---- the full map: right-click, ESC, pausing or leaving the window closes it ----
+cv.addEventListener('contextmenu',e=>{if(BIGMAP){BIGMAP=false;e.preventDefault();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)BIGMAP=false;});

@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.10.1
+- The full map (from the pause menu or TAB) could stay stuck open: clicking on it sets a waypoint, and ESC paused the game under it. Now ESC or P closes the map first, right-click closes it, and pausing or leaving the window closes it too.
+
 ## v5.10.0
 - Brake lights glow when a car slows hard or you hold the brake; white reverse lights when backing up.
 - Tire smoke and rubber on burnouts from a standstill and when you lock up the brakes at speed.

@@ -289,10 +289,10 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyV'&&game.started&&!game.paused)cycleCam();
   if(e.code==='KeyN'&&!DLG.open){mirrorOn=!mirrorOn;OPT.rearview=mirrorOn;saveOpts();note(mirrorOn?'Rear-view mirror on':'Rear-view mirror off');}
   if(e.code==='KeyR'&&player.car)setStation(radio.st+1);
-  if((e.code==='KeyP'||e.code==='Escape')&&game.started)togglePause();
+  if((e.code==='KeyP'||e.code==='Escape')&&game.started){if(BIGMAP&&!game.paused)BIGMAP=false;else togglePause();}
 });
 window.addEventListener('keyup',e=>{keys[e.code]=false});
-window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouse.down=false;});
+window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouse.down=false;BIGMAP=false;});
 // ---- mouse look (GTA III PC style): click to capture the mouse; moving it turns the camera and you aim with a crosshair.
 // On foot the crosshair sits just above the middle of the screen; in a car it's a free cursor for drive-bys.
 const ML={exiting:false,cx:0,cy:0,dy:0};

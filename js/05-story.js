@@ -506,7 +506,7 @@ function drawBigMap(sc){const s=Math.min(VW,VH)*0.92,ox=(VW-s)/2,oy=(VH-s)/2,k=s
   const tg=objectiveTarget();if(tg){const gp=gpsRoute(tg);if(gp){ctx.beginPath();const[p0,p1]=P2((player.car||player).x,(player.car||player).y);ctx.moveTo(p0,p1);for(const q of gp){const[x,y]=P2(q.x,q.y);ctx.lineTo(x,y);}ctx.strokeStyle='#ffd600';ctx.lineWidth=3;ctx.stroke();}}
   if(tg){const[a,b]=P2(tg.x,tg.y);ctx.fillStyle='#ffd600';ctx.beginPath();ctx.arc(a,b,6+Math.sin(game.t*6)*2,0,TAU);ctx.fill();ctx.stroke();}
   {const o=player.car||player,[a,b]=P2(o.x,o.y);ctx.save();ctx.translate(a,b);ctx.rotate(o.a);ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-6);ctx.lineTo(-2,0);ctx.lineTo(-6,6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-  hudText(touchMode?'tap to close':'TAB to close',VW/2,oy+s-14,Math.round(13*sc),'#fff','center',`600 ${Math.round(13*sc)}px system-ui`);
+  hudText(touchMode?'tap to close':'TAB or ESC to close',VW/2,oy+s-14,Math.round(13*sc),'#fff','center',`600 ${Math.round(13*sc)}px system-ui`);
   hudText('★ stunt jump  RC toy cars  4 off-road run  ✈ airstrip',VW/2,oy+32,Math.round(12*sc),'#ddd','center',`600 ${Math.round(12*sc)}px system-ui`);
   hudText('! job  H safehouse  R race  $ spray  ~ boat  W guns  A cars  E export  P pizza',VW/2,oy+16,Math.round(12*sc),'#ddd','center',`600 ${Math.round(12*sc)}px system-ui`);}
 

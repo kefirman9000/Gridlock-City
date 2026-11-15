@@ -584,7 +584,7 @@ function bigMapExtras(P2,icon,kk){
   for(const k in TURF){const t=TURF[k];if(!(t.p>0))continue;const bi=+k,[a,b2]=P2((bi%NB)*P*T+4*T,Math.floor(bi/NB)*P*T+4*T);if(t.p>=2&&Math.floor(game.t*2)%2)continue;ctx.strokeStyle=t.p>=2?'#ff7a2a':'#ffb35a';ctx.lineWidth=2;ctx.strokeRect(a,b2,10*T*kk,10*T*kk);}
   if(GWAR){const bi=GWAR.bi,[a,b2]=P2((bi%NB)*P*T+4*T,Math.floor(bi/NB)*P*T+4*T);ctx.fillStyle='rgba(255,40,40,.35)';ctx.fillRect(a,b2,10*T*kk,10*T*kk);}
   if(WAYPOINT){const[a,b2]=P2(WAYPOINT.x,WAYPOINT.y);ctx.fillStyle='#ff4fa8';ctx.beginPath();ctx.moveTo(a,b2);ctx.lineTo(a-7,b2-16);ctx.lineTo(a+7,b2-16);ctx.closePath();ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.stroke();}
-  ctx.font='600 12px system-ui';ctx.fillStyle='#ddd';ctx.textAlign='center';const g=bigMapGeom();ctx.fillText(touchMode?'Tap the map to set a waypoint · tap outside to close':'Click to set a waypoint · TAB to close',VW/2,g.oy+g.s+14);}
+  ctx.font='600 12px system-ui';ctx.fillStyle='#ddd';ctx.textAlign='center';const g=bigMapGeom();ctx.fillText(touchMode?'Tap the map to set a waypoint · tap outside to close':'Click to set a waypoint · TAB, ESC or right-click to close',VW/2,g.oy+g.s+14);}
 // ---------- replay finished story missions from the pause menu ----------
 function missionsHTML(){let h='<h2>MISSIONS</h2><p class="note">Replay any story mission you\'ve finished, for half the pay. Starting one calls off any police chase.</p>';
   CHAPTERS.forEach((ch,g)=>{h+=`<p style="color:${GANGS[g].col};margin:10px 0 2px">${BOSSES[g].name}</p>`;ch.forEach((m,i)=>{const done=i<STORY.prog[g];h+=`<div class="opt"><span>${done?m.title:'<i style="color:#666">locked</i>'}</span>${done?`<button data-rep="${g},${i}">REPLAY</button>`:''}</div>`;});});
