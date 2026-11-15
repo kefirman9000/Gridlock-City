@@ -130,7 +130,7 @@ function updatePed(p,dt){
   }
   let sp=0,gx=p.tx,gy=p.ty;
   if(p.state==='flee'){
-    p.panic-=dt;sp=118;
+    p.panic-=dt;sp=96;
     let ax=p.x-p.fx,ay=p.y-p.fy;const l=hyp(ax,ay)||1;
     gx=p.x+ax/l*40+rr(-10,10);gy=p.y+ay/l*40+rr(-10,10);
     if(p.panic<=0){p.state='walk';const tx=Math.floor(p.x/T),ty=Math.floor(p.y/T);
@@ -157,14 +157,14 @@ function updateCop(p,dt){
     const cx=p.car.x,cy=p.car.y,dc=hyp(cx-p.x,cy-p.y);
     if(dc<p.car.t.L/2+14){p.gone=true;p.car.copsOut=Math.max(0,p.car.copsOut-1);if(!p.car.driver){p.car.driver='cop';p.car.ai=newAI('chase',0,0);p.car.copsOut=0;}
       for(const q of peds)if(q!==p&&q.car===p.car&&q.state==='cop'){q.gone=true;}return;}
-    const a=Math.atan2(cy-p.y,cx-p.x);p.a=lerpAng(p.a,a,0.3);p.vx=Math.cos(a)*150;p.vy=Math.sin(a)*150;
+    const a=Math.atan2(cy-p.y,cx-p.x);p.a=lerpAng(p.a,a,0.3);p.vx=Math.cos(a)*120;p.vy=Math.sin(a)*120;
   }else{
     const hidden=seenT>1.2,see=!hidden&&d<330&&los(p.x,p.y,px,py);
     let gx=px,gy=py;
     if(!(d<170&&see)){const n=ffNext(p.x,p.y,2);if(n){gx=n[0];gy=n[1];}}
     const a=Math.atan2(gy-p.y,gx-p.x);p.a=lerpAng(p.a,see?Math.atan2(py-p.y,px-p.x):a,0.3);
     const shoots=s>=3||p.heavy;
-    let sp=152;if(shoots&&see&&d<200)sp=55;
+    let sp=124;if(shoots&&see&&d<200)sp=50;/* a sprinting player (130) just outruns them */
     if(d>13){p.vx=Math.cos(a)*sp;p.vy=Math.sin(a)*sp}else{p.vx=p.vy=0}
     if(shoots){p.gun=true;p.shootT-=dt;
       if(p.shootT<=0&&see&&d<280){p.shootT=p.heavy?rr(.45,.8):rr(1.0,1.7);const aa=npcAim(Math.atan2(py-p.y,px-p.x),hyp(p.vx,p.vy)>5&&d>13)+rr(-0.07,0.07);
@@ -173,7 +173,7 @@ function updateCop(p,dt){
     if(!player.car&&d<18&&!hidden){const run=hyp(player.vx,player.vy)>70||player.jz>4;bustT+=dt*(run?0.7:1.7);p.vx*=0.2;p.vy*=0.2;if(!bustNote){bustNote=true;note('A cop has hold of you! Run or fight back');}}
     if(player.car&&d<player.car.t.L/2+16&&hyp(player.car.vx,player.car.vy)<35)bustT+=dt*1.1;
   }
-  p.moving=true;p.anim+=dt*25;
+  p.moving=true;p.anim+=dt*Math.max(6,hyp(p.vx,p.vy))*0.17;
   p.x+=p.vx*dt;p.y+=p.vy*dt;circleTiles(p,6);
 }
 

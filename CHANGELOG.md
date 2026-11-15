@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.31.0
+- 07: walk 120 -> 82, sprint 205x1.1 -> 118x1.1, backwards 90 -> 65; player.anim advances by speed x 0.155 (was a fixed 13/s).
+- 03: fleeing peds 118 -> 96, gang chasers 150 -> 120, cops on foot 152 -> 124 (50 while shooting); cop stride by speed.
+
 ## v5.30.0
 - index.html: @media (max-height:540px) compact menu (two-column nav, small logo, no tagline) and full-screen column-flow panels (column-width 188px, explicit 95dvh height, opaque); portrait phones get a 94dvh panel. Panel sizes use --fz.
 - 09: fitPanel() (MutationObserver on #mmPanel + resize) shortens '(...)' labels, hides keys/mouselook/invertY/msens (and padmap/pad/rumble without a pad) on touch, and lowers --fz until nothing overflows (min 0.55).

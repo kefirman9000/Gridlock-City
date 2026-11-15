@@ -1,4 +1,4 @@
 {
-  "version": "5.30.0",
-  "notes": "Menus fit phone screens without scrolling, slower walking and running, softer smoke."
+  "version": "5.31.0",
+  "notes": "On foot is much slower than traffic now; cops and fleeing people slowed to match."
 }

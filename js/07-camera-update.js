@@ -81,7 +81,7 @@ function update(dt){
       if(mouse.turn){player.body+=mouse.turn*0.006*(OPT.msens||1);mouse.turn=0;}
       player.body+=clamp(turn,-1.5,1.5)*2.8*dt;}
       // sprint: hold SHIFT (or click the left stick, or push the touch stick all the way)
-      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.1:1),sp=(player.swim?0.45:1)*(fwd<0?90:run?205*(1+(typeof SKR!=='undefined'?SKR:0)):120),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
+      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.1:1),sp=(player.swim?0.45:1)*(fwd<0?65:run?118*(1+(typeof SKR!=='undefined'?SKR:0)):82)/* v5.31: well under traffic speed (city traffic averages ~150) */,mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
       player.vx=lerp(player.vx,mx*sp,Math.min(1,dt*14));player.vy=lerp(player.vy,my*sp,Math.min(1,dt*14));
       const ox0=player.x,oy0=player.y;player.x+=player.vx*dt;player.y+=player.vy*dt;
       {let[fl,onCar]=footFloor(player.x,player.y,player.jz);
@@ -100,7 +100,7 @@ function update(dt){
         else{if(fl>player.jz&&fl-player.jz<=8.5)player.jz=fl;player.peak=player.jz;}} // step up as far as footFloor looks (z+8)
       circleTiles(player,7,true,player.jz);swimPost(dt); // water is swimmable now (swimPost in 08c-places.js)
       player.moving=m>0.1&&(player.jz<=0||player.swim);
-      if(player.moving){const a0=player.anim;player.anim+=dt*m*13;if(Math.floor(a0/PI)!==Math.floor(player.anim/PI))sfx('step',run?1.3:1);}
+      if(player.moving){const a0=player.anim;player.anim+=dt*Math.max(4,hyp(player.vx,player.vy))*0.155;if(Math.floor(a0/PI)!==Math.floor(player.anim/PI))sfx('step',run?1.3:1);}
       if(mouse.used&&!touchMode){const [wx,wy]=aimPoint();player.a=Math.atan2(wy-player.y,wx-player.x);}
       else player.a=lerpAng(player.a,player.body,Math.min(1,dt*14));
       if(aimJoy.active&&hyp(aimJoy.x,aimJoy.y)>0.3)player.a=joyAng(aimJoy);else if(pad.aim&&!GTA3MOVE())player.a=pad.aimA;
