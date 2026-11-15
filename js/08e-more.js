@@ -130,7 +130,7 @@ function startHeist(){if(mission){note('Finish what you\'re doing first');return
 let busyT=6,HAIL=null;
 function busyTick(dt){busyT-=dt;
   if(HAIL){const p=HAIL.p,c=HAIL.c;HAIL.t-=dt;if(p.gone||!c||c.wreck||c.cab||player.car===c||HAIL.t<=0){if(c&&c.ai&&!c.cab){c.ai.follow=null;c.ai.cruise=180;}if(p&&!p.gone)p.waving=false;HAIL=null;}
-    else{const d=hyp(c.x-p.x,c.y-p.y);if(c.ai){c.ai.follow={x:p.x,y:p.y};c.ai.cruise=d<70?0:170;}if(d<60&&hyp(c.vx,c.vy)<20){HAIL.w=(HAIL.w||0)+dt;if(HAIL.w>1.6){p.gone=true;c.ai.follow=null;c.ai.cruise=200;HAIL=null;}}}}
+    else{const d=hyp(c.x-p.x,c.y-p.y);if(c.ai){c.ai.follow={x:p.x,y:p.y};c.ai.cruise=d<70?0:170;}if(d<60&&hyp(c.vx,c.vy)<20){HAIL.w=(HAIL.w||0)+dt;if(HAIL.w>1.6){p.gone=true;if(c.ai){c.ai.follow=null;c.ai.cruise=200;}HAIL=null;}}}}
   if(busyT>0||game.state!=='play')return;busyT=rr(7,13);const r=R();
   if(r<0.4&&!HAIL){let cab=null,bd=380*380;for(const c of cars)if(c.t.taxi&&c.driver==='ai'&&!c.vip&&c.ai&&c.ai.mode==='lane'){const d=dist2(c.x,c.y,player.x,player.y);if(d<bd){bd=d;cab=c;}}
     if(cab){let w=null,wd=300*300;for(const p of peds){if(p.gone||p.cop||p.gang!=null||p.injured||p.target||p.busker||p.clubber)continue;const t=tileAt(Math.floor(p.x/T),Math.floor(p.y/T));if(t!==WALK)continue;const d=dist2(p.x,p.y,cab.x,cab.y);if(d<wd&&d>80*80){wd=d;w=p;}}

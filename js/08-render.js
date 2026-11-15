@@ -320,6 +320,16 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
   // the dirt strip along the city limits turns to grass where the edge has gone wild
   for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const k=j*HN+i;if(TTYPE[k]!==8)continue;const x=-HM+i*HS,y=-HM+j*HS;if(wildNear(x,y)){TTYPE[k]=3;TCOL[k]=packC(92,116,58);}}
 })();
+// v5.19: no cliffs beside the beltway. Ground next to the ring road and its spurs slopes away at most 7 per terrain cell (about 24 degrees):
+// cuts become banks and embankments get shoulders, instead of sheer walls drawn as jagged curtains (DESIGN RULES C).
+{const S=7,N=HN*HN,U=new Float32Array(N).fill(1e9),L=new Float32Array(N).fill(-1e9),A=new Uint8Array(N);
+ for(let k=0;k<N;k++)if(TTYPE[k]===10){U[k]=L[k]=HMAP[k];A[k]=1;}
+ const D=S*1.4142,rel=(k,n,w)=>{const u=U[n]+w;if(u<U[k])U[k]=u;const l=L[n]-w;if(l>L[k])L[k]=l;};
+ for(let pass=0;pass<2;pass++){for(let j=1;j<HN-1;j++)for(let i=1;i<HN-1;i++){const k=j*HN+i;if(A[k])continue;rel(k,k-1,S);rel(k,k-HN,S);rel(k,k-HN-1,D);rel(k,k-HN+1,D);}
+   for(let j=HN-2;j>0;j--)for(let i=HN-2;i>0;i--){const k=j*HN+i;if(A[k])continue;rel(k,k+1,S);rel(k,k+HN,S);rel(k,k+HN+1,D);rel(k,k+HN-1,D);}}
+ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const k=j*HN+i;if(A[k]||U[k]>1e8||!COAST.LAND[k])continue;const x=-HM+i*HS,y=-HM+j*HS;if(x>-8&&y>-8&&x<WPX+8&&y<WPX+8)continue;
+   const h=HMAP[k];if(h>U[k])HMAP[k]=U[k];else if(h<L[k])HMAP[k]=L[k];}
+ for(const b of OUTB)b.base=Math.min(GH(b.x,b.y),GH(b.x+b.w,b.y),GH(b.x,b.y+b.h),GH(b.x+b.w,b.y+b.h))-1;}
 for(let j=1;j<HN-1;j++)for(let i=1;i<HN-1;i++){const k=j*HN+i,dx=(HMAP[k+1]-HMAP[k-1])/(2*HS),dy=(HMAP[k+HN]-HMAP[k-HN])/(2*HS);SHMAP[k]=clamp(1+(-dx*0.6+dy*0.8)*1.6,0.55,1.4);}
 {const wet=(x,y)=>{const t=TTYPE[(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0)];return t===1||t===2;};
  for(let i=trees.length-1;i>=0;i--){const t=trees[i];if((t.x<0||t.y<0||t.x>WPX||t.y>WPX)&&wet(t.x,t.y))trees.splice(i,1);}
@@ -473,12 +483,12 @@ function renderGround(heads){
             if(mx<4&&my>=4){
               if((mx===2&&u<2)||(mx===1&&u>=30)){if(v>5&&v<26){r=168;g=137;b=58;}}
               else if((mx===0&&u<2)||(mx===3&&u>=30)){r=85;g=87;b=92;}
-              if((my===4||my===13)&&v>4&&v<28&&(u&7)>=3&&(u&7)<7&&((nz*5+u*3+v*7+h)&15)>1){r=147-nz*2;g=146-nz*2;b=140-nz*2;}
+              if((my===4||my===13)&&v>4&&v<28&&(u&7)>=3&&(u&7)<7){r=147;g=146;b=140;}
               if((my===12&&mx<2&&v>=27&&v<30)||(my===5&&mx>=2&&v>=2&&v<5)){r=214;g=214;b=208;}
             }else if(my<4&&mx>=4){
               if((my===2&&v<2)||(my===1&&v>=30)){if(u>5&&u<26){r=168;g=137;b=58;}}
               else if((my===0&&v<2)||(my===3&&v>=30)){r=85;g=87;b=92;}
-              if((mx===4||mx===13)&&u>4&&u<28&&(v&7)>=3&&(v&7)<7&&((nz*5+v*3+u*7+h)&15)>1){r=147-nz*2;g=146-nz*2;b=140-nz*2;}
+              if((mx===4||mx===13)&&u>4&&u<28&&(v&7)>=3&&(v&7)<7){r=147;g=146;b=140;}
               if((mx===12&&my>=2&&u>=27&&u<30)||(mx===5&&my<2&&u>=2&&u<5)){r=214;g=214;b=208;}
             }
             // v5 avenues: a planted median down the middle between the crossings
@@ -508,7 +518,7 @@ function renderGround(heads){
             if(pk===2){r=70+nz;g=112+nz*2+(((yi>>4)&1)?6:0);b=50+nz;}
             else{r=(q===0?59:q===1?62:q===2?56:64)+nz*2-6+lf*2;g=(q===0?84:q===1?88:q===2?80:91)+nz*2-6+lf*3;b=(q===0?48:q===1?51:q===2?45:53)+nz-3;}
             if(t===4){r*=0.78;g*=0.8;b*=0.78;}
-            if(pk){const n2=(((xi>>1)*7919)^((yi>>1)*104729))>>>0;if(n2%151===0){const fc=(n2>>9)%4;if(fc===0){r=236;g=236;b=228;}else if(fc===1){r=240;g=210;b=60;}else if(fc===2){r=230;g=120;b=170;}else{r=150;g=120;b=220;}}}
+            if(pk&&!flat){const n2=(((xi>>1)*7919)^((yi>>1)*104729))>>>0;if(n2%151===0){const fc=(n2>>9)%4;if(fc===0){r=236;g=236;b=228;}else if(fc===1){r=240;g=210;b=60;}else if(fc===2){r=230;g=120;b=170;}else{r=150;g=120;b=220;}}}
             break;}
           case 5:if(PARKT[ti]===12||PARKT[ti]===13){r=104+nz*3;g=98+nz*3;b=88+nz*2;if(((u*5+v*11+h)&31)===0){r-=24;g-=22;b-=20;}
               if(PARKT[ti]===12){if(v>=6&&v<=26&&((u+((tx&1)<<4))%10)<3){r=88;g=66;b=46;}if((v>=10&&v<=11)||(v>=21&&v<=22)){r=150;g=150;b=156;}}}
@@ -579,18 +589,19 @@ function renderGround(heads){
   const f0=Math.max(6,(CZ-GH(CX,CY)-30)*FOC/(LH-HOR)*0.7);
   for(let x=0;x<lw;x++){
     const rq=(x+0.5-HW)/FOC,dx=CC-CS*rq,dy=CS+CC*rq;
-    let yb=LH,f=f0,ob=0,hT=0,hB=0,pDeck=false;
+    let yb=LH,f=f0,ob=0,hT=0,hB=0,pDeck=false,ph=-1e9;
     while(f<FOG1&&yb>0){
       while(ob<OCCN&&f>=OCCE[ob]){OCC[ob*lw+x]=yb;ob++;}
       const wx=CX+dx*f,wy=CY+dy*f;let h=GH(wx,wy);let water=h<0&&(wx<0||wy<0||wx>=WPX||wy>=WPX),deck=false;if(water)h=0;else if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){const ti=((wy|0)>>5)*W+((wx|0)>>5);if(RIV[ti])h=RIVL;else if(BRT[ti])deck=true;}
       const sy=HOR+(CZ-h)*FOC/f;let yi=Math.ceil(sy-0.5);if(yi<0)yi=0;
       // a bridge deck is a slab with open air under it: whatever lies beyond fills the gap underneath
       if(hB>hT&&!deck&&yi<hB){const y0=Math.max(yi,hT),col=pix(wx,wy,f,water,h,true);for(let y=y0;y<hB;y++)buf[y*lw+x]=col;hB=y0;}
-      if(yi<yb){const col=pix(wx,wy,f,water,h);
+      if(yi<yb){const face=h-ph>3&&yb-yi>2&&!deck; // a steep face (a bank, a cut, a cliff): one sample fills it, so no glints or flowers stretched down it, and a little darker
+        let col=pix(wx,wy,f,water,h,face);if(face)col=0xff000000|((((col>>16)&255)*0.84|0)<<16)|((((col>>8)&255)*0.84|0)<<8)|(((col&255)*0.84)|0);
         if(deck&&!pDeck){const yd=Math.ceil(HOR+(CZ-h+9)*FOC/f-0.5),ybot=Math.min(yd,yb),fg=fogAt(f),dk=0xff000000|((44+(FOGC[2]-44)*fg|0)<<16)|((42+(FOGC[1]-42)*fg|0)<<8)|(42+(FOGC[0]-42)*fg|0);
           for(let y=yi;y<ybot;y++)buf[y*lw+x]=y<yi+1?col:dk;if(ybot<yb&&!(hB>hT)){hT=ybot;hB=yb;}}
         else for(let y=yi;y<yb;y++)buf[y*lw+x]=col;yb=yi;}
-      pDeck=deck;
+      pDeck=deck;ph=h;
       const rel=CZ-h;let st=rel>8?f*f/(rel*FOC)*0.9:f*0.02;if(st<0.5)st=0.5;else if(st>f*0.04)st=f*0.04;f+=st;
     }
     for(;ob<OCCN;ob++)OCC[ob*lw+x]=yb;
@@ -1231,7 +1242,8 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   if(inHall(CX,CY)){for(const o of SUBHALL)add(13,o,o.x,o.y,o.rad,null,o.ht);for(let i=0;i<utrain.cars;i++){const p=utrainCar(i);add(22,{x:p.x,y:p.y,a:0,i,z:0},p.x,p.y,50,null,30);}}
   for(const p of peds){if(p.gone)continue;add(1,p,p.x,p.y,6);}
   forCells(cl=>{for(const[k,o]of cl.s){switch(k){
-    case 2:add(2,o,o.x,o.y,o.r+4,null,15+o.r*2+(o.sp==='palm'?30:0));break;case 3:add(3,o,o.x,o.y,5,null,63);break;
+    case 2:{const cd=(o.x-CX)**2+(o.y-CY)**2;if(cd<(o.r+30)**2)break; // a tree right at the camera would fill the screen with leaves: skip it (DESIGN RULES E)
+      add(2,o,o.x,o.y,o.r+4,null,15+o.r*2+(o.sp==='palm'?30:0));break;}case 3:add(3,o,o.x,o.y,5,null,63);break;
     case 13:if(o.rad){add(13,o,o.x,o.y,o.rad,null,o.ht);break;}add(13,o,o.x,o.y,o.k==='hedge'||o.k==='rail'||o.k==='seawall'||o.k==='brail'||o.k==='deck'||o.k==='fence'||o.k==='eltrack'?24:o.k==='elplat'?64:o.k==='elcorner'||o.k==='elpillar'?20:o.k==='elstair'?30:o.k==='fountain'?30:o.k==='crane'?100:8,null,o.k==='fountain'?34:o.k==='crane'?176:o.k[0]==='e'&&o.k[1]==='l'?EL_H+12:12);break;
     case 15:add(15,o,o.x,o.y,5,null,47);break;case 16:add(16,o,o.x,o.y,32,null,16);break;case 19:if(!o.got)add(19,o,o.x,o.y,8,null,16);break;}}});
   if(fare&&fare.stage==='ride')add(18,fare,fare.x,fare.y,40,null,40);
@@ -1311,7 +1323,7 @@ function drawBehindWarnings(sc){
     const cop=o.driver==='cop'||o.cop||o===heli,col=cop?(Math.floor(game.t*6)%2?'#ff3030':'#3a7bff'):'#ff9a2e';
     ctx.save();ctx.translate(x,y);ctx.rotate(rel-PI/2+PI);ctx.globalAlpha=0.55+0.45*k;ctx.fillStyle=col;ctx.strokeStyle='#000';ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(0,-sz);ctx.lineTo(sz*0.8,sz*0.6);ctx.lineTo(0,sz*0.25);ctx.lineTo(-sz*0.8,sz*0.6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-  if(out.length&&out[0][0]<260)hudText(out[0][2]===heli?'CHOPPER BEHIND':(out[0][2].driver==='cop'||out[0][2].cop)?'COPS BEHIND':'ATTACKER BEHIND',VW/2,VH*0.7,Math.round(13*sc),'#ffd0d0','center');
+  if(out.length&&out[0][0]<260)hudText(out[0][2]===heli?'CHOPPER BEHIND':(out[0][2].driver==='cop'||out[0][2].cop)?'COPS BEHIND':'ATTACKER BEHIND',VW/2,VH*0.16,Math.round(13*sc),'#ffd0d0','center');
 }
 
 function boostLines(){const c=player.car;return !!(c&&!c.wreck&&hyp(c.vx,c.vy)>430);}

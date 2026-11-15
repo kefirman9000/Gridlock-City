@@ -46,6 +46,11 @@
 //      registries first (packages, stashes, ramps, shops, places, safehouses and so on).
 //  C4. Places are modelled on real ones (the island is Oahu-shaped with the city where Honolulu sits). A new area
 //      should make sense the way a real place does, not be random noise.
+//  C5. No sheer walls of ground beside a road. Land next to the beltway and its spurs slopes away at most 7 per terrain
+//      cell (the limiter after ringRoad in 08-render). Steep faces drawn by the ground raster take one sample with no
+//      glints, flowers or reflections (they would be stretched into vertical streaks) and are shaded a little darker.
+//  C6. Solid things block only where they really are. A tree blocks at its trunk (a small circle at the tile centre),
+//      not the whole tile; nothing blocks with an invisible box bigger than what's drawn.
 //
 // D. OBJECTS, VEHICLES, BRIDGES AND BUILDINGS (with the RENDERING RULES in 08-render.js)
 //  D1. Everything is opaque. No see-through vehicles, decks or walls. Glass is an opaque tinted colour drawn only
@@ -58,6 +63,16 @@
 //  D4. Anything you can stand on has a matching walk surface (WALKS) at the same footprint and height, and it is
 //      drawn under the player (UNDERFOOT).
 //  D5. Every new object is checked from the front, back, both sides, above and at night (clock=0.95).
+//  D6. Every roof can be stood on, wherever it is (inside the city or out on the island) and however hard it is to
+//      reach. bldAt() finds any building covering a spot; new buildings go in `buildings` with a base and a roofAbs.
+//  D7. A vehicle on rails looks like one: boxcars and trams show wheels and an underframe. Nothing that isn't a rail
+//      vehicle is placed on track.
+//  D8. Glows and halos are for lamps and neon only, small and soft. No glow squares on cars: they read as boxes.
+//  D9. Nothing big is drawn right at the camera: a tree or prop within its own size of the camera is skipped, and the
+//      chase camera pulls in when a hill, bank or wall is between it and the player.
+//  D10. Ground paint is clean: crosswalks, arrows and lines are solid shapes. Noise breaks them into garbled pixels.
+//  D11. A business sign means you can walk in. Neon shop signs go only on walk-in shops (WALKSHOPS, over their
+//      door); a new business with a sign gets a live room and a counter that does something.
 //
 // E. LOOK AND FEEL: keep new things in step with the rest
 //  E1. Colour comes through lit() (it applies time of day and fog). Pick colours near the existing palettes: brick,
@@ -69,6 +84,7 @@
 //  E4. On-screen text uses showBig() and note(). Overlays use the same panel as COMPLETION and ERROR LOG (#16171b
 //      background, gold border, Pixelify Sans heading).
 //  E5. Sound goes through master (or radioG for the radio) and respects muted. Spoken lines go through talkSay2.
+//  E6. HUD text never sits on top of the player or their car (warnings like COPS BEHIND go near the top).
 //
 // F. CODE
 //  F1. Before adding a global, check the name isn't taken. All files share one scope, and a clash stops a whole file
@@ -81,8 +97,13 @@
 //  F4. Test the way a player plays: let the game's own camera and traffic run, not just a still placed by hand.
 //      Check that what you added actually shows up and survives a minute of play (things can be culled, despawned
 //      or pushed away).
+//  F5. Code that drives a car checks it has an AI first (c.ai can be null for parked or player cars). Guard every
+//      field you read from something that may not have it; the error log (ERROR LOG) shows which line it was.
+//  F6. Per-tile arrays (map, BMAP, BRT, SHOPDOOR, ARRT...) cover the city only. Check 0<=tx<W and 0<=ty<W before
+//      indexing ty*W+tx: off the map it wraps onto a real tile somewhere else (a shop door at the west edge once
+//      stopped the Dodo taking off out at the airstrip).
 // =====================================================================================================================
-const VERSION='5.18.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.19.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');

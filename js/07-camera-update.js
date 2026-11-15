@@ -429,6 +429,9 @@ function update(dt){
     for(let s2=10;s2<=dist;s2+=6){const qx=player.x-ca*s2,qy=player.y-sa*s2;if(!(s2>=30?side(qx,qy):solidPx(qx,qy))||(inBoat&&tileAt(Math.floor(qx/T),Math.floor(qy/T))===WATER))continue;
       if(hi){const tt=tileAt(Math.floor(qx/T),Math.floor(qy/T));if(tt===TREE)continue;const bb=bldAt(qx,qy);if(bb&&roofAbs(bb,qx,qy)<camZ-6)continue;}
       dd=Math.max(24,s2-10);break;}}
+    // a hill or bank between you and the camera pulls it in too, so it never sits inside the ground
+    {const z0=GH(player.x,player.y)+(player.car?(player.car.az||0):(player.jz||0))+16,camZ2=GH(player.x,player.y)+(player.jz||0)+hgt;
+     for(let s2=16;s2<Math.min(dd,dist);s2+=8){const qx=player.x-ca*s2,qy=player.y-sa*s2,lz=z0+(camZ2-z0)*s2/dist;if(GH(qx,qy)>lz-6){dd=Math.max(24,s2-12);break;}}}
     cam.dist=lerp(cam.dist,dd,Math.min(1,dt*(dd<cam.dist?16:2.5)));cam.h=lerp(cam.h,Math.max(10,hgt),Math.min(1,dt*(cam.pidle<0.3?14:3)));
     cam.x=player.x-ca*cam.dist;cam.y=player.y-sa*cam.dist;shopCam();{const gz=GH(player.x,player.y)+(player.riding?EL_H+6:player.car?(player.car.az||0)*0.85:(player.jz||0)>18?player.jz-6:(player.jz||0)*0.4);cam.gz=cam.gz==null?gz:lerp(cam.gz,gz,Math.min(1,dt*(player.car&&player.car.air>0?9:5)));}}
   updateAudio();

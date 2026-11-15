@@ -47,15 +47,12 @@ function lookTick(dt){
   if(p.smoke&&!p.moving&&proj(p.x+ca*2.6,p.y+sa*2.6,22))glow(PX,PY,1.1*PK,'#ff8a30',0.45+0.35*Math.sin(game.t*2.3+p.x));}}
 
 // ---- neon blade signs on shopfronts: bars, diners, hotels, pawn shops; they glow at night and a few flicker ----
-const NEONW=['BAR','HOTEL','PIZZA','LIQUOR','DINER','PAWN','CLUB','LIVE MUSIC','24 HRS','NOODLES','TATTOO','CAFE','DELI','LAUNDRY','BOWLING','GIRLS GIRLS','CHECKS CASHED','OPEN'];
+const NEONW=['BAR','HOTEL','PIZZA','LIQUOR','DINER','PAWN','CLUB','LIVE MUSIC','24 HRS','NOODLES','TATTOO','CAFE','DELI','LAUNDRY','BOWLING','CHECKS CASHED','OPEN'];
 const NEONC=['#ff3fa4','#3fe0ff','#ffd23f','#7dff6a','#ff6a3f','#c47dff'];
 {const f=walls;walls=function(b,x0,y0,x1,y1,z0,z1,fg,det,gr){f(b,x0,y0,x1,y1,z0,z1,fg,det,gr);
-  if(!det||!gr||b.st==='house'||b.st==='garage'||b.hollow||b.kind)return;
-  if(b.nsg==null){const h=hash(b.id*7+3,11);b.nsg=h%4===0&&b.hg>=2&&b.hg<=16?h%NEONW.length:-1;b.nsC=NEONC[(h>>>5)%NEONC.length];b.nsF=(h>>>9)%5===0;}
-  if(b.nsg<0)return;
-  // the face the camera is looking at
-  let x,y;const cx=(x0+x1)/2,cy=(y0+y1)/2,o=(b.id%2?0.28:-0.28);
-  if(CY>y1){x=cx+(x1-x0)*o;y=y1+5;}else if(CY<y0){x=cx+(x1-x0)*o;y=y0-5;}else if(CX>x1){x=x1+5;y=cy+(y1-y0)*o;}else if(CX<x0){x=x0-5;y=cy+(y1-y0)*o;}else return;
+  // v5.19: a business sign means you can walk in (DESIGN RULES D11), so only the walk-in shops carry one, over their door
+  if(!det||!gr||b.enterW==null)return;b.nsg=b.enterW;if(b.nsC==null){const h=hash(b.id*7+3,11);b.nsC=NEONC[(h>>>5)%NEONC.length];b.nsF=(h>>>9)%7===0;}
+  if(!(CY>y1))return;const x=b.enterX,y=y1+5;
   if(dist2(x,y,CX,CY)>520*520)return;
   const z=BH*1.25,flick=b.nsF&&((game.t*6+b.id)%17)<0.7,on=LIGHTK>0.15&&!flick;
   sign3(x,y,z,NEONW[b.nsg],'#16101c',on?b.nsC:'#6a6070',6.5,fg);
@@ -556,3 +553,62 @@ const FIN_BR={
   FINALE.steps.push({k:'until',desc:'Decide who to call',start:()=>{say([[YOU,'Dex is getting away, and every cop Marlowe owns is on my tail. I can\'t do this alone. Or can I?']],null,
     [['CALL VINCE',()=>finBranch('vince')],['CALL MOTHER LIN',()=>finBranch('lin')],['GO ALONE (+$10,000)',()=>finBranch('alone')]]);},cond:()=>!!(mission&&mission.fin)});}}
 function finBranch(k){const m=mission;if(!m)return;m.fin=k;m.steps=m.steps.slice(0,m.si+1).concat(FIN_BR[k]);}
+
+// ================= v5.19: tree trunks, roofs you can stand on anywhere, steep faces =================
+// Cars hit tree trunks (a circle at the tile centre), not the whole tree tile; the on-foot side is in circleTiles (02).
+function carTrunks(c){if(c.t.boat||c.t.heli&&(c.alt||0)>4||c.t.plane&&(c.alt||0)>4||(c.az||0)>12)return;const t=c.t,hl=t.L/2,hw=t.Wd/2,ca=Math.cos(c.a),sa=Math.sin(c.a),R=3.6,rr2=hl+hw+R;
+  const x0=Math.floor((c.x-rr2)/T),x1=Math.floor((c.x+rr2)/T),y0=Math.floor((c.y-rr2)/T),y1=Math.floor((c.y+rr2)/T);
+  for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){if(tx<0||ty<0||tx>=W||ty>=W||map[ty*W+tx]!==TREE)continue;
+    const cx=(tx+.5)*T,cy=(ty+.5)*T,lx=(cx-c.x)*ca+(cy-c.y)*sa,ly=-(cx-c.x)*sa+(cy-c.y)*ca,qx=clamp(lx,-hl,hl),qy=clamp(ly,-hw,hw);let dx=lx-qx,dy=ly-qy,d=Math.hypot(dx,dy);
+    if(d>=R)continue;let nx,ny,pen;if(d<1e-4){const ex=hl-Math.abs(lx),ey=hw-Math.abs(ly);if(ex<ey){nx=Math.sign(lx)||1;ny=0;pen=ex+R;}else{nx=0;ny=Math.sign(ly)||1;pen=ey+R;}}else{nx=dx/d;ny=dy/d;pen=R-d;}
+    // nx,ny points from the car towards the trunk (car space): push the car the other way
+    const wx=nx*ca-ny*sa,wy=nx*sa+ny*ca;c.x-=wx*pen;c.y-=wy*pen;const vn=c.vx*wx+c.vy*wy;
+    if(vn>0){const imp=vn;c.vx-=wx*vn*1.3;c.vy-=wy*vn*1.3;c.va+=(lx>0?1:-1)*(ly>0?-1:1)*Math.min(2,imp/300);
+      if(imp>90){damageCar&&damageCar(c,imp*0.35,c.driver==='player'?'player':null);if(c===player.car){shake=Math.max(shake,imp/60);sfx('crash',clamp(imp/500,0.2,0.8));}}}}}
+{const f=carTiles;carTiles=function(c){f(c);carTrunks(c);}}
+// Every roof can be stood on: the old lookup only knew one building per city tile and nothing outside the city, so roofs out on the
+// island, and buildings sharing a tile with a neighbour, couldn't be landed on. This one looks at every building whose footprint covers the spot.
+let BGR=null,BGRN=-1,BGRT=0;
+function bgridBuild(){BGR=new Map();buildings.forEach((b,i)=>{const x0=Math.floor(b.x/T),x1=Math.floor((b.x+b.w-0.01)/T),y0=Math.floor(b.y/T),y1=Math.floor((b.y+b.h-0.01)/T);
+  for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){const k=(ty+4096)*8192+(tx+4096);let L=BGR.get(k);if(!L)BGR.set(k,L=[]);L.push(i);}});BGRN=buildings.length;BGRT=game?game.t:0;}
+{const old=bldAt;bldAt=function(x,y){const b0=old(x,y);if(b0)return b0;
+  if(!BGR||BGRN!==buildings.length||(game&&Math.abs(game.t-BGRT)>8))bgridBuild();
+  const L=BGR.get((Math.floor(y/T)+4096)*8192+(Math.floor(x/T)+4096));if(!L)return null;let best=null,bz=-1e9;
+  for(const i of L){const b=buildings[i];if(!b||!(x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h))continue;const z=roofAbs(b,x,y);if(z>bz){bz=z;best=b;}}return best;};}
+// Boxcars in the rail yard sit on the tracks, so they need to read as rail cars: a dark underframe and wheels on the side you can see.
+{const f=walls;walls=function(b,x0,y0,x1,y1,z0,z1,fg,det,gr){f(b,x0,y0,x1,y1,z0,z1,fg,det,gr);if(b.kind!=='boxcar'||!gr)return;
+  for(const[fy,ny]of[[y0,-1],[y1,1]]){if(ny<0?CY>y0:CY<y1)continue;NOTOP=true;obox((x0+x1)/2,fy+ny*0.3,0,(x1-x0)/2,0.2,z0,z0+3.2,[26,26,28],null,fg);NOTOP=false;
+    for(const fx of[x0+10,x0+20,x1-20,x1-10])obox(fx,fy+ny*0.9,0,3.2,0.8,z0,z0+5,[34,34,36],[50,50,54],fg);}}}
+
+// ---- walk-in shops: the signed shops in the city are real places you can walk into ----
+// Each one is a live room (08d's liveRoom) behind a door on its sidewalk: the store, diner, pawn shop, bar and arcade rooms
+// already work, and the hotel, tattoo parlour and laundromat are new rooms whose counters are handled in walkInTick.
+{const add=(k,tx0,w,h,floor,wall,name,sign)=>{ROOMS2[k]={tx0,tx1:tx0+w,ty1:h,floor,wall,name,sign};const q=ROOMS2[k],r={id:k,tx0:q.tx0,ty0:W+13,tx1:q.tx1,ty1:W+13+q.ty1,floor,wall,name,props:[]};
+   r.x0=r.tx0*T;r.y0=r.ty0*T;r.x1=r.tx1*T;r.y1=r.ty1*T;r.cx=(r.x0+r.x1)/2;r.cy=(r.y0+r.y1)/2;r.counter={x:r.cx,y:r.y0+T*2.4};ROOMS[k]=r;return r;};
+ {const r=add('hotel',282,12,9,[150,40,48],[214,200,170],'HOTEL',['HOTEL','#1a1a1a','#ffd36a']);
+  r.props.push({x:r.cx,y:r.y0+T*2.4,k:'rbox',hl:T*2.2,hw:T*0.5,z0:0,z1:15,c:[96,60,36],rad:80,ht:16},{x:r.cx,y:r.y0+T*1.2,k:'rbox',hl:T*1.6,hw:T*0.3,z0:0,z1:30,c:[70,44,28],rad:60,ht:30},
+   {x:r.x0+T*2,y:r.y1-T*2.6,k:'rbox',hl:T*0.9,hw:T*0.6,z0:0,z1:8,c:[120,30,40],rad:30,ht:9},{x:r.x1-T*2,y:r.y1-T*2.6,k:'rbox',hl:T*0.9,hw:T*0.6,z0:0,z1:8,c:[120,30,40],rad:30,ht:9},
+   {x:r.x0+T*1.4,y:r.y0+T*1.4,k:'rbox',hl:T*0.3,hw:T*0.3,z0:0,z1:24,c:[70,140,70],rad:14,ht:24});}
+ {const r=add('tattoo',296,10,8,[40,36,40],[60,30,40],'TATTOO',['TATTOO','#16101c','#ff3fa4']);
+  r.props.push({x:r.cx,y:r.y0+T*2.4,k:'rbox',hl:T*1.6,hw:T*0.45,z0:0,z1:14,c:[30,30,34],rad:60,ht:15},{x:r.x0+T*2.4,y:r.cy+T,k:'rbox',hl:T*0.9,hw:T*0.4,z0:0,z1:9,c:[150,20,30],rad:30,ht:10},
+   {x:r.x1-T*2.4,y:r.cy+T,k:'rbox',hl:T*0.9,hw:T*0.4,z0:0,z1:9,c:[150,20,30],rad:30,ht:10},{x:r.cx,y:r.y0+T*1.0,k:'rbox',hl:T*3,hw:T*0.1,z0:12,z1:30,c:[220,200,170],rad:100,ht:30});}
+ {const r=add('laundry',308,10,8,[200,206,210],[150,190,210],'LAUNDROMAT',['LAUNDRY','#1a2a3a','#7de0ff']);
+  for(let i=0;i<4;i++)r.props.push({x:r.x0+T*(1.8+i*2),y:r.y0+T*1.3,k:'rbox',hl:T*0.7,hw:T*0.5,z0:0,z1:15,c:[236,238,240],rad:24,ht:16});
+  r.props.push({x:r.cx,y:r.cy+T*0.8,k:'rbox',hl:T*2,hw:T*0.4,z0:0,z1:12,c:[120,150,170],rad:70,ht:13});r.counter={x:r.x0+T*3,y:r.y0+T*1.3};}}
+const WSHOP={BAR:['bar','THE RUSTY ANCHOR'],HOTEL:['hotel','THE GRAND GRIDLOCK'],PIZZA:['diner','SLICE OF GRIDLOCK'],LIQUOR:['store','CORNER LIQUOR'],DINER:['diner','BLUE PLATE DINER'],
+  PAWN:['pawn','GOLD & PAWN'],CLUB:['bar','CLUB VELVET'],'LIVE MUSIC':['bar','THE BASEMENT'],'24 HRS':['store','NITE OWL 24/7'],NOODLES:['diner','GOLDEN NOODLE'],TATTOO:['tattoo','INK CITY'],
+  CAFE:['diner','BEAN THERE CAFE'],DELI:['store','SAL\'S DELI'],LAUNDRY:['laundry','SUDS LAUNDROMAT'],BOWLING:['arcade','PIXEL LANES'],'CHECKS CASHED':['pawn','CASH 4 U'],OPEN:['store','QUIK MART']};
+const WALKSHOPS=[];
+(function signedShops(){const order=NEONW.map((w,i)=>i);let wi=0;const used=new Set();
+  const cands=buildings.map((b,i)=>[b,i]).filter(([b])=>!b.outside&&!b.hollow&&!b.shop&&(!b.kind||b.kind==='bld')&&b.st!=='house'&&b.st!=='garage'&&b.hg>=1.5&&b.hg<=16&&b.x>T&&b.y>T&&b.x+b.w<WPX-T&&b.y+b.h<WPX-T)
+    .sort((p,q)=>hash(p[0].x|0,(p[0].y|0)+CITY_SEED%997)-hash(q[0].x|0,(q[0].y|0)+CITY_SEED%997));
+  for(const[b]of cands){if(WALKSHOPS.length>=34)break;const dtx=Math.floor((b.x+b.w/2)/T),sy=Math.floor((b.y+b.h)/T),blk=Math.floor(dtx/P)*64+Math.floor(sy/P);if(used.has(blk))continue;
+    if(map[sy*W+dtx]!==WALK||map[(sy-1)*W+dtx]!==BLD||DIAGT[sy*W+dtx])continue;const word=NEONW[order[wi%order.length]],[rid,nm]=WSHOP[word];
+    const D={x:(dtx+.5)*T,y:(sy+.5)*T};let S=null;try{S=liveRoom(rid,D,D);}catch(e){S=null;}if(!S)continue;
+    used.add(blk);wi++;S.b.enterW=NEONW.indexOf(word);S.b.enterX=S.dx;S.room.name=nm;S.signName=nm;WALKSHOPS.push(S);}})();
+SGRID=null;
+{const f=walkInTick;walkInTick=function(dt){if(!ROOM||!['hotel','tattoo','laundry'].includes(ROOM.id)){f(dt);return;}walkCool-=dt;if(walkCool>0||!ROOM.live||DLG.open||player.car)return;const r=ROOM.r;if(!r||!r.counter)return;
+  if(dist2(player.x,player.y,r.counter.x,r.counter.y+T)>34*34)return;walkCool=5;
+  if(ROOM.id==='hotel')say([['Desk clerk','Welcome to '+r.name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())+'. A room for the night?']],null,[['ROOM FOR THE NIGHT $60',()=>{if(money>=60){addMoney(-60);player.hp=PMAX();game.paused=true;menuShow('pause');openPanel('save');note('Rested. Health restored');}else note('Not enough cash');}],['NO THANKS',()=>{},'no']]);
+  else if(ROOM.id==='tattoo')say([['Tattoo artist','Walk-ins welcome. Something to make the Saints think twice?']],null,[['GET INKED $120',()=>{if(money>=120){addMoney(-120);STATS.ink=(STATS.ink||0)+1;note('Fresh ink ('+STATS.ink+'). Looking tougher');}else note('Not enough cash');}],['MAYBE LATER',()=>{},'no']]);
+  else say([['Attendant','Wash and dry? Nobody recognises a man in clean clothes.']],null,[['WASH YOUR CLOTHES $8',()=>{if(money>=8){addMoney(-8);if(stars()===1){clearHeat();note('Fresh clothes. The cops lose your description');}else note('Fresh and clean');}else note('Not enough cash');}],['NO',()=>{},'no']]);};}

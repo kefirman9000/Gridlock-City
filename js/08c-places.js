@@ -52,7 +52,7 @@ let pCool=0;
 // drawShopShell), then the counter, the clerk and the displays as ordinary props sorted by distance. Walk onto a glowing
 // pad in front of a display to buy that item.
 const SHOPS=[],SHOPDOOR=new Set(),SH_H=56;
-const shopDoorTile=(tx,ty)=>SHOPDOOR.has(ty*W+tx);
+const shopDoorTile=(tx,ty)=>tx>=0&&ty>=0&&tx<W&&ty<W&&SHOPDOOR.has(ty*W+tx); // bounds first: off the map, ty*W+tx wraps onto a real tile
 const SHOPUSED=[];
 // a walk-in store on the nearest free parking lot to (ax,ay) (failing that a small park or plaza, paved over);
 // kind 'gun' (Ammu-Nation) or 'clothes' (08d-life.js). Returns the store, or null if there was nowhere to put it

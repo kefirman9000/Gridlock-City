@@ -2,6 +2,16 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.19.0
+- Walk-in shops: 34 of the city's buildings become shops you can walk into (live rooms behind a door on their sidewalk), each with its neon sign over the door: diner, pizza, noodles and cafe (food), bar, club and live music (drinks and bar games), liquor, 24 hrs, deli and quik mart (the store), pawn and checks cashed, bowling, plus three new rooms: the hotel (a room for the night: rest and save), the tattoo parlour and the laundromat (clean clothes clear a one-star wanted level). Neon business signs now appear only on places you can enter.
+- Trees block only at the trunk (a small circle), for people and cars; cars that hit a trunk bounce off and take damage.
+- Every roof can be stood on: the roof lookup finds every building covering a spot, out on the island and where two buildings share a tile.
+- The land beside the beltway and its spurs slopes at most about 24 degrees, so there are no sheer walls of ground next to the road.
+- Steep faces (river banks, cuts, cliffs) are drawn as one shaded colour, so flowers and puddle glints aren't stretched into vertical streaks.
+- Removed the glow squares around parked cars' tail lights; crosswalks are clean again; the camera skips trees right in front of it and pulls in when a hill is between it and you; boxcars in the rail yard have wheels and an underframe; COPS BEHIND moved to the top of the screen.
+- Fixed: a crash when a pedestrian hailed a taxi that had no driver logic; the Dodo couldn't take off on some cities (a shop-door check read off the edge of the map).
+- New DESIGN RULES: C5, C6, D6-D11, E6, F5, F6.
+
 ## v5.18.0
 - Story contacts: Maya Cruz (reporter, Times Square, after Jailbreak), Paulie (by Vince's, after Jailbreak) and Nico (river docks, once the city opens). Each stands on a sidewalk with a marker and a name sign, shows as a letter on the radar, texts you when they unlock, and has their own chain of jobs that fills in the main story.
 - Maya, "The Marlowe Files": Off the Record (tail Marlowe's car for 45 s; too close for long and he spots you, too far and you lose him), Paper Trail (take Marlowe's car and ledger from behind Police HQ, lose the cops, bring it to her), Front Page (fight off Dex's men, then rush the proofs to the printing plant at the docks against the clock).

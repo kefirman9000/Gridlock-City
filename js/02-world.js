@@ -233,6 +233,9 @@ function circleTiles(o,r,sw,z){
   const x0=Math.floor((o.x-r)/T),x1=Math.floor((o.x+r)/T),y0=Math.floor((o.y-r)/T),y1=Math.floor((o.y+r)/T);
   for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){
     {const tt=tileAt(tx,ty);if(!isSolid(tt)||(sw&&tt===WATER))continue;
+     // a tree tile only blocks at its trunk (a small circle at the tile centre), not the whole square around it
+     if(tt===TREE){if(z>14)continue;const cx=(tx+.5)*T,cy=(ty+.5)*T,dx=o.x-cx,dy=o.y-cy,d=Math.hypot(dx,dy),R=r+3.2;if(d>=R)continue;
+       const nx=d>1e-6?dx/d:1,ny=d>1e-6?dy/d:0;o.x=cx+nx*R;o.y=cy+ny*R;if(!hit)hit={nx:0,ny:0};hit.nx+=nx;hit.ny+=ny;continue;}
      if(tt===BLD&&z>4&&typeof bldAt==='function'){const cx2=(tx+.5)*T,cy2=(ty+.5)*T,b=bldAt(cx2,cy2);if(b&&(FOOT_LADDER||roofAbs(b,cx2,cy2)-GH(o.x,o.y)<=z+8))continue;}}
     const cx=clamp(o.x,tx*T,tx*T+T),cy=clamp(o.y,ty*T,ty*T+T);
     const dx=o.x-cx,dy=o.y-cy,d2=dx*dx+dy*dy;
@@ -277,7 +280,7 @@ function carTiles(c){if(c.t.heli&&(c.alt||0)>30)return;
     const ca=Math.cos(c.a),sa=Math.sin(c.a);let any=false;
     for(const q of CARPTS){
       const rx=ca*q[0]*hl-sa*q[1]*hw,ry=sa*q[0]*hl+ca*q[1]*hw,px=c.x+rx,py=c.y+ry,tx=Math.floor(px/T),ty=Math.floor(py/T);
-      const SOL=c.t.boat?boatSolid:(x,y)=>(isSolid(tileAt(x,y))&&!garageSkip(c,x,y)&&!shallowTile(x,y))||shopDoorTile(x,y);
+      const SOL=c.t.boat?boatSolid:(x,y)=>{const tt=tileAt(x,y);return (isSolid(tt)&&tt!==TREE&&!garageSkip(c,x,y)&&!shallowTile(x,y))||shopDoorTile(x,y);};
       if(!SOL(tx,ty))continue;
       const cands=[[px-tx*T,-1,0],[tx*T+T-px,1,0],[py-ty*T,0,-1],[ty*T+T-py,0,1]].sort((a,b)=>a[0]-b[0]);
       let ch=cands[0];for(const k of cands)if(!SOL(tx+k[1],ty+k[2])){ch=k;break;}

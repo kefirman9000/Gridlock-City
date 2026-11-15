@@ -52,6 +52,9 @@ The storyline: Dex pays Captain Marlowe (Police HQ) to break Vince and Lin; keep
 v5.18 (end of 08g): `CONTACTS` (Maya, Paulie, Nico): each has `unlock()`, `jobs` (story-style defs with `contact:id`), a sidewalk spot (`sideSpot`) and marker `mk`; progress in `STATS.ct`, intro texts in `STATS.ctx`.
 `contactsTick` (from `cityTick`) spawns them and starts jobs; a `storyPass` wrapper pays them. `tailStep()` builds an `until` step for tailing a car; `doNow(f)` is an `until` step that runs `f` and moves on.
 The finale ends at a choice step: `finBranch(k)` replaces the rest of `mission.steps` with `FIN_BR[k]` (vince / lin / alone), recorded in `STATS.ending`.
+v5.19 (end of 08g): walk-in shops (`WALKSHOPS`, built with `liveRoom` behind a sidewalk door; `b.enterW` is the sign word, drawn over the door by the neon `walls` wrapper, which no longer signs any other building;
+`WSHOP` maps sign words to room ids; new rooms hotel/tattoo/laundry in `ROOMS2`, handled by a `walkInTick` wrapper). `carTrunks` (wraps `carTiles`) and the TREE branch in `circleTiles` make trees block at the trunk only.
+`bldAt` is wrapped with `BGR`, a lookup covering every building (outside ones too). In 08-render: a slope limiter after `ringRoad` (land beside TTYPE 10 cells within 7 per cell) and steep faces drawn with `face` (no glints, darker).
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
