@@ -181,3 +181,52 @@ function sinkTick(dt){const c=player.car;
     for(let i=props.length-1;i>=0;i--){const o=props[i];if((o.k==='hay'||o.k==='bush'||o.k==='rock')&&inC(o.x,o.y))props.splice(i,1);}
     for(let i=buildings.length-1;i>=0;i--){const b=buildings[i];if(b.outside&&inC(b.x+b.w/2,b.y+b.h/2)){buildings.splice(i,1);const j=OUTB.indexOf(b);if(j>=0)OUTB.splice(j,1);}}}
   SGRID=null;})();
+
+// ---- street traffic stays in town: a wide turn at the city's edge used to swing cars out onto the hillside past the last street ----
+function trafficBounds(){const m=12;for(const c of cars){if(!c.ai||c.ai.mode==='chase'||c.ai.mode==='ring'||c.driver!=='ai'||c.t.boat||c.t.heli||c.t.plane||c===player.car)continue;
+  if(c.x<m){c.x=m;if(c.vx<0)c.vx=0;}else if(c.x>WPX-m){c.x=WPX-m;if(c.vx>0)c.vx=0;}
+  if(c.y<m){c.y=m;if(c.vy<0)c.vy=0;}else if(c.y>WPX-m){c.y=WPX-m;if(c.vy>0)c.vy=0;}
+  // run wide onto a verge, a riverbank or a park and stuck there: gone if you can't see it, back on its lane if you can
+  if(c.ai.mode==='lane'||c.ai.mode==='diag'){const tx=Math.floor(c.x/T),ty=Math.floor(c.y/T),t=tileAt(tx,ty);
+    if((t===GRASS||t===TREE)&&!(DIAGT[ty*W+tx])){c.offT=(c.offT||0)+1/60;if(c.offT>2.5){c.offT=0;if(!camSees(c.x,c.y)&&!c.vip)c.stuckOut=true;else if(c.ai.mode==='lane'){const s=laneSpotNear(c.x,c.y)||null;laneFromHere(c);if(s){c.x+=(s.x-c.x)*0.5;c.y+=(s.y-c.y)*0.5;}}}}else c.offT=0;}}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);trafficBounds();}}
+
+// ================= traffic on the beltway =================
+// Cars drive the beltway and its spurs like any street: in the right-hand lane, following the centre line, slowing for whatever's
+// ahead. Off the end of a spur they rejoin the street grid; city traffic passing a spur's street end sometimes heads out onto it;
+// on the beltway they sometimes turn off down a spur into town. Some traffic is spawned on the beltway while you're near it.
+function ringNear(P,i,x,y){let bi=i,bd=1e18;for(let j=Math.max(0,i-8);j<=Math.min(P.length-1,i+8);j++){const d=dist2(P[j].x,P[j].y,x,y);if(d<bd){bd=d;bi=j;}}return bi;}
+function ringJoin(c,pth,i,dir){const ai=c.ai||(c.ai=newAI('lane',0,0,rr(150,210)));ai.mode='ring';ai.pth=pth;ai.pi=i;ai.dir=dir;ai.blockT=ai.blockT||0;ai.stuckT=0;ai.revT=0;}
+function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);return;}
+  ai.pi=ringNear(P,ai.pi|0,c.x,c.y);const i=ai.pi,dir=ai.dir,last=P.length-1;
+  // the end of a road: back into town, or onto the beltway
+  if((dir>0&&i>=last-1)||(dir<0&&i<=1)){
+    if(ai.pth===0||(ai.pth>0&&dir<0)){c.ai.mode='lane';laneFromHere(c);return;}
+    ringJoin(c,0,P.ringI,R()<0.5?1:-1);return;}
+  // on the beltway: now and then take a spur into town
+  if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<0.35){ringJoin(c,k,S.length-1,-1);return;}}}}
+  const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=14,gx=q.x-uy*lo,gy=q.y+ux*lo;
+  const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);
+  // ease off on the bends
+  {const a=P[clamp(i+dir*6,0,last)],b=P[clamp(i+dir*14,0,last)];const bend=Math.abs(angDiff(Math.atan2(b.uy,b.ux),Math.atan2(a.uy,a.ux)));if(bend>0.25)target=Math.min(target,200-bend*160);}
+  const fx=Math.cos(c.a),fy=Math.sin(c.a),D=c.t.L/2+22+spd*0.45,hw=c.t.Wd/2;let blocked=false;
+  for(const o of cars){if(o===c)continue;const rx=o.x-c.x,ry=o.y-c.y;if(rx*rx+ry*ry>(D+80)**2)continue;const f=rx*fx+ry*fy;if(f<=0)continue;if(f<D+o.t.L/2&&Math.abs(-rx*fy+ry*fx)<hw+o.t.Wd/2+2){blocked=true;break;}}
+  if(!blocked){const p=player.car?null:player;if(p){const rx=p.x-c.x,ry=p.y-c.y,f=rx*fx+ry*fy;if(f>0&&f<D&&Math.abs(-rx*fy+ry*fx)<hw+10)blocked=true;}}
+  if(blocked){ai.blockT+=dt;if(ai.blockT<3.5)target=0;if(ai.blockT>5.5)ai.blockT=0;}else ai.blockT=Math.max(0,ai.blockT-dt*2);
+  const vf=c.vx*fx+c.vy*fy;let thr=vf<target-10?1:vf>target+15?-1:0.15;if(target===0)thr=vf>5?-1:0;
+  if(target>0&&spd<12){ai.stuckT+=dt;if(ai.stuckT>2.5){ai.revT=1;ai.stuckT=0;}}else ai.stuckT=0;if(ai.revT>0){ai.revT-=dt;thr=-1;steer=-steer;}
+  driveCar(c,thr,steer,false,dt);}
+// city traffic passing the street end of a spur sometimes takes it out to the beltway
+const RINGNODE=new Map();
+function ringTraffic(dt){if(!RING.paths.length)return;
+  if(!RINGNODE.size)for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];RINGNODE.set(S.node+'',{k,x:(S.node[0]*P+2)*T,y:(S.node[1]*P+2)*T});}
+  for(const c of cars){if(!c.ai||c.ai.mode!=='lane'||c.driver!=='ai'||!c.traffic||c.vip)continue;const ix=Math.round((c.x/T-2)/P),iy=Math.round((c.y/T-2)/P),n=RINGNODE.get(ix+','+iy);
+    if(!n||dist2(c.x,c.y,n.x,n.y)>34*34){continue;}if(c.ai.ringNode===n.k)continue;c.ai.ringNode=n.k;if(R()<0.4)ringJoin(c,n.k,0,1);}
+  // the beltway's own traffic, while you're near it
+  ringTraffic.t=(ringTraffic.t||0)-dt;if(ringTraffic.t>0)return;ringTraffic.t=1.5;
+  const R0=RING.paths[0];let near=null,bd=1e18;for(let i=0;i<R0.length;i+=6){const d=dist2(R0[i].x,R0[i].y,player.x,player.y);if(d<bd){bd=d;near=i;}}
+  if(bd>1400*1400)return;let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&dist2(c.x,c.y,player.x,player.y)<1300*1300)n++;if(n>=6)return;
+  for(let tries=0;tries<6;tries++){const i=clamp(near+(R()<0.5?-1:1)*Math.floor(rr(30,48)),2,R0.length-3),q=R0[i],dir=R()<0.5?1:-1,x=q.x-q.uy*dir*14,y=q.y+q.ux*dir*14;
+    if(camSees(x,y)||carNear(x,y,120))continue;const c=makeCar(trafficType(clamp(x,0,WPX),clamp(y,0,WPX)),x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;
+    if(c.t.police||c.t.tank||c.t.army){c.traffic=true;}c.traffic=true;c.driver=c.t.police?'cop':'ai';ringJoin(c,0,i,dir);const sp=c.ai.cruise*0.8;c.vx=Math.cos(c.a)*sp;c.vy=Math.sin(c.a)*sp;break;}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);ringTraffic(dt);}}

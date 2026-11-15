@@ -21,14 +21,17 @@ function startGame(){
   ringT=rr(35,60);
   showBig('GRIDLOCK CITY','','#ffcc00',3);
 }
-let last=performance.now();
+let last=performance.now(),LOOPERR={n:0,shown:''};
+function loopErr(e){LOOPERR.n++;const m=String(e&&e.message||e),at=String(e&&e.stack||'').split('\n')[1]||'';console.error(e);
+  if(m!==LOOPERR.shown){LOOPERR.shown=m;try{note('Glitch caught: '+m.slice(0,80)+' '+(at.match(/js\/[\w-]+\.js:\d+/)||[''])[0]);}catch(_){}}}
 function frame(now){
   pollPad();mlTick();{const n2=performance.now();cutTick(Math.min(0.05,(n2-(SCENE.lt||n2))/1000));SCENE.lt=n2;}
   let dt=Math.min(0.033,Math.max(0,(now-last)/1000));last=now;
   if(slowT>0&&!game.paused){slowT-=dt;dt*=0.35;}
   if(FREECAM.on)freeCamTick(dt);else
-  if(game.state!=='menu'&&!game.paused&&!DLG.open)update(dt);
-  if(game.state!=='menu')render();else menuView(dt);
+  // an error in one frame used to stop the loop for good (the picture froze, the menus still worked): report it and carry on
+  try{if(game.state!=='menu'&&!game.paused&&!DLG.open)update(dt);}catch(e){loopErr(e);}
+  try{if(game.state!=='menu')render();else menuView(dt);}catch(e){loopErr(e);}
   requestAnimationFrame(frame);
 }
 document.getElementById('play').addEventListener('click',()=>{

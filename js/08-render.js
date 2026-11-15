@@ -246,7 +246,12 @@ for(let y=-HM+120;y<WPX+HM-120;y+=72)for(let x=-HM+120;x<WPX+HM-120;x+=72){if(x>
 // The ring road: a beltway close round the city (think Honolulu's H-1): out of the south-west corner, up the west side, round the
 // north and down the east side to the south-east corner, with gentle rounded corners and short spurs into the city's street ends.
 // Graded (smoothed heights, gentle slopes) and cut into the terrain; drawn per pixel with its own markings (RD* below). No R().
-const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDP=[];
+const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDI2=new Int32Array(HN*HN).fill(-1),RDP=[],ROLD=new Uint32Array(HN*HN),RHB=new Float32Array(HN*HN).fill(1e9);
+// per pixel: the exact signed distance from a road's centre line (projected onto the two segments either side of the cell's nearest point)
+let RLA=0,RLS=0;
+function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.max(0,e.i-1);j<=Math.min(P.length-2,e.i);j++){const a=P[j],b=P[j+1],dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy||1;
+  let t=((wx-a.x)*dx+(wy-a.y)*dy)/L2;t=t<0?0:t>1?1:t;const px=a.x+dx*t,py=a.y+dy*t,L=Math.sqrt(L2),lat=((wx-a.x)*dy-(wy-a.y)*dx)/L,d=Math.hypot(wx-px,wy-py);
+  if(d<best){best=d;RLA=(lat<0?-d:d);RLS=a.s+(b.s-a.s)*t;}}return best;}
 (function ringRoad(){const n1=(s,k)=>{const i=Math.floor(s),f=s-i,u=f*f*(3-2*f),h=q=>(hash(q*131+k*7,k*977+11)&65535)/65535;return h(i)+(h(i+1)-h(i))*u;};
   const node=(ix,iy)=>[(ix*P+2)*T,(iy*P+2)*T],D0=190,yEnd=node(0,NB-1)[1],xA=-D0,xB=WPX+D0,y0=-D0,Rr=560;
   // the base loop: a rounded rectangle, then pushed in and out along its normal by noise, then smoothed
@@ -279,7 +284,7 @@ const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDP=[];
   // spurs from the city's street ends out to the ring
   for(const[jx,jy]of RINGJ){if(jy===NB-1)continue;const[nx,ny]=node(jx,jy),sx=jy===0?nx:jx===0?0:WPX,sy=jy===0?0:ny;let b=null,bd=1e18;for(const q of ring){const d=dist2(q.x,q.y,sx,sy);if(d<bd){bd=d;b=q;}}
     const out=jy===0?[0,-1]:jx===0?[-1,0]:[1,0],mid=[sx+out[0]*Math.sqrt(bd)*0.55,sy+out[1]*Math.sqrt(bd)*0.55];let p=[[sx-out[0]*8,sy-out[1]*8],mid,[b.x,b.y]];for(let k=0;k<3;k++)p=chaikin(p);
-    const sp2=mk(p),h0=GH(sx,sy),h1=b.h,n=sp2.length-1;for(let i=0;i<=n;i++){const t=i/n;sp2[i].h=lerp(lerp(h0,h1,t),sp2[i].h,Math.sin(t*PI)*0.6);}sp2[0].h=h0;sp2[n].h=h1;RING.paths.push(sp2);}
+    const sp2=mk(p),h0=GH(sx,sy),h1=b.h,n=sp2.length-1;sp2.ringI=ring.indexOf(b);sp2.node=[jx,jy];for(let i=0;i<=n;i++){const t=i/n;sp2[i].h=lerp(lerp(h0,h1,t),sp2[i].h,Math.sin(t*PI)*0.6);}sp2[0].h=h0;sp2[n].h=h1;RING.paths.push(sp2);}
   // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
   const hw=RING.hw,bank=180;
   for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);
@@ -287,8 +292,14 @@ const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDP=[];
     for(let j=cj-r;j<=cj+r;j++)for(let ii=ci-r;ii<=ci+r;ii++){if(ii<1||j<1||ii>=HN-1||j>=HN-1)continue;const x=-HM+ii*HS,y=-HM+j*HS;
       if(x>=-2&&y>=-2&&x<=WPX+2&&y<=WPX+2)continue;const k=j*HN+ii;if(TTYPE[k]===0&&HMAP[k]===0&&y>WPX)continue;
       const lat=(x-q.x)*-q.uy+(y-q.y)*q.ux,lon=(x-q.x)*q.ux+(y-q.y)*q.uy;if(Math.abs(lon)>16)continue;const d=Math.abs(lat);
-      if(d<hw+HS){const prev=RDI[k],main=path===ring,better=prev<0||(main&&!RDP[prev].main&&d<hw)||(main===RDP[prev].main&&Math.abs(RDP[prev].lat)>d)||(!RDP[prev].main&&!main&&Math.abs(RDP[prev].lat)>d);
-        if(better){const e={x:q.x,y:q.y,ux:q.ux,uy:q.uy,s:q.s,lat,main};if(prev<0){RDI[k]=RDP.length;RDP.push(e);}else RDP[prev]=e;HMAP[k]=q.h;}
+      if(d<hw+HS+6){const main=path===ring,pi=RING.paths.indexOf(path);
+        if(TTYPE[k]!==10){ROLD[k]=TCOL[k];}
+        // up to two roads per cell (where a spur meets the ring), each with its nearest centre-line point
+        const A=RDI[k],B=RDI2[k],e={p:pi,i,d,main};
+        if(A<0){RDI[k]=RDP.length;RDP.push(e);}else if(RDP[A].p===pi){if(d<RDP[A].d)RDP[A]=e;}
+        else if(B<0){RDI2[k]=RDP.length;RDP.push(e);}else if(RDP[B].p===pi||d<RDP[B].d){if(RDP[B].p!==pi||d<RDP[B].d)RDP[B]=e;}
+        // the ground height comes from the ring where it runs, else the nearest road
+        const pr=main&&d<hw+4?d-1000:d;if(pr<RHB[k]){RHB[k]=pr;HMAP[k]=q.h;}
         TTYPE[k]=10;TCOL[k]=packC(70,70,74);}
       else if(d<hw+bank&&TTYPE[k]!==10){const w=1-smooth01((d-hw-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
   // nothing standing in the road; the guard rail opens where the spurs leave town and is gone where the edge has gone wild
@@ -512,9 +523,15 @@ function renderGround(heads){
     }else{
       const xi=wx|0,yi=wy|0,gi=(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0),tt=TTYPE[gi],nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
       if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
-      else if(tt===10){const e=RDP[RDI[gi]],sh=SHMAP[gi];r=64+nz;g=64+nz;b=68+nz;
-        if(e){const lat=(wx-e.x)*-e.uy+(wy-e.y)*e.ux,s=e.s+(wx-e.x)*e.ux+(wy-e.y)*e.uy,al=Math.abs(lat),hw=RING.hw;
-          if(al>hw){r=118+nz;g=110+nz;b=92+nz;}else if(al>hw-3.5){r=g=b=196;}else if(e.main&&al<1.6&&((s%64)+64)%64<34){r=214;g=176;b=40;}}
+      else if(tt===10){const sh=SHMAP[gi],hw=RING.hw,ia=RDI[gi],ib=RDI2[gi];let al=1e9,s=0,main=false,onAny=false;
+        // the nearer road decides, but a road's tarmac always wins over another road's shoulder (no grey wedges at junctions)
+        if(ia>=0){const e=RDP[ia],d=roadLat(e,wx,wy);al=d;s=RLS;main=e.main;}
+        if(ib>=0){const e=RDP[ib],d=roadLat(e,wx,wy);if(d<al||(d<hw&&al>=hw-3.5)){if(!(al<hw-3.5&&main)||d<hw-3.5){al=d;s=RLS;main=e.main;}}}
+        const both=ia>=0&&ib>=0&&Math.min(roadLat(RDP[ia],wx,wy),roadLat(RDP[ib],wx,wy))<hw-3.5;
+        if(al<hw-3.5||both){r=64+nz;g=64+nz;b=68+nz;if(main&&!both&&al<1.6&&((s%64)+64)%64<34){r=214;g=176;b=40;}}
+        else if(al<hw){r=g=b=196;}
+        else if(al<hw+4){r=112+nz;g=106+nz;b=92+nz;}
+        else{const c=ROLD[gi]||0xff406a3a;r=(c&255)+nz*2-7;g=((c>>8)&255)+nz*2-7;b=((c>>16)&255)+nz-3;}
         r*=sh;g*=sh;b*=sh;}
       else{const c=TCOL[gi]||0xff406a3a,sh=SHMAP[gi];r=((c&255)+nz*2-7)*sh;g=(((c>>8)&255)+nz*2-7)*sh;b=(((c>>16)&255)+nz-3)*sh;
         if(tt===7&&(xi&3)===0){r*=0.85;g*=0.85;b*=0.85;}if(snk>0.02){const k=snk*0.8;r+=(236-r)*k;g+=(240-g)*k;b+=(246-b)*k;}}

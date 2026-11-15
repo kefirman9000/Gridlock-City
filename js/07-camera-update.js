@@ -144,9 +144,9 @@ function update(dt){
     if(c.wreck){c.wreckT+=dt;driveCar(c,0,0,true,dt);}
     else if(c.driver==='ai'||c.driver==='cop'){
       if(!c.ai)acquireLane(c);
-      if(c.driver==='cop'&&(c.ai.mode==='lane'||c.ai.mode==='diag')&&stars()>0&&dist2(c.x,c.y,player.x,player.y)<650*650)c.ai.mode='chase';
+      if(c.driver==='cop'&&(c.ai.mode==='lane'||c.ai.mode==='diag'||c.ai.mode==='ring')&&stars()>0&&dist2(c.x,c.y,player.x,player.y)<650*650)c.ai.mode='chase';
       if(c.ai.mode==='chase'&&stars()===0)acquireLane(c);
-      if(c.ai.mode==='chase')aiChase(c,dt);else if(c.ai.mode==='diag')aiDiag(c,dt);else aiLane(c,dt);
+      if(c.ai.mode==='chase')aiChase(c,dt);else if(c.ai.mode==='diag')aiDiag(c,dt);else if(c.ai.mode==='ring')aiRing(c,dt);else aiLane(c,dt);
       if(c.t.tank&&c.driver==='cop'){const tg=player.car||player,want=Math.atan2(tg.y-c.y,tg.x-c.x);c.turret=lerpAng(c.turret==null?c.a:c.turret,want,Math.min(1,dt*2.5));
         c.shootT-=dt;const d=hyp(tg.x-c.x,tg.y-c.y);if(game.state==='play'&&c.shootT<=0&&d<480&&Math.abs(angDiff(want,c.turret))<0.15&&los(c.x,c.y,tg.x,tg.y)){c.shootT=rr(2.4,3.4);fireBullet(c.x+Math.cos(c.turret)*42,c.y+Math.sin(c.turret)*42,c.turret,560,'cop',0,'r',0);sfx('boom',0.35);shake=Math.max(shake,4);}}
       else if(game.state==='play'&&((c.gang!=null&&respect[c.gang]<=-3)||(c.driver==='cop'&&c.ai&&c.ai.mode==='chase'&&(stars()>=4||c.t.fbi||c.t.army)))){

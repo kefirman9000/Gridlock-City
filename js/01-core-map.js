@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='5.14.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.14.1',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -663,6 +663,9 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
   // keep every road the traffic can reach in one piece: anything cut off from the middle of town is closed too
   {const c=[Math.floor(NB/2)+1,Math.floor(NB/2)],seen=new Set([c+'']),q=[c];while(q.length){const[x,y]=q.pop();for(let d=0;d<4;d++)if(lk(x,y,d)){const k=[x+DX[d],y+DY[d]];if(!seen.has(k+'')){seen.add(k+'');q.push(k);}}}
    for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(seen.has(ix+','+iy))continue;for(let d=0;d<4;d++)if(linkBase(ix,iy,d)&&!CUT.has(segKey(ix,iy,d))){CUT.add(segKey(ix,iy,d));const h=d===0||d===2,a=h?(d===0?ix:ix-1):ix,b=h?iy:(d===1?iy:iy-1);fill(segTiles(h,a,b));}}}
+  // dead-end stubs left by the rounded corners go too (traffic would have to U-turn there); the stubs that lead out to the beltway stay
+  for(let pass=0;pass<4;pass++)for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(RINGJ.some(j=>j[0]===ix&&j[1]===iy))continue;let deg=0,dd=-1;for(let d=0;d<4;d++)if(lk(ix,iy,d)){deg++;dd=d;}
+    if(deg===1&&(ix===0||iy===0||ix===NB)){CUT.add(segKey(ix,iy,dd));const h=dd===0||dd===2,a=h?(dd===0?ix:ix-1):ix,b=h?iy:(dd===1?iy:iy-1);fill(segTiles(h,a,b));}}
   for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){let deg=0;for(let d=0;d<4;d++)if(lk(ix,iy,d))deg++;if(!deg)fill({x0:ix*P,x1:ix*P+3,y0:iy*P,y1:iy*P+3});}
   // clear what stood there, then grass, woods and a few rocks
   const wildAt=(x,y)=>{const tx=Math.floor(x/T),ty=Math.floor(y/T);return tx>=0&&ty>=0&&tx<W&&ty<W&&WILD[ty*W+tx];};

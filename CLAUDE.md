@@ -42,7 +42,9 @@ Note `ISLE` is already taken (the river island). Cars that drive into deep water
 v5.12: `cityEdge` (01, after the street lights; hash noise, no `R()`) marks `WILD` tiles on the outer blocks (rounded NW/NE corners; the random bites were removed in v5.13),
 closes street segments it touches (in `CUT`) and anything cut off from the middle, then grasses them over. `RINGJ` lists the edge nodes it must keep:
 the ring road (`RING.paths`, `ringRoad` in 08-render, after `COAST`) joins the city there. Ring road cells are `TTYPE` 10; `RDI`/`RDP` give each cell its
-centre-line point so the terrain raster draws lanes per pixel. Note `reachAll()` starts at node 0,0, which the rounded corner removes.
+centre-line point (`RDP` entries are `{p:path,i:point}`, up to two roads per cell via `RDI2`); `roadLat()` gives the exact per-pixel distance. Traffic drives the ring and spurs in AI mode `ring` (`aiRing` in 08f; spurs know `ringI` and `node`). Note `reachAll()` starts at node 0,0, which the rounded corner removes.
+
+The frame loop in 09 catches errors from `update`/`render` (`loopErr` shows 'Glitch caught: ...'), so one bad frame no longer stops the game.
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).

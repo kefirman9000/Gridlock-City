@@ -2,6 +2,12 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.14.1
+- Traffic on the beltway: cars drive it in the right-hand lane, slow for bends and for whatever's ahead, and turn off down the spurs into town; city traffic passing a spur's street end sometimes heads out onto it. The spurs are real connections now, not paths to nowhere.
+- Smooth road edges: the beltway and spurs are drawn from their exact centre lines per pixel (they were stepped and jagged), the junctions where spurs meet the beltway are clean (no grey wedge), and the ground beyond the gravel shoulder is the land's own colour.
+- Street traffic stays on the streets: no more cars swinging out past the city's last street onto the hillside, the dead-end stubs left at the rounded northern corners are gone, and a car that runs wide onto a verge or a riverbank and gets stuck is put back on its lane (or quietly cleared if you can't see it).
+- The game no longer freezes if something goes wrong in a frame (the picture used to stop while the menus still worked): the error is caught, shown briefly at the top as "Glitch caught: ...", and the game carries on.
+
 ## v5.14.0
 - Three new stations: JUNGLE 99.9 (drum & bass, with MC Flux), IRIE 92.7 (reggae and dub, with Auntie Rose) and PULSE 105.9 (house and disco, with DJ Kiki), each with its own song names and DJ.
 - Songs are built properly: a sparse intro, verses, a chorus with a hook that's different for every song, a breakdown now and then, and a drum fill into each new section.
