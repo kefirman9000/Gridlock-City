@@ -495,6 +495,7 @@ function sign3(x,y,z,txt,bg,fgc,size,fg){if(!proj(x,y,z))return;const k=PK;if(k<
 // ---------- ground ----------
 // ---------- ground: ray-march each screen column over the terrain (voxel landscape), nearest first ----------
 let gcv=document.createElement('canvas'),GCX=gcv.getContext('2d');
+const FACE_C=[118,114,106],FACE_S=[176,156,118],FACE_R=[108,102,94],FACE_E=[94,80,60]; // steep-face materials: concrete, sand, rock, earth
 function renderGround(heads){
   if(gcv.width!==LW||gcv.height!==LH){gcv.width=LW;gcv.height=LH;}
   const buf=lowBuf,lw=LW,fr=FOGC[0],fgc=FOGC[1],fb=FOGC[2];buf.fill(0);
@@ -630,6 +631,14 @@ function renderGround(heads){
         let col=pix(wx,wy,f,water,h,face);if(face)col=0xff000000|((((col>>16)&255)*0.84|0)<<16)|((((col>>8)&255)*0.84|0)<<8)|(((col&255)*0.84)|0);
         if(deck&&!pDeck){const yd=Math.ceil(HOR+(CZ-h+9)*FOC/f-0.5),ybot=Math.min(yd,yb),fg=fogAt(f),dk=0xff000000|((44+(FOGC[2]-44)*fg|0)<<16)|((42+(FOGC[1]-42)*fg|0)<<8)|(42+(FOGC[0]-42)*fg|0);
           for(let y=yi;y<ybot;y++)buf[y*lw+x]=y<yi+1?col:dk;if(ybot<yb&&!(hB>hT)){hT=ybot;hB=yb;}}
+        else if(face&&!water&&yb-yi>3){ // v5.29: a steep face gets its own material (earth, rock, concrete, sand) in horizontal bands and small
+          // blocks, instead of one ground sample stretched down each screen column (which read as vertical streaks down banks and cliffs)
+          const gi=(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0),tt=TTYPE[gi],inC=wx>=0&&wy>=0&&wx<WPX&&wy<WPX;
+          const M=inC||tt===10?FACE_C:tt===2?FACE_S:tt===5?FACE_R:FACE_E,fg=fogAt(f),bx=((wx/10)|0)*7+((wy/10)|0)*13;
+          buf[yi*lw+x]=col;
+          for(let y=yi+1;y<yb;y++){const zr=CZ-(y-HOR)*f/FOC,bd=(zr*0.3)|0,n=(hash(bx,bd)&15)-7,k=((bd&1)?0.93:1)*(0.96+n*0.012);
+            let r=M[0]*k*ar,g=M[1]*k*ag,b=M[2]*k*ab;r+=(FOGC[0]-r)*fg;g+=(FOGC[1]-g)*fg;b+=(FOGC[2]-b)*fg;
+            buf[y*lw+x]=0xff000000|((b>255?255:b|0)<<16)|((g>255?255:g|0)<<8)|(r>255?255:r|0);}}
         else for(let y=yi;y<yb;y++)buf[y*lw+x]=col;yb=yi;}
       pDeck=deck;ph=h;
       const rel=CZ-h;let st=rel>8?f*f/(rel*FOC)*0.9:f*0.02;if(st<0.5)st=0.5;else if(st>f*0.04)st=f*0.04;f+=st;

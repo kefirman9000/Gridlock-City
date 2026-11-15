@@ -31,15 +31,14 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.29
+- **Driving feels more natural**: let off the gas and the car rolls on instead of stopping as if you'd braked. Hills pull the same both ways, so you slow down climbing and speed up going down, and the tyres hold you on a camber instead of sliding you sideways.
+- **Running is a little slower** (sprinting about 17% slower, walking about 10% slower).
+- Neon underglow is a soft glow that follows the ground, no longer a big bright slab that floated off hills. Steep banks and cliffs are drawn as earth, rock, concrete or sand in layers instead of vertical streaks.
+
 ## What's new in v5.28
 - The police helicopter's searchlight no longer shines through buildings: the beam only shows when nothing stands between the helicopter and you, and the pool of light stops at walls.
 - Smoke puffs are soft round clouds instead of stacked see-through squares.
-
-## What's new in v5.27
-- **The East River Tunnel**: a road tunnel under the river, Holland Tunnel style. The portals are on the riverside on both banks; drive in and you're in a long tiled tube with lights and traffic both ways, and you come out the far side heading on along the same street. It opens with the bridges, and the cops lose sight of you inside.
-- **Cars sit on the hills**: they now tilt with the slope, nose up or down a hill and leaning on a camber, instead of floating level.
-- **Phones**: a new Graphics option (FAST / BALANCED / BEST). Phones start on FAST (lower resolution, a shorter view, no sun shadows or wet reflections, a few less people and cars); change it in Options. The game now warms up behind a short "getting the streets ready" screen on phones, so the first seconds don't stutter.
-- The SWAT van has proper sides and a back (doors, windows, tail lights, light bar). The Ironwood Bridge approach is gentler and its hump lower.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

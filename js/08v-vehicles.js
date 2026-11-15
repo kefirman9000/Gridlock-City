@@ -73,7 +73,10 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     return;
   }
   const U=c.up||{};
-  if(U.neon&&!c.wreck){const nc=U.neon===true?'#ff3ad0':U.neon;flat(c.x,c.y,a,hl+5,hw+5,0.25,nc);if(proj(c.x,c.y,1))glow(PX,PY,(hl+8)*PK,nc,LIGHTK>0.2?0.55:0.25);} // neon underglow
+  if(U.neon&&!c.wreck){const nc=U.neon===true?'#ff3ad0':U.neon;{const pv=[PIT,ROL];PIT=ROL=0;const ca2=Math.cos(a),sa2=Math.sin(a),H=hl+3,Wd=hw+3,cn=[[H,Wd],[H,-Wd],[-H,-Wd],[-H,Wd]].map(([f,l])=>{const x=c.x+ca2*f-sa2*l,y=c.y+sa2*f+ca2*l;return[x,y,GH(x,y)-ZOFF+0.4];});
+      // v5.29: the underglow follows the ground under each corner and is see-through (it was one solid flat slab at the car's centre height, which
+      // floated off slopes and stretched toward the camera into a big bright shape)
+      L3.save();L3.globalAlpha=LIGHTK>0.2?0.5:0.22;if(LIGHTK>0.2)L3.globalCompositeOperation='lighter';quad(cn[0][0],cn[0][1],cn[0][2],cn[1][0],cn[1][1],cn[1][2],cn[2][0],cn[2][1],cn[2][2],cn[3][0],cn[3][1],cn[3][2],nc);L3.restore();[PIT,ROL]=pv;}if(proj(c.x,c.y,1))glow(PX,PY,(hl+8)*PK,nc,LIGHTK>0.2?0.55:0.25);} // neon underglow
   const near=(c.x-CX)**2+(c.y-CY)**2<330*330;
   if(!near)obox(c.x,c.y,a,hl*0.86,hw*0.98,0,5,U.chrome?[178,182,190]:BLACK,null,fg); // far away: the old single wheel slab
   else{obox(c.x,c.y,a,hl*0.8,hw*0.86,1,5,BLACK,null,fg); // the underside

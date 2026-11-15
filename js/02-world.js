@@ -117,10 +117,13 @@ function driveCar(c,thr,steer,hb,dt){if(c.t.plane){planeDrive(c,thr,steer,hb,dt)
     Fx+=wx;Fy+=wy;tq+=rx*wy-ry*wx;return Math.abs(flat);
   };
   // CalculateFrontWheelForce: grip 1 (+turn in while steering), rolling 0.139 + 80% of the brakes
-  skidF=wheel(H.fw,c.a+pointing,(turning?1+H.turnIn:1)*wet,0.139+brakeF*0.8,torque*H.fdb);
+  // v5.29: coasting (no gas, brake or handbrake) the player's car rolls on instead of stopping as if braked: much less rolling
+  // resistance and forward-speed decay below (GTA2 kept only 97% of forward speed every tick even with your foot off the gas)
+  const coast=isP&&!g.fg&&!g.bg&&!g.fb&&!hb&&!c.flat,rr0=coast?0.008:0.139;
+  skidF=wheel(H.fw,c.a+pointing,(turning?1+H.turnIn:1)*wet,rr0+brakeF*0.8,torque*H.fdb);
   // CalculateRearWheelForce: grip 1 (-turn in), handbrake slide + ramping handbrake, x rear end stability;
   // the rear steers against the front at low speed and with it at high speed
-  {let frx=(turning?1-H.turnIn:1)*wet,fry=0.139+brakeF*0.2;
+  {let frx=(turning?1-H.turnIn:1)*wet,fry=rr0+brakeF*0.2;
     if(hb){frx*=H.hbs;fry+=H.brake*g.hbc/128;}
     frx*=H.res;fry*=H.res;
     const rv=(0.6-speed)/(3.8*0.6);
@@ -132,7 +135,7 @@ function driveCar(c,thr,steer,hb,dt){if(c.t.plane){planeDrive(c,thr,steer,hb,dt)
   // StabilizeVelocityAtSpeed: every tick keep 90% of sideways speed, 97% of forward speed, 88% of spin
   {const ca=Math.cos(c.a),sa=Math.sin(c.a);
     if(Math.abs(vx)<=1/128&&Math.abs(vy)<=1/128){const k=Math.pow(0.9,n);vx*=k;vy*=k;}
-    else{let lon=vx*ca+vy*sa,lat=-vx*sa+vy*ca;lat*=Math.pow(G3H&&!hb?0.86:0.9,n);lon*=Math.pow(0.97,n);vx=ca*lon-sa*lat;vy=sa*lon+ca*lat;}
+    else{let lon=vx*ca+vy*sa,lat=-vx*sa+vy*ca;lat*=Math.pow(G3H&&!hb?0.86:0.9,n);lon*=Math.pow(coast?0.997:0.97,n);vx=ca*lon-sa*lat;vy=sa*lon+ca*lat;}
     w*=Math.pow(G3H?0.85:0.88,n);}
   // EnforceGearSensitiveMaxSpeed: max speed going forwards, gear 2 speed going backwards
   {const sp=hyp(vx,vy),cap=(vx*fx+vy*fy>=0?H.max:H.g2s)*dmg*(c.flat?0.55:1);if(sp>cap){vx*=cap/sp;vy*=cap/sp;}if(c.flat&&sp>0.05)w+=(Math.random()-0.5)*0.004*n;}

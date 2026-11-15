@@ -81,7 +81,7 @@ function update(dt){
       if(mouse.turn){player.body+=mouse.turn*0.006*(OPT.msens||1);mouse.turn=0;}
       player.body+=clamp(turn,-1.5,1.5)*2.8*dt;}
       // sprint: hold SHIFT (or click the left stick, or push the touch stick all the way)
-      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.35:1),sp=(player.swim?0.45:1)*(fwd<0?115:run?245*(1+(typeof SKR!=='undefined'?SKR:0)):168),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
+      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.12:1),sp=(player.swim?0.45:1)*(fwd<0?105:run?240*(1+(typeof SKR!=='undefined'?SKR:0)):150),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
       player.vx=lerp(player.vx,mx*sp,Math.min(1,dt*14));player.vy=lerp(player.vy,my*sp,Math.min(1,dt*14));
       const ox0=player.x,oy0=player.y;player.x+=player.vx*dt;player.y+=player.vy*dt;
       {let[fl,onCar]=footFloor(player.x,player.y,player.jz);
@@ -163,10 +163,14 @@ function update(dt){
     if(!c.driver&&!c.wreck&&c.burn<0&&!(c.air>0)&&!c.towedBy&&c!==player.car&&Math.abs(c.vx)+Math.abs(c.vy)<1&&Math.abs(c.va)<0.01){c.zz=(c.zz||0)+1;if(c.zz>30){c.vx=c.vy=0;c.va=0;continue;}}else c.zz=0;
     // integrate
     carRamps(c);carAir(c,dt);
-    if(!(c.air>0)&&!c.t.tank&&!c.t.boat&&!c.t.heli&&(c.driver||Math.abs(c.vx)+Math.abs(c.vy)>30)){const gx=GH(c.x+10,c.y)-GH(c.x-10,c.y),gy=GH(c.x,c.y+10)-GH(c.x,c.y-10);
+    if(!(c.air>0)&&!c.t.tank&&!c.t.boat&&!c.t.heli&&(c.driver||Math.abs(c.vx)+Math.abs(c.vy)>30)){const gx=(GH(c.x+24,c.y)-GH(c.x-24,c.y))*10/24,gy=(GH(c.x,c.y+24)-GH(c.x,c.y-24))*10/24; // slope over the car's length (smoother than over 20 px)
       // hills: the GTA2-tuned engines are built for flat ground, so a driven car only feels part of the slope (it
       // pulls up hills instead of bogging down, and still runs a little faster downhill); empty cars roll freely
-      const up=(gx*Math.cos(c.a)+gy*Math.sin(c.a))>0,k=c.driver?(up?0.3:0.6):1;c.vx-=gx/20*560*k*dt;c.vy-=gy/20*560*k*dt;}
+      // v5.29: the same pull up and down hill (it was 30% climbing and 60% descending, so hills barely slowed you but sped you up),
+      // split along and across the car: along the car it slows you climbing and speeds you up going down; across it the tyres
+      // hold, so a driven car only creeps sideways on a camber (it used to slide sideways at full strength)
+      const ca=Math.cos(c.a),sa=Math.sin(c.a),G=c.driver?330:560,al=(gx*ca+gy*sa)/20*G,lt=(-gx*sa+gy*ca)/20*G*(c.driver?0.08:0.35);
+      c.vx-=(ca*al-sa*lt)*dt;c.vy-=(sa*al+ca*lt)*dt;}
     c.x+=c.vx*dt;c.y+=c.vy*dt;if(!c.driven){c.a+=c.va*dt;c.va*=Math.exp(-5*dt);}c.driven=false;
     carTiles(c);
     carCircles(c);

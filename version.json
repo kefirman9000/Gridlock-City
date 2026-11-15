@@ -1,4 +1,4 @@
 {
-  "version": "5.28.0",
-  "notes": "The helicopter searchlight no longer shines through buildings, and smoke is drawn as soft round puffs."
+  "version": "5.29.0",
+  "notes": "Cars coast instead of stopping dead, hills work both ways, running is a bit slower, and fixes for floating underglow and streaky slopes."
 }

@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.29.0
+- 02 driveCar: player coasting (no gas/brake/handbrake) uses rolling resistance 0.008 (was 0.139) and keeps 99.7% of forward speed per tick (was 97%).
+- 07: hill force measured over 48 px, the same pull up and down (G 330 driven, 560 empty; was 0.3/0.6 of 560 for driven cars), split along/across the car (across x0.08 driven, x0.35 empty). Walk 168 -> 150, sprint x1.35 -> x1.12, backwards 115 -> 105.
+- 08v: underglow quad per-corner GH, translucent (lighter at night). 08-render: steep faces (FACE_C/S/R/E) banded by height with 10 px blocks, keeping the top row's ground colour.
+
 ## v5.28.0
 - 08v drawHeli3: searchlight shaft skipped when a building between heli and target is taller than the beam (sampled 12 times along it); pool radius shrunk per angle until outside bldAt.
 - 08-render drawPart3: smoke puffs are 4 ellipses filled as one path (no alpha stacking).
