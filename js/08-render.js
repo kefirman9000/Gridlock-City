@@ -30,8 +30,8 @@
 //  9. Moving things you can stand on (cars, the El train) must report their velocity from footFloor so the
 //     player rides along, and the player must be drawn after them while on top (see the UNDERFOOT block).
 // 10. Slots are per object, not transitive: two things next to each other can get different slots. Vehicles, the
-//     player and people that overlap on screen are re-ordered by distance after slotting (see the end of the ITEMS
-//     pass); if you add another kind of solid thing that sits among cars, add its kind there too.
+//     player and people are lifted past any farther item they overlap on screen after slotting (see the end of the
+//     ITEMS pass), except big props (rad over 40, decks, the train), which keep their own order.
 // Checking a change: render the thing from the front, back, both sides and from above at day and night
 // (the Playwright harness idea in CLAUDE.md does exactly this).
 // ======================================================================================================
@@ -1044,8 +1044,12 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   // different slots (the one hugging the wall overlaps it, the one in the lane doesn't) and the farther car got painted
   // over yours. Where two vehicles or people overlap on screen, the nearer one is lifted to the farther one's slot,
   // so the distance order inside that slot decides.
-  {const V=[];for(const it of ITEMS)if((it.kind===0||it.kind===14||it.kind===1)&&it.sx!=null)V.push(it);
-    for(let pass=0;pass<2;pass++)for(const a of V)for(const b of V){if(a.f>=b.f||a.slot>=b.slot)continue;
+  // The same goes for anything farther away that a car or person overlaps (a tree in the park behind your car got
+  // painted over it): movers are lifted past any farther, overlapping item of ordinary size. Big props (El decks,
+  // cranes, the train) keep their own order, since one distance can't stand for their whole body (rule 1).
+  {const V=[],O=[];for(const it of ITEMS){if(it.sx==null)continue;if(it.kind===0||it.kind===14||it.kind===1)V.push(it);
+      if(it.kind!==22&&it.kind!==24&&!(it.rad>40))O.push(it);}
+    for(let pass=0;pass<2;pass++)for(const a of V)for(const b of O){if(a.f>=b.f||a.slot>=b.slot)continue;
       if(Math.abs(a.sx-b.sx)<a.sw+b.sw&&a.yt<b.yb&&b.yt<a.yb)a.slot=b.slot;}}
   ITEMS.sort((a,b)=>a.slot-b.slot||b.f-a.f);
   let ii=0;

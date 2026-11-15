@@ -1,4 +1,4 @@
 {
-  "version": "5.4.4",
-  "notes": "Updates now show up on a normal refresh (the game no longer reuses the browser's 10-minute cached copies of its files)."
+  "version": "5.4.5",
+  "notes": "Fix: trees, lamps and other props behind your car could be drawn on top of it."
 }

@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.4.5
+- Fix: trees, lamps and other props behind your car could be drawn on top of it.
+
 ## v5.4.4
 - Updates now show up on a normal refresh (the game no longer reuses the browser's 10-minute cached copies of its files).
 
