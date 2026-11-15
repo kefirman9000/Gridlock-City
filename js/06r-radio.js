@@ -84,9 +84,25 @@ function radioNow(st){const S=RADIO[st];if(!S||S.kind==='off')return null;const 
     return{key:'b'+seg+k,line:dj.lines[(Math.floor(seg/3)*4+(seg%3?2:0)+k)%dj.lines.length],speak:true};}
   return null;}
 const VOICE={MARTY:[0.8,1.08,0],WENDY:[1.3,1.12,2],DORIS:[1.1,0.95,4],GARY:[1.0,1.2,5],PAOLO:[0.9,1.2,6],REVEREND:[0.7,0.9,8],DR:[1.05,1.25,9],CALLER:[1.35,1.15,3],AD:[1.0,1.1,1]};
+// voices: every speaker gets their own voice from all the English accents the device has (US, UK, Australian, Irish,
+// Indian, South African...), matched to whether they're a man or a woman where the voice's name tells us; callers and ads
+// are a different person each time, with their own pitch and pace
+const VGENDER={MARTY:'m',WENDY:'f',DORIS:'f',GARY:'m',PAOLO:'m',REVEREND:'m',DR:'m',SKIDS:'m',LUCINDA:'f',LOW:'m'};
+const FEM=/female|woman|samantha|victoria|karen|moira|tessa|fiona|susan|hazel|zira|serena|kate|allison|ava|nicky|veena|catherine|libby|sonia|natasha|jenny|aria|emma|amy|joanna|salli|kimberly|ivy|kendra|olivia|google uk english female|google us english/i;
+const MAL=/male|man\b|daniel|david|mark|alex|fred|rishi|george|oliver|arthur|aaron|thomas|james|ryan|guy|brian|matthew|joey|justin|russell|gordon|lee|google uk english male/i;
+let VPOOL=null,VPOOLN=0;
+function voicePool(ss){const all=ss.getVoices();if(VPOOL&&all.length===VPOOLN)return VPOOL;VPOOLN=all.length;
+  const en=all.filter(v=>/^en/i.test(v.lang));const f=en.filter(v=>FEM.test(v.name)&&!/\bmale\b/i.test(v.name)),m=en.filter(v=>MAL.test(v.name)&&!/female/i.test(v.name));
+  VPOOL={all:en.length?en:all,f:f.length?f:en,m:m.length?m:en};return VPOOL;}
+const vhash=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
 function talkSay(line){try{const ss=window.speechSynthesis;if(!ss||muted)return;ss.cancel();const i=line.indexOf(': '),who=line.slice(0,i),txt=line.slice(i+2);
-  const u=new SpeechSynthesisUtterance(txt);const dj=DJS.find(d=>d.name===who);let v=VOICE[who.split(' ')[0]]||VOICE.CALLER;if(dj)v=[dj.pitch,dj.rate,DJS.indexOf(dj)+7];
-  u.pitch=v[0];u.rate=v[1];u.volume=0.85;const vs=ss.getVoices().filter(x=>/^en/i.test(x.lang));if(vs.length)u.voice=vs[v[2]%vs.length];ss.speak(u);}catch(_){}}
+  const u=new SpeechSynthesisUtterance(txt),key=who.split(' ')[0],dj=DJS.find(d=>d.name===who),anon=key==='CALLER'||key==='AD';
+  const seed=anon?vhash(txt):vhash(who),g=VGENDER[key]||(seed&1?'f':'m');
+  let pitch,rate;if(dj){pitch=dj.pitch;rate=dj.rate;}else if(VOICE[key]&&!anon){pitch=VOICE[key][0];rate=VOICE[key][1];}
+  else{pitch=0.55+((seed>>>3)%100)/100*1.05;rate=0.85+((seed>>>11)%100)/100*0.45;} // a new caller or ad voice each time
+  if(key==='AD'&&(seed>>>17)%3===0){rate*=1.18;} // the fast-talking small print
+  u.pitch=pitch;u.rate=rate;u.volume=0.85;const P=voicePool(ss),list=P[g]&&P[g].length?P[g]:P.all;
+  if(list.length)u.voice=list[(seed>>>5)%list.length];ss.speak(u);}catch(_){}}
 function talkStop(){try{if(window.speechSynthesis)window.speechSynthesis.cancel();}catch(_){}}
 let RLAST='';
 function updateRadioText(dt){const st=RADIO[radio.st],on=!!(player.car&&game.state==='play'&&!game.paused&&st&&st.kind!=='off');

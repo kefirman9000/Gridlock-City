@@ -526,7 +526,7 @@ function extLoad(e){if(!e)return;GYM=e.gym||0;for(const k in GOLDGOT)delete GOLD
 // ---------- traffic on the diagonal avenues ----------
 function aiDiag(c,dt){const ai=c.ai,d=DIAGS[ai.di],[t,sd]=diagRel(d,c.x,c.y),dir=ai.dir,ux=d.ux*dir,uy=d.uy*dir,lx=-uy,ly=ux;
   if((dir>0&&t>d.L-70)||(dir<0&&t<70)||Math.abs(sd)>110){laneFromHere(c);return;}
-  const spd=hyp(c.vx,c.vy),look=50+spd*0.35,ta=t+dir*look,gx=d.ax+d.ux*ta+lx*26,gy=d.ay+d.uy*ta+ly*26;
+  const spd=hyp(c.vx,c.vy),look=50+spd*0.35,ta=t+dir*look,lo=d.side?15:26,gx=d.ax+d.ux*ta+lx*lo,gy=d.ay+d.uy*ta+ly*lo;
   const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,100);
   const fx=Math.cos(c.a),fy=Math.sin(c.a),D=c.t.L/2+22+spd*0.45,hw=c.t.Wd/2;let blocked=false;
   for(const o of cars){if(o===c)continue;const rx=o.x-c.x,ry=o.y-c.y;if(rx*rx+ry*ry>(D+80)**2)continue;const f=rx*fx+ry*fy;if(f<=0)continue;if(f<D+o.t.L/2&&Math.abs(-rx*fy+ry*fx)<hw+o.t.Wd/2+2){blocked=true;break;}}

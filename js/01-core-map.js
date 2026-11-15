@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='5.6.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.7.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -76,7 +76,7 @@ const DHW=56,DSW=84;
 function diagRel(d,x,y){const px=x-d.ax,py=y-d.ay;return[px*d.ux+py*d.uy,px*d.nx+py*d.ny];} // [along, signed side]
 function diagDist(d,x,y){const[t,sd]=diagRel(d,x,y);if(t<0)return hyp(x-d.ax,y-d.ay);if(t>d.L)return hyp(x-d.bx,y-d.by);return Math.abs(sd);}
 const nearDiag=(x,y,r)=>DIAGS.some(d=>diagDist(d,x,y)<r);
-function diagPix(i,xi,yi,nz,tx,ty){const d=DIAGS[i],[t,sd]=diagRel(d,xi,yi),a=Math.abs(sd);if(t<-DHW||t>d.L+DHW)return null;
+function diagPix(i,xi,yi,nz,tx,ty){const d=DIAGS[i],[t,sd]=diagRel(d,xi,yi),a=Math.abs(sd),DHW=d.hw||56,DSW=d.sw||84;if(t<-DHW||t>d.L+DHW)return null;
   const grid=MXT[tx]<4||MXT[ty]<4;
   // where the avenue crosses a street, the street's own asphalt shows: no avenue sidewalk painted across it
   if(grid&&a>=DHW)return null;
@@ -86,14 +86,14 @@ function diagPix(i,xi,yi,nz,tx,ty){const d=DIAGS[i],[t,sd]=diagRel(d,xi,yi),a=Ma
       // (stripes run with the traffic and alternate across the road, like the crossings on the grid streets)
       if(eg<14&&eg>6&&a<DHW-6){if((((sd+60)/6)|0)&1){r=206;g=206;b=200;}}
       else if(eg<=4){}
-      else if(a<2.4&&a>0.6){r=168;g=137;b=58;}else if(Math.abs(a-28)<1&&(((t/18)|0)&1)){r=200;g=200;b=194;}else if(a>DHW-3){r=85;g=87;b=92;}}
+      else if(a<2.4&&a>0.6){r=168;g=137;b=58;}else if(!d.side&&Math.abs(a-28)<1&&(((t/18)|0)&1)){r=200;g=200;b=194;}else if(a>DHW-3){r=85;g=87;b=92;}}
     return[r,g,b];}
   // the avenue's sidewalks use the same paving as the neighbourhood's own sidewalks, and run on over the bits of
   // block the avenue cut into road (so there are no jagged asphalt slivers beside it)
-  if(a<DSW||(a<DSW+44&&map[ty*W+tx]===ROAD))return diagWalk(tx,ty,xi,yi,nz,a);
+  if(a<DSW||(a<DSW+44&&map[ty*W+tx]===ROAD))return diagWalk(tx,ty,xi,yi,nz,a,DHW);
   return null;}
-function diagWalk(tx,ty,xi,yi,nz,a){const zt=ZT[ty*W+tx],u=xi&31,v=yi&31;
-  if(a<DHW+3)return[150,147,140]; // the curb
+function diagWalk(tx,ty,xi,yi,nz,a,hw){const zt=ZT[ty*W+tx],u=xi&31,v=yi&31;
+  if(a<(hw||56)+3)return[150,147,140]; // the curb
   if(zt===3){if((v&7)===0||((u+((v>>3)&1)*8)&15)===0)return[98,82,74];return[138+nz*2,80+nz,62+nz];}
   if(zt===2){if(u===0||v===0)return[120,120,118];return[148+nz,148+nz,144+nz];}
   if(zt===0){if((u&15)===0||(v&15)===0)return[98,98,104];return[122+nz,122+nz,128+nz];}
@@ -127,7 +127,7 @@ function alleys(){for(let by=0;by<NB;by++)for(let bx=0;bx<NB;bx++){const k=BLOCK
     if(R()<0.35)addRamp(ax0+aw/2,ay0+ah/2,hz?(R()<0.5?0:PI):(R()<0.5?PI/2:-PI/2),'wood');}}
 // traffic on the avenues
 function diagSpotNear(x,y){for(let i=0;i<DIAGS.length;i++){const d=DIAGS[i],[t,sd]=diagRel(d,x,y);if(t<d.L*0.05||t>d.L*0.95||Math.abs(sd)>350)continue;
-    const dir=R()<0.5?1:-1,ux=d.ux*dir,uy=d.uy*dir,lx=-uy,ly=ux;const px=d.ax+d.ux*t+lx*26,py=d.ay+d.uy*t+ly*26;
+    const dir=R()<0.5?1:-1,ux=d.ux*dir,uy=d.uy*dir,lx=-uy,ly=ux;const lo=d.side?15:26,px=d.ax+d.ux*t+lx*lo,py=d.ay+d.uy*t+ly*lo;
     if(map[Math.floor(py/T)*W+Math.floor(px/T)]!==ROAD)continue;return{x:px,y:py,a:Math.atan2(uy,ux),di:i,dir};}return null;}
 // is the road from intersection (ix,iy) heading dd still land (or a bridge)?
 // Some street segments are closed and turned into pedestrian plazas and park paths, so the city isn't a perfect grid:
@@ -565,6 +565,68 @@ const DRIVEWAYS=[];
     else if(r<0.06)props.push({x:curbX,y:curbY,k:'pbike',a:along+(cr()<0.5?0:PI),c:BIKE[Math.floor(cr()*BIKE.length)]});
     else if(r<0.08&&z!==2)props.push({x:inX-sideX*3,y:inY-sideY*3,k:'aframe',a:along+PI/2});
   }
+})();
+// ---- v5.7: a less formulaic street plan (its own seeded stream; the main grid and every story spot stay put) ----
+// Crooked side streets cut through blocks at odd angles where the old city is (like the Village and Lower Manhattan),
+// narrower than Broadway, drawn and driven like the diagonal avenues; and a few short street segments closed to cars and
+// turned into pedestrian plazas with seating and trees (like the Broadway plazas).
+(function naturalStreets(){
+  const cr=(a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296})(CITY_SEED^0x2f6b1a37);
+  const node=(ix,iy)=>[(ix*P+2)*T,(iy*P+2)*T];
+  const sp=new Set();for(const k in SPECIAL)sp.add(k);
+  const okNode=(ix,iy)=>ix>=1&&iy>=1&&ix<NB&&iy<NB;
+  const nD=DIAGS.length,want=7;let made=0;
+  for(let tries=0;tries<220&&made<want;tries++){
+    const ix=1+Math.floor(cr()*(NB-2)),iy=1+Math.floor(cr()*(NB-2)),[ax,ay]=node(ix,iy);
+    const dn=districtAt(ax,ay);if(!(dn==='OLD TOWN'||dn==='DOWNTOWN'||dn==='LOTUS QUARTER'||dn==='CHINATOWN'||dn==='THE VILLAGE'||made<3||tries>120))continue;
+    const dx=(cr()<0.5?-1:1)*(1+Math.floor(cr()*2)),dy=(cr()<0.5?-1:1)*(cr()<0.6?1:2);if(Math.abs(dx)===Math.abs(dy))continue; // never 45 degrees: odd angles
+    if(!okNode(ix+dx,iy+dy))continue;const[bx2,by2]=node(ix+dx,iy+dy);
+    const sx=ax+(bx2-ax)*0.04,sy=ay+(by2-ay)*0.04,ex=bx2-(bx2-ax)*0.04,ey=by2-(by2-ay)*0.04,L=hyp(ex-sx,ey-sy),ux=(ex-sx)/L,uy=(ey-sy)/L;
+    const d={ax:sx,ay:sy,bx:ex,by:ey,L,ux,uy,nx:-uy,ny:ux,hw:30,sw:46,side:true};
+    // keep clear of the river, bridges, special blocks, Central Park and the other diagonals
+    let bad=false;
+    for(let t=0;t<=L&&!bad;t+=24){const x=sx+ux*t,y=sy+uy*t,tx=Math.floor(x/T),ty=Math.floor(y/T);if(tx<2||ty<2||tx>=W-2||ty>=W-2){bad=true;break;}
+      if(RIV[ty*W+tx]||BRT[ty*W+tx]||map[ty*W+tx]===WATER)bad=true;const bx=Math.floor(tx/P),by=Math.floor(ty/P);if(sp.has(bx+','+by)||(typeof inCP==='function'&&inCP(bx,by)))bad=true;
+      for(const o of DIAGS)if(diagDist(o,x,y)<(o.side?260:340))bad=true;}
+    if(bad)continue;
+    DIAGS.push(d);made++;const i=DIAGS.length-1;
+    const x0=Math.floor(Math.min(sx,ex)/T)-3,x1=Math.ceil(Math.max(sx,ex)/T)+3,y0=Math.floor(Math.min(sy,ey)/T)-3,y1=Math.ceil(Math.max(sy,ey)/T)+3;
+    for(let ty=Math.max(0,y0);ty<Math.min(W,y1);ty++)for(let tx=Math.max(0,x0);tx<Math.min(W,x1);tx++){const ti=ty*W+tx,t=map[ti];if(t===WATER||RIV[ti]||BRT[ti])continue;
+      const dd=diagDist(d,(tx+.5)*T,(ty+.5)*T);if(dd<d.sw+18&&!DIAGT[ti])DIAGT[ti]=i+1;
+      if(dd<d.hw+10){map[ti]=ROAD;PARKT[ti]=0;}else if(dd<d.sw+12&&t!==ROAD){map[ti]=WALK;PARKT[ti]=0;}}
+    for(const b of buildings.slice()){const k=buildings.indexOf(b);let hit=false;for(let q=0;q<=8&&!hit;q++){const qx=b.x+b.w*((q%3)/2),qy=b.y+b.h*(Math.floor(q/3)/2);if(diagDist(d,qx,qy)<d.sw+10)hit=true;}
+      if(!hit)continue;buildings.splice(k,1);
+      // trim it back from the new street instead of losing it: keep the biggest rectangle of its tiles clear of the street
+      const tx0=Math.floor(b.x/T),ty0=Math.floor(b.y/T),tw=Math.ceil((b.x+b.w)/T)-tx0,th=Math.ceil((b.y+b.h)/T)-ty0,okT=(x,y)=>diagDist(d,(x+.5)*T,(y+.5)*T)>=d.sw+22;
+      let best=null,ba=0;for(let y0=0;y0<th;y0++)for(let x0=0;x0<tw;x0++)for(let y1=y0;y1<th;y1++)for(let x1=x0;x1<tw;x1++){const ar=(x1-x0+1)*(y1-y0+1);if(ar<=ba)continue;
+        let ok=true;for(let y=y0;y<=y1&&ok;y++)for(let x=x0;x<=x1;x++)if(!okT(tx0+x,ty0+y)){ok=false;break;}if(ok){ba=ar;best=[x0,y0,x1,y1];}}
+      for(let ty=ty0;ty<ty0+th;ty++)for(let tx=tx0;tx<tx0+tw;tx++){const ti=ty*W+tx;if(map[ti]===BLD){map[ti]=WALK;PARKT[ti]=0;}}
+      if(best&&ba>=2){const[x0,y0,x1,y1]=best,nb=Object.assign({},b,{x:(tx0+x0)*T,y:(ty0+y0)*T,w:(x1-x0+1)*T,h:(y1-y0+1)*T});nb.tier=null;
+        if(nb.w>=T&&nb.h>=T){buildings.push(nb);for(let ty=ty0+y0;ty<=ty0+y1;ty++)for(let tx=tx0+x0;tx<=tx0+x1;tx++)map[ty*W+tx]=BLD;}}
+      else for(let ty=ty0;ty<ty0+th;ty++)for(let tx=tx0;tx<tx0+tw;tx++){const ti=ty*W+tx;if(map[ti]===WALK&&diagDist(d,(tx+.5)*T,(ty+.5)*T)>d.sw+22&&cr()<0.2)addTree((tx+.5)*T,(ty+.5)*T,'round',0.7);}}
+    const clear=o=>diagDist(d,o.x,o.y)>=d.sw+6;for(const arr of[trees,props,parkedSpots])if(arr){const keep=arr.filter(clear);arr.length=0;arr.push(...keep);}
+    for(let k=lotBlocks.length-1;k>=0;k--)if(diagDist(d,lotBlocks[k].x,lotBlocks[k].y)<d.sw+60)lotBlocks.splice(k,1);
+    for(let t=50;t<L-50;t+=90)for(const s2 of[-1,1]){const x=sx+ux*t+d.nx*s2*(d.hw+10),y=sy+uy*t+d.ny*s2*(d.hw+10),tx=Math.floor(x/T),ty=Math.floor(y/T);
+      if(map[ty*W+tx]===WALK&&tx%P>=4&&ty%P>=4&&cr()<0.6)addTree(x,y,cr()<0.3?'sakura':'round',0.55);}}
+  // pedestrian plazas on a few short street segments (never one the traffic network needs)
+  const base=reachAll(),cands=[];
+  for(let by=1;by<NB-1;by++)for(let bx=1;bx<NB-1;bx++){cands.push([true,bx,by]);cands.push([false,bx,by]);}
+  for(let k=cands.length-1;k>0;k--){const j=Math.floor(cr()*(k+1));[cands[k],cands[j]]=[cands[j],cands[k]];}
+  let plz=0;
+  for(const[h,a,b]of cands){if(plz>=5)break;const key=h?'h'+a+','+b:'v'+a+','+b;if(CUT.has(key)||segProtected(h,a,b))continue;
+    const A=h?BLOCKK[(b-1)*NB+a]:BLOCKK[b*NB+a-1],B=BLOCKK[b*NB+a];if(!['bld','plaza','park'].includes(A)||!['bld','plaza','park'].includes(B))continue;
+    const s2=stripTiles(h,a,b);let bad=false;for(let ty=s2.y0-1;ty<=s2.y1+1&&!bad;ty++)for(let tx=s2.x0-1;tx<=s2.x1+1;tx++)if(DIAGT[ty*W+tx]||BRT[ty*W+tx]||RIV[ty*W+tx]||map[ty*W+tx]===WATER)bad=true;if(bad)continue;
+    if(nodeDeg(a,b)<=2||nodeDeg(h?a+1:a,h?b:b+1)<=2)continue;
+    CUT.add(key);if(reachAll()<base){CUT.delete(key);continue;}plz++;
+    const rx0=h?s2.x0:a*P,rx1=h?s2.x1:a*P+3,ry0=h?b*P:s2.y0,ry1=h?b*P+3:s2.y1;
+    for(let ty=ry0;ty<=ry1;ty++)for(let tx=rx0;tx<=rx1;tx++){map[ty*W+tx]=LOT;PARKT[ty*W+tx]=3;}
+    for(let i=parkedSpots.length-1;i>=0;i--){const q=parkedSpots[i];if(q.x>=rx0*T-T&&q.x<(rx1+2)*T&&q.y>=ry0*T-T&&q.y<(ry1+2)*T)parkedSpots.splice(i,1);}
+    const cx=(rx0+rx1+1)/2*T,cy=(ry0+ry1+1)/2*T,len=(h?rx1-rx0+1:ry1-ry0+1)*T;
+    for(let t=-len/2+40;t<=len/2-40;t+=56){const x=h?cx+t:cx,y=h?cy:cy+t;
+      if(cr()<0.55){props.push({x:x+(h?0:-30),y:y+(h?-30:0),k:'planter'});addTree(x+(h?0:-30),y+(h?-30:0),'round',0.6);}
+      if(cr()<0.6)props.push({x:x+(h?0:28),y:y+(h?28:0),k:'bench',a:h?0:PI/2});
+      if(cr()<0.5)props.push({x,y,k:'umbrella',c:['#d8382a','#2a7ae0','#f0b020','#30a050'][Math.floor(cr()*4)]});}
+    for(const e of[-1,1])for(const o of[-36,-12,12,36]){const x=h?cx+e*(len/2+6):cx+o,y=h?cy+o:cy+e*(len/2+6);props.push({x,y,k:'planter'});}}
 })();
 const streetLights=[];
 for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){const cx=ix*P*T,cy=iy*P*T;

@@ -31,6 +31,12 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.7
+- **Walk into everything:** the diner, gym, pawn shop, arcade, bar, 24/7s, bank and the Neon Lotus are real interiors in their buildings, no loading. Rob the 24/7, crack the vault and shoot pool right there on the street.
+- **A more natural city:** crooked side streets cut across blocks at odd angles like the old parts of Manhattan, and some streets are now pedestrian plazas with seating and trees.
+- **Map and waypoints:** MAP in the pause menu; click to set a waypoint and a beacon marks it in the city.
+- **More radio voices:** every DJ and host sounds different, and each caller and ad is a new voice.
+
 ## What's new in v5.6
 - **Rampages:** a red skull hidden in every district starts a timed rampage with its own weapon and target. Finish them all for the stats screen.
 - **Taxi back:** fail a mission far from where it started and $50 gets you a cab back to retry it.
@@ -40,12 +46,6 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - **Tuning:** spray shops add an engine tune and sport handling, and you pick the paint colour.
 - **Photo mode:** in the pause menu; free camera, six looks and a save button.
 - **Roadblocks:** smash through one at speed for a payout.
-
-## What's new in v5.5
-- **Cars fall apart like in GTA III.** Each end and side of a car keeps its own damage: a battered front or back leaves the bumper hanging and then knocks it off, a smashed front pops the bonnet, and a hit on the side springs that door open. A spray shop fixes it all.
-- **Street life.** Rear-end someone and they may get out and come for you (and drag you out if you sit there). A crash draws a crowd of gawkers. People stop to chat in pairs. Park with music on and people nearby dance along or tell you to turn it down.
-- **Money-makers.** Safehouse garages hold three cars. Every so often the docks page you for one particular car: bring it in clean before the deadline for well over its export price.
-- Shops, safehouses, helipads and mission markers each get their own spot instead of piling up, and shop doors are visible on the street.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

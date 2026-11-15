@@ -49,7 +49,7 @@ function bizTick(dt){bizCool-=dt;STATS.biz=STATS.biz||{};
     if(tot>0)radioMsg('ACCOUNTANT: A good day. $'+tot.toLocaleString()+' is waiting in your tills.');}
   lastClock=clock;
   const rid=ROOM?ROOM.id:null;if(rid!==lastRoom){lastRoom=rid;const b=rid&&STATS.biz[rid];if(b&&b.own&&b.till>0){addMoney(b.till);showBig('THE TAKINGS','+$'+b.till.toLocaleString()+' from '+BIZ[rid][0],'#3ee07a',2.2);b.till=0;}}
-  if(!rid||!BIZ[rid]||bizCool>0||DLG.open||player.car)return;const r=ROOMS[rid];if(dist2(player.x,player.y,r.office.x,r.office.y+T*0.9)>22*22)return;bizCool=4;
+  if(!rid||!BIZ[rid]||bizCool>0||DLG.open||player.car)return;const r=ROOM.r;if(!r.office)return;if(dist2(player.x,player.y,r.office.x,r.office.y+T*0.9)>22*22)return;bizCool=4;
   const[name,price,inc]=BIZ[rid],b=STATS.biz[rid];
   if(b&&b.own){say([['Manager','It\'s your place, boss. We make about $'+inc+' a day, and I keep it in the till until you come by.']]);return;}
   say([['Owner','I\'d sell '+name+' for $'+price.toLocaleString()+'. It makes about $'+inc+' a day.']],null,[['BUY $'+price.toLocaleString(),()=>{if(money<price){note('Not enough cash');return;}addMoney(-price);STATS.biz[rid]={own:1,till:0};sfx('pass');showBig('PROPERTY BOUGHT',name+'  ·  $'+inc+' a day','#ffd24a',2.4);}],['NOT NOW',()=>{},'no']]);}
@@ -93,7 +93,7 @@ function timingTick(dt){const t=TIMING;if(!t)return;player.vx=player.vy=0;
   t.pos+=t.dir*t.speed*dt;if(t.pos>1){t.pos=1;t.dir=-1;}if(t.pos<-1){t.pos=-1;t.dir=1;}}
 addEventListener('keydown',e=>{if(TIMING&&(e.code==='Space'||e.code==='Enter'||e.code==='KeyE'||e.code==='KeyF')){e.preventDefault();timingHit();}},true);
 addEventListener('pointerdown',()=>{if(TIMING)timingHit();},true);
-function barGamesTick(dt){gameCool-=dt;if(TIMING||!ROOM||ROOM.id!=='bar'||gameCool>0||DLG.open)return;const r=ROOMS.bar,near=(q,d)=>dist2(player.x,player.y,q.x,q.y)<d*d;
+function barGamesTick(dt){gameCool-=dt;if(TIMING||!ROOM||ROOM.id!=='bar'||gameCool>0||DLG.open)return;const r=ROOM.r;if(!r.pool)return;const near=(q,d)=>dist2(player.x,player.y,q.x,q.y)<d*d;
   if(near({x:r.darts.x+T*1.2,y:r.darts.y},20)){gameCool=4;const opp=Math.round(rr(95,150));
     say([['Regular','Darts? Three throws, best total. $50 says I beat you. I got '+opp+' last round.']],null,[['PLAY $50',()=>{if(money<50){note('Not enough cash');return;}addMoney(-50);
       timingStart('DARTS',3,1.7,0.12,res=>{const sc=res.reduce((a,e)=>a+Math.round(Math.max(0,1-e)*60),0);STATS.darts=Math.max(STATS.darts||0,sc);
@@ -140,3 +140,88 @@ function roadblockTick(){const c=player.car;if(!c||stars()<3)return;const sp=hyp
 function lifeTick(dt){rampTick(dt);bizTick(dt);barGamesTick(dt);timingTick(dt);roadblockTick();}
 {const pt=placesTick;placesTick=function(dt){pt(dt);lifeTick(dt);};}
 {const pp=placesProp;placesProp=function(o,fg){if(o.k==='skull'){drawSkull(o,fg);return;}pp(o,fg);};}
+
+// =====================================================================================================================
+// ---- live interiors, GTA V style: the diner, the gym, the pawn shop, the arcade, the bar, both 24/7s, the bank and
+// the club are inside the building behind their street door, walked into with no loading. Each door gets its own
+// copy of its room, laid out to fit the building (props and the counter/vault/bed spots are mapped across), and the
+// world pass draws it from the inside like the gun shop (SHOPV). A door with no building to hold it keeps the old room.
+const LIVE=[],LIVE_DOORS=[];
+function liveWhy(){return null;} // (was a placement log while tuning)
+function liveRoom(id,D,from){const R0=ROOMS[id];if(!R0||!D)return liveWhy(1,id);
+  // the buildings behind a door are usually small, so the store gets a building of its own there: the little ones in
+  // its footprint are replaced by one two-or-more-storey building, hollow on the ground floor
+  const dtx=Math.floor(D.x/T),sw=Math.floor(D.y/T)-1;if(map[sw*W+dtx]!==BLD)return liveWhy(2,id);
+  const bx=Math.floor(dtx/P),by=Math.floor(sw/P),lx0=bx*P+4,lx1=bx*P+13,ly0=by*P+4; // block interior incl. its sidewalk ring; footprints may take the ring's inner tiles
+  const rw=R0.tx1-R0.tx0,rh=R0.ty1-R0.ty0;
+  const fw=()=>null;
+  const fits=(fx0,fx1,fy0)=>{if(fx0<lx0||fx1>lx1||fy0<ly0||dtx<=fx0||dtx>=fx1)return fw();
+    for(let y=fy0;y<=sw;y++)for(let x=fx0;x<=fx1;x++){const t=map[y*W+x];if(t===ROAD||t===WATER||DIAGT[y*W+x]||BRT[y*W+x])return fw();}
+    const X0=fx0*T,Y0=fy0*T,X1=(fx1+1)*T,Y1=(sw+1)*T;
+    if(LIVE.some(L=>L.X0<X1+T&&L.X1>X0-T&&L.Y0<Y1+T&&L.Y1>Y0-T)||SHOPS.some(L=>L.X0<X1+T&&L.X1>X0-T&&L.Y0<Y1+T&&L.Y1>Y0-T))return fw();
+    const n=o=>o&&o.x>X0-8&&o.x<X1+8&&o.y>Y0-8&&o.y<Y1-4;
+    if(STASH.some(n)||GOLDG.some(n)||PLANKS.some(n)||PACKAGES.some(n)||BOSSES.some(q=>n(q.pt)||n(q.mk))||RUNS.some(q=>n({x:q.sx,y:q.sy})))return fw();
+    const old=buildings.filter(q=>q.x<X1&&q.x+q.w>X0&&q.y<Y1&&q.y+q.h>Y0);if(!old.length||old.some(q=>q.hollow||q.shop||q.outside||q.kind==='stadium'))return fw(old.length?'oldbad':'noold');
+    return{X0,Y0,X1,Y1,old};};
+  let F=null;
+  for(const w of[Math.min(10,Math.max(7,rw)),9,8,7,6,5])for(const h of[Math.min(8,Math.max(5,rh)),7,6,5,4]){if(F)break;
+    for(let off=0;off<w&&!F;off++){const k=(off%2?1:-1)*Math.ceil(off/2),fx0=dtx-Math.floor(w/2)+k;F=fits(fx0,fx0+w-1,sw-h+1);if(F){F.fx0=fx0;F.fx1=fx0+w-1;F.fy0=sw-h+1;}}}
+  if(!F)return liveWhy(5,id);
+  const{X0,Y0,X1,Y1,old,fx0,fx1,fy0}=F;
+  // their roof ladders go with them
+  for(const q of old)if(q.lad){const L=q.lad,i=LADDERS.indexOf(L);if(i>=0)LADDERS.splice(i,1);for(let j=props.length-1;j>=0;j--){const o=props[j];if(o.k==='ladder'&&Math.abs(o.x-L.x)<20&&Math.abs(o.y-L.y)<20)props.splice(j,1);}q.lad=null;}
+  // out with the old: their tiles outside the footprint become a little paved yard
+  for(const q of old){buildings.splice(buildings.indexOf(q),1);for(let y=Math.floor(q.y/T);y<Math.ceil((q.y+q.h)/T);y++)for(let x=Math.floor(q.x/T);x<Math.ceil((q.x+q.w)/T);x++){if(map[y*W+x]===BLD){map[y*W+x]=LOT;PARKT[y*W+x]=0;}}}
+  const top=old.reduce((m,q)=>Math.max(m,q.hg),0),tall=old.reduce((m,q)=>q.hg>m.hg?q:m,old[0]);
+  const b={x:X0,y:Y0,w:X1-X0,h:Y1-Y0,hg:Math.max(1.8,Math.min(top,6)),col:tall.col,st:['glass','brick','conc','plaster'].includes(tall.st)?tall.st:'brick',kind:'bld',hollow:true};
+  b.id=++uid;b.ac=[];b.ws=tall.ws||22;b.wf=tall.wf||.5;b.wh=tall.wh||.55;b.rgb=rgbOf(b.col);b.corn=false;b.fe=false;b.feAx=0;b.bulk=null;
+  b.base=Math.min(GH(X0,Y0),GH(X1,Y0),GH(X0,Y1),GH(X1,Y1))-1;buildings.push(b);
+  BMAP.fill(-1);buildings.forEach((q,i)=>{for(let ty=Math.floor(q.y/T);ty<Math.ceil((q.y+q.h)/T);ty++)for(let tx=Math.floor(q.x/T);tx<Math.ceil((q.x+q.w)/T);tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)BMAP[ty*W+tx]=i;});
+  const mm=mmc.getContext('2d');
+  for(let y=fy0;y<=sw;y++)for(let x=fx0;x<=fx1;x++){const edge=x===fx0||x===fx1||y===fy0||y===sw,door=x===dtx&&y===sw;map[y*W+x]=edge&&!door?BLD:WALK;PARKT[y*W+x]=0;mm.fillStyle=edge&&!door?'#26262c':'#8c8a84';mm.fillRect(x,y,1,1);}
+  SHOPDOOR.add(sw*W+dtx);clearRect(X0+2,Y0+2,X1-2,Y1-2);
+  const S={b,kind:'room',id,x0:X0+T,y0:Y0+T,x1:X1-T,y1:Y1-T,X0,Y0,X1,Y1,dx:(dtx+.5)*T,door:sw*W+dtx,inside:false,pads:[],floor:R0.floor,wall:R0.wall,top:58,from};
+  return liveFinish(S,R0,D);}
+// lay the room's furniture out inside a live store's interior and register it
+function liveFinish(S,R0,D){const id=S.id;
+  const ox=R0.x0+T,oy=R0.y0+T,sx=(S.x1-S.x0)/(R0.x1-R0.x0-2*T),sy=(S.y1-S.y0)/(R0.y1-R0.y0-2*T),ks=Math.min(1.15,Math.min(sx,sy));
+  const f=p=>({x:S.x0+(p.x-ox)*sx,y:S.y0+(p.y-oy)*sy});
+  const r=Object.assign({},R0,{live:S,x0:S.X0,y0:S.Y0,x1:S.X1,y1:S.Y1,cx:(S.x0+S.x1)/2,cy:(S.y0+S.y1)/2,door:{x:-1e7,y:-1e7},props:[]});
+  for(const k of['counter','bed','bar','vault','office','pool','darts'])if(R0[k])r[k]=f(R0[k]);
+  for(const p of R0.props){if(p.k==='rwall'||p.k==='rdoor')continue;const q=Object.assign({},p,f(p));if(q.hl!=null)q.hl*=Math.min(1.15,sx);if(q.hw!=null)q.hw*=Math.min(1.15,sy);if(q.rad)q.rad*=Math.max(0.6,ks);
+    if(q.z1!=null&&q.z1>S.top-4){q.z1=S.top-4;if(q.z0>=q.z1)continue;}if(q.z!=null&&q.z>S.top-6)q.z=S.top-6;props.push(q);r.props.push(q);}
+  S.room=r;LIVE.push(S);SHOPS.push(S);LIVE_DOORS.push({x:D.x,y:D.y});SGRID=null;return S;}
+// no room behind the door: put the place on the nearest free lot as its own storefront, and move its door and sign there
+function liveOnLot(id,D,from){const R0=ROOMS[id];if(!R0||!D)return null;const B=buildStore(D.x,D.y,'room',['#7a5a44','#5a6a7a','#6a4a6a','#8a7050'][hash(D.x|0,D.y|0)%4],true);if(!B)return null;
+  const S={b:B.b,kind:'room',id,x0:B.x0,y0:B.y0,x1:B.x1,y1:B.y1,X0:B.X0,Y0:B.Y0,X1:B.X1,Y1:B.Y1,dx:B.dx,door:Math.floor(B.Y1/T-1)*W+Math.floor(B.dx/T),inside:false,pads:[],floor:R0.floor,wall:R0.wall,top:SH_H,from};
+  B.b.st='brick';B.b.shop=null;B.b.col=['#8a5a44','#6a6a76','#7a4a5a','#8a7050'][hash(D.x|0,D.y|0)%4];B.b.rgb=rgbOf(B.b.col);B.b.hg=2.2;
+  const ox=D.x,oy=D.y,nx=S.dx,ny=S.Y1+18;
+  for(const sg of SIGNS)if(Math.abs(sg.x-ox)<8&&sg.y<oy&&sg.y>oy-60){sg.x=nx;sg.y=S.Y1+2;sg.h=Math.max(sg.h||40,B.b.hg*BH+10);}
+  for(let j=props.length-1;j>=0;j--){const o=props[j];if(o.k==='sdoor'&&Math.abs(o.x-ox)<8&&Math.abs(o.y-oy)<40)props.splice(j,1);}
+  D.x=nx;D.y=ny;S.room=null;return liveFinish(S,R0,D);}
+{const tryOne=(id,d)=>liveRoom(id,d,d)||liveOnLot(id,d,d);
+ for(const d of PLACES)tryOne(d.id,d);for(const s of STORES)tryOne('store',s);tryOne('bank',BANK);tryOne('club',CLUB);
+ for(const g of GUNSHOPS)if(!g.real)tryOne('ammu',g);}
+// the old doors no longer warp you anywhere when a live interior is behind them
+{const er=enterRoom;enterRoom=function(id,back){if(back&&LIVE_DOORS.some(d=>Math.abs(d.x-back.x)<4&&Math.abs(d.y-(back.y-40))<4))return;er(id,back);};}
+function roomShell(S,wq,top){const x0=S.x0,y0=S.y0,x1=S.x1,y1=S.y1,w=S.wall||[200,190,170],glass=LIGHTK>0.3?[40,50,78]:[200,220,232];
+  if(CY>y0)wq(x0,y0,x1,y0,0,top,w,0.86);
+  if(CY<y1){const d0=S.dx-T/2,d1=S.dx+T/2;wq(x0,y1,d0,y1,0,top,w,0.8);wq(d1,y1,x1,y1,0,top,w,0.8);wq(d0,y1,d1,y1,Math.min(36,top-6),top,w,0.8);wq(d0+2,y1,d1-2,y1,0,Math.min(34,top-8),glass,1);
+    if(d0-x0>40)wq(x0+8,y1-0.3,d0-8,y1-0.3,12,Math.min(34,top-8),glass,1);if(x1-d1>40)wq(d1+8,y1-0.3,x1-8,y1-0.3,12,Math.min(34,top-8),glass,1);}
+  if(CX>x0)wq(x0,y1,x0,y0,0,top,w,0.78);if(CX<x1)wq(x1,y0,x1,y1,0,top,w,0.82);}
+// you're "in" a room while you stand inside its interior; the club's door only opens at night
+let liveClubT=0;
+function liveTick(dt){const S=!player.car&&!player.riding&&(player.jz||0)<40?LIVE.find(L=>player.x>L.x0&&player.x<L.x1&&player.y>L.y0&&player.y<L.y1):null;
+  if(S&&!(ROOM&&ROOM.live===S)){if(ROOM&&ROOM.live)liveLeave();ROOM={id:S.id,r:S.room,back:{x:S.dx,y:S.Y1+20},live:S};ROOM_FROM=S.from;roomCool=0.5;
+    note(S.room.name+(S.id==='club'?': dance floor, bar and the DJ':S.id==='bank'?'':': walk up to the counter'));
+    if(S.id==='club'){for(let i=0;i<10;i++){const p=makePed(rr(S.x0+20,S.x1-20),rr(S.y0+30,S.y1-20),false);p.busker=true;p.target=true;p.clubber=true;p.col=pick(['#ff4fa8','#3ad6ff','#ffd23a','#7cff6a','#c07cff','#ffffff']);}radioSaved=radio.st;}}
+  else if(!S&&ROOM&&ROOM.live)liveLeave();
+  liveClubT-=dt;for(const L of LIVE)if(L.id==='club'){const open=clubOpen(),want=open||(ROOM&&ROOM.live===L)?WALK:BLD;if(map[L.door]!==want)map[L.door]=want;
+    if(!open&&liveClubT<=0&&dist2(player.x,player.y,L.dx,L.Y1+12)<26*26){liveClubT=5;note('The Neon Lotus opens at night');}}}
+function liveLeave(){if(ROOM.id==='club')for(const p of peds)if(p.clubber)p.gone=true;ROOM=null;}
+{const lt=lifeTick;lifeTick=function(dt){liveTick(dt);lt(dt);};}
+// a beacon over your waypoint, so you can see it in the city and not only on the map
+{const lh=lifeHUD;lifeHUD=function(sc){lh(sc);if(!WAYPOINT||mission||SHOPV||ROOM||game.state!=='play')return;const w=WAYPOINT;ZOFF=GH(w.x,w.y);
+  if(!proj(w.x,w.y,0))return;const k=VW/LW,x=PX*k,y0=PY*k;proj(w.x,w.y,220);const y1=PY*k,d=hyp((player.car||player).x-w.x,(player.car||player).y-w.y);
+  ctx.save();ctx.globalAlpha=0.35;ctx.fillStyle='#ff4fa8';const bw=Math.max(2,6*PK*k*0.4);ctx.fillRect(x-bw/2,y1,bw,y0-y1);ctx.globalAlpha=1;ctx.restore();
+  hudText(Math.round(d/10)+' m',x,y1-6*sc,Math.round(11*sc),'#ff8fc8','center','system-ui,sans-serif');};}

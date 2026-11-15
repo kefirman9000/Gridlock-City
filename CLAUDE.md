@@ -21,6 +21,9 @@ Since v5.3 it also holds the walk-in Ammu-Nation stores (`SHOPS`; `SHOPV` in the
 `js/08d-life.js` (v5.6) holds rampages, taxi back (`tripSkip`), businesses (`BIZ`, `STATS.biz`), the Threads clothes store (`OUTFITS`, `plook()` colours the player),
 bar games on a timing bar (`timingStart`/`lifeHUD`), the spray shop's tuning (`applyUp`, `renderShop`), photo mode and roadblock busting. It wraps
 `placesTick`, `placesProp`, `frenzyHit`, `freeCam`/`freeCamTick` rather than editing them.
+Since v5.7 it also makes the old off-map rooms live (`LIVE`, `liveRoom`/`liveOnLot`/`liveFinish`): each street door gets its own copy of its room laid out
+inside a real building (a new hollow building replaces the small ones behind the door, or a store on a free lot); `ROOM` is set while you stand inside,
+so the room code (counters, robbery, vault, bar games) runs unchanged, and `enterRoom` no longer warps for those doors.
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).
@@ -43,7 +46,8 @@ The city seed is random per browser profile, so place things relative to `hospit
 v5.0 layout steps live just above `genMap()` in `js/01-core-map.js`: `joinBlocks` (streets built over, listed in `BUILT` and also in `CUT`
 so traffic and GPS skip them), `sideStreets` (`LANEB`; ROAD tiles with `PARKT` 10/11, not on the traffic grid), `culBlock` (BLOCKK 'cul'),
 `railYard` (`YARDB`, `PARKT` 12/13), `riverShape` (`BANKW`/`BANKE`, `ISLE`, `BAY`; the heightmap follows in `08-render.js`), `skyline`,
-and the avenue medians (`AVX`/`AVY`). The street grid itself never moves: `laneCoord`, `linkOK` and every story location depend on it.
+and the avenue medians (`AVX`/`AVY`). After `genMap()`, `naturalStreets` (own stream) adds crooked side streets to `DIAGS` (`d.side`, narrower `d.hw`/`d.sw`)
+and closes a few street segments as pedestrian plazas (in `CUT`, checked with `reachAll`). The street grid itself never moves: `laneCoord`, `linkOK` and every story location depend on it.
 Generation uses the seeded `R()` stream. Adding calls to `R()`/`pick()`/`rr()` inside generation changes the
 whole city for every saved seed and moves the hidden packages in old saves. New generation steps use their own
 seeded stream (see `livedIn()` after `genMap()`).

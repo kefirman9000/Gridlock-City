@@ -2,6 +2,12 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.7.0
+- Live interiors, GTA V style: the diner, gym, pawn shop, arcade, bar, both 24/7s, the bank and the Neon Lotus are inside real buildings you walk straight into; no separate area or fade. Where the building behind a door was too small, the place gets its own building there; where that couldn't fit, it moves to a nearby lot with its door, sign and map icon. Everything inside (counters, robberies, the vault, bar games, the business office, the dance floor) works as before. The club's door only opens at night.
+- A less formulaic street plan: seven crooked side streets cut through blocks at odd angles (narrower than Broadway, buildings trimmed back to wedges along them), and five short street segments closed to cars as pedestrian plazas with planters, benches, umbrellas and trees. The main grid, traffic network and every story location are unchanged.
+- MAP in the pause menu opens the big map; a pink beacon and distance show your waypoint in the city.
+- Radio voices: every speaker gets their own voice from all the English accents on the device, matched to whether they're a man or a woman; callers and ads are a different voice, pitch and pace each time.
+
 ## v5.6.0
 - Rampages: a red skull hidden in every district, each with its own weapon, target and time limit; completed ones count towards your stats and pay more each time.
 - Taxi back: after a failed mission far from where it began, $50 takes you to the start and runs it again.

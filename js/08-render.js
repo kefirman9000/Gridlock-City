@@ -901,6 +901,7 @@ function render(){if(SCOPE.on&&!MENUVIEW){FOC=Math.round(FOC0*SCOPE.z);HALF=HW/F
   FOGC=bot;SKYT=top;if(inHall(cam.x,cam.y)||roomAt(cam.x,cam.y)){FOGC=[18,18,22];SKYT=[12,12,14];top=[12,12,14];bot=[18,18,22];}
   AMB=mixA([1,1,1],[0.24,0.28,0.46],night);if(warm>0)AMB=[AMB[0],AMB[1]*(1-warm*0.1),AMB[2]*(1-warm*0.2)];
   if(lightning>0)AMB=AMB.map(v=>v+lightning*0.7);
+  if(typeof shopView==='function'&&shopView()){AMB=[0.96,0.94,0.9];FOGC=[30,28,26];} // indoors the lights are on
   LIGHTK=clamp((darkness-0.12)/0.45,0,1);
   worldPass(top,bot,lightLvl,warm);
   const mir=mirrorShow();if(mir&&(frameNo&1||!mirC.done)){renderMirror(top,bot,lightLvl,warm);mirC.done=true;}
