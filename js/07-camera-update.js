@@ -89,12 +89,12 @@ function update(dt){
         player.onFE=FOOT_FE&&player.jz-fl<6;
         if(onCar&&player.jz>=fl-1.5&&player.jv<=0){player.x+=onCar.vx*dt;player.y+=onCar.vy*dt;}
         const grounded=player.jz<=fl+0.6&&player.jv<=0;
-        if((kd.Space||tbtn.brake.on)&&grounded&&!player.jumpHeld){player.jv=180;player.jz=Math.max(player.jz,fl)+0.01;sfx('door',0.4);}
+        if((kd.Space||tbtn.brake.on)&&grounded&&!player.jumpHeld){player.jv=FLOATY()?205:180;player.jz=Math.max(player.jz,fl)+0.01;sfx('door',0.4);}
         player.jumpHeld=!!(kd.Space||tbtn.brake.on);
         // walking down stairs or a slope: stay on it rather than floating off and falling
         if(player.jv===0&&player.wasGrounded&&player.jz>fl+0.6&&player.jz-fl<=8.5){player.jz=fl;}
         player.wasGrounded=player.jv===0&&player.jz<=fl+0.6;
-        if(player.jv!==0||player.jz>fl+0.6){player.peak=Math.max(player.peak||0,player.jz);player.jz+=player.jv*dt;player.jv-=640*dt;if(player.jz<=fl&&player.jv<=0){player.jz=fl;player.jv=0;
+        if(player.jv!==0||player.jz>fl+0.6){player.peak=Math.max(player.peak||0,player.jz);player.jz+=player.jv*dt;player.jv-=(FLOATY()?(player.jv>0?520:600):640)*dt;if(player.jz<=fl&&player.jv<=0){player.jz=fl;player.jv=0;
             const drop=(player.peak||0)-fl;if(drop>110&&game.state==='play'&&tileAt(Math.floor(player.x/T),Math.floor(player.y/T))!==WATER){hurtPlayer(Math.round((drop-110)*0.45));sfx('crash',0.4);if(drop>200)note('Ouch. That was a long way down');}player.peak=fl;}}
         else{if(fl>player.jz&&fl-player.jz<=8.5)player.jz=fl;player.peak=player.jz;}} // step up as far as footFloor looks (z+8)
       circleTiles(player,7,true,player.jz);swimPost(dt); // water is swimmable now (swimPost in 08c-places.js)

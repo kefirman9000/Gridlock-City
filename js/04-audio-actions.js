@@ -195,6 +195,7 @@ function swapWeapon(dir){dir=dir||1;for(let i=1;i<=WEAPONS.length;i++){const n=(
 
 // ================= GTA EXTRAS: stunt ramps, police helicopter, taxi fares =================
 // ---- stunt ramps on one-way lanes mid-block ----
+const FLOATY=()=>OPT.floaty!==false;
 function carRamps(c){
   c.rampZ=0;c.rampP=0;if(c.t.heli){c.rampZ=c.alt||0;c.air=0;return;}if(c.t.boat){c.rampZ=waterZ(c.x,c.y)-GH(c.x,c.y);c.air=0;return;}if(c.air>0||c.t.tank)return;
   for(const r of RAMPS){const dx=c.x-r.x,dy=c.y-r.y;if(dx*dx+dy*dy>2500)continue;
@@ -203,7 +204,7 @@ function carRamps(c){
     if(vd<0){if(f>r.hl-10){c.vx-=ca*vd*1.4;c.vy-=sa*vd*1.4;if(-vd>120)damageCar(c,(-vd-120)*0.06,c.driver==='player'?'player':null);}continue;} // ran into the tall end
     c.rampZ=r.h*(f+r.hl)/(2*r.hl);c.rampP=Math.atan2(r.h,2*r.hl);
     if(f>r.hl-6){ // off the lip: launch with upward speed from the ramp angle (a slow car just drops off the end)
-      c.air=1;c.airT=0;c.az=r.h;c.vz=vd>140?clamp(vd*0.52,90,380):0;c.pitch=c.rampP;
+      c.air=1;c.airT=0;c.az=r.h;c.vz=vd>140?clamp(vd*(FLOATY()?0.6:0.52),90,FLOATY()?460:380):0;c.pitch=c.rampP;
       if(c===player.car&&c.vz>0){if(OPT.slowmo)slowT=Math.max(slowT,0.55);sfx('rocket',0.35);usjLaunch(c,r);}}
   }
   garageCar(c);
@@ -211,15 +212,18 @@ function carRamps(c){
 function carAir(c,dt){
   if(!(c.air>0)){ // on the ground: ride the ramp and let the suspension settle after a landing
     c.az=lerp(c.az||0,c.rampZ||0,Math.min(1,dt*18));c.pitch=lerp(c.pitch||0,c.rampP||0,Math.min(1,dt*7));return;}
-  c.airT+=dt;c.vz-=900*dt;c.az+=c.vz*dt;
+  // floaty jumps (default): the player's car falls slower and you can twist it in the air with the steering
+  const fl=FLOATY()&&c===player.car;c.airT+=dt;c.vz-=(fl?(c.vz>0?520:620):900)*dt;c.az+=c.vz*dt;
+  if(fl){let st=0;if(kd.KeyA||kd.ArrowLeft)st-=1;if(kd.KeyD||kd.ArrowRight)st+=1;if(pad.on&&pad.lx)st=clamp(pad.lx*1.2,-1,1);if(joy.active)st=clamp(joy.x*1.4,-1,1);
+    c.airSpin=lerp(c.airSpin||0,st*2.4,Math.min(1,dt*5));c.a+=c.airSpin*dt;}
   const sp=Math.max(80,hyp(c.vx,c.vy));c.pitch=lerp(c.pitch,clamp(Math.atan2(c.vz,sp)*0.85,-0.45,0.45),Math.min(1,dt*3.5));
   const gfl=garageFloor(c);
   if(c.az<=gfl){
-    const imp=-c.vz;c.az=gfl;c.vz=0;c.air=0;c.pitch=-0.05-clamp(imp/2600,0,0.16);c.vx*=0.95;c.vy*=0.95;c.va*=0.5;
+    const imp=-c.vz;c.az=gfl;c.vz=0;c.air=0;c.airSpin=0;c.pitch=-0.05-clamp(imp/2600,0,0.16);c.vx*=0.95;c.vy*=0.95;c.va*=0.5;
     if(imp>560)damageCar(c,(imp-560)*0.05,c.driver==='player'?'player':null);
     for(let k=0;k<6;k++)puff(c.x+rr(-15,15),c.y+rr(-15,15),rr(-60,60),rr(-60,60),rr(.4,.8),rr(6,10),'#9a9a9a','smoke');
     if(c===player.car){shake=Math.max(shake,4+imp/70);sfx('crash',clamp(imp/700,0.25,0.7));usjLand(c);
-      if(c.airT>0.3){STATS.jumps++;STATS.bestAir=Math.max(STATS.bestAir,c.airT);lastJumpAir=c.airT;const bonus=Math.round(c.airT*c.airT*1500/50)*50;addMoney(bonus);showBig(c.airT>1.0?'INSANE STUNT BONUS':'STUNT BONUS','+$'+bonus.toLocaleString()+'  ·  '+c.airT.toFixed(1)+'s air','#ffd600',2.2);chaos();}}
+      if(c.airT>0.3){STATS.jumps++;STATS.bestAir=Math.max(STATS.bestAir,c.airT);lastJumpAir=c.airT;const at=FLOATY()?c.airT*0.78:c.airT,bonus=Math.round(at*at*1500/50)*50;addMoney(bonus);showBig(c.airT>1.0?'INSANE STUNT BONUS':'STUNT BONUS','+$'+bonus.toLocaleString()+'  ·  '+c.airT.toFixed(1)+'s air','#ffd600',2.2);chaos();}}
     else if(nearPlayer(c.x,c.y,600))sfx('crash',0.3);
   }
 }

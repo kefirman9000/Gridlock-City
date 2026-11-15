@@ -224,7 +224,7 @@ function garageCar(c){const G=GARAGE;if(!G)return;const dx=c.x-G.cx,dy=c.y-G.cy;
   if(!s.s){c._gh=0;return;}
   const r=s.s,rel=s.h-g0;c._gh=rel;if(rel>(c.rampZ||0)){c.rampZ=rel;c.rampP=r.h1!==r.h0?Math.atan2(r.h1-r.h0,2*r.hl)*Math.cos(c.a-r.a):0;}
   if(r.kick){const kc=Math.cos(r.a),ks=Math.sin(r.a),f=(c.x-r.x)*kc+(c.y-r.y)*ks,vd=c.vx*kc+c.vy*ks;
-    if(vd>0&&(f>r.hl-6||!sf.s)){c._gh=0;c._gx=null;c.air=1;c.airT=0;c.az=G.base+r.h1-g0;c.vz=vd>140?clamp(vd*0.52,90,380):0;c.pitch=c.rampP;
+    if(vd>0&&(f>r.hl-6||!sf.s)){c._gh=0;c._gx=null;c.air=1;c.airT=0;c.az=G.base+r.h1-g0;c.vz=vd>140?clamp(vd*(FLOATY()?0.6:0.52),90,FLOATY()?460:380):0;c.pitch=c.rampP;
       if(c===player.car&&c.vz>0){if(OPT.slowmo)slowT=Math.max(slowT,0.55);sfx('rocket',0.35);usjLaunch(c,r);}return;}}
   if(!(c.air>0)&&(c.az||0)>c.rampZ+10){c._gh=0;c._gx=null;c.air=1;c.airT=0;c.vz=0;}}
 

@@ -92,6 +92,7 @@ function openPanel(kind){
     <div class="opt"><span>Keyboard</span><button data-opt="keys">REMAP KEYS</button></div>
     <div class="opt"><span>Controller buttons</span><button data-opt="padmap">REMAP BUTTONS</button></div>
     <div class="opt"><span>Slow motion on jumps</span><button data-opt="slowmo">${onoff(OPT.slowmo)}</button></div>
+    <div class="opt"><span>Jumps</span><button data-opt="floaty">${OPT.floaty!==false?'FLOATY (FUN)':'REALISTIC'}</button></div>
     <div class="opt"><span>Rear-view mirror (V)</span><button data-opt="mirror">${onoff(OPT.mirror)}</button></div>
     <div class="opt"><span>Camera view (V)</span><button data-opt="cam">${CAMV[camMode()].n}</button></div>
     <div class="opt"><span>Car handling</span><button data-opt="handling">${OPT.handling==='gta3'?'GTA III (HEAVY)':'CLASSIC (GTA2)'}</button></div>
@@ -122,7 +123,7 @@ function openPanel(kind){
   p.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>{const s=readSave(b.dataset.load);if(s)loadFrom(s);});
   p.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{sleepSix();if(writeSave(b.dataset.save)){note('Saved to '+slotName(b.dataset.save));openPanel('save');}});
   p.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const k=b.dataset.opt;
-    if(k==='cam')OPT.camMode=(camMode()+1)%CAMV.length;else if(k==='pad')OPT.pad=OPT.pad==='classic'?'modern':'classic';else if(k==='handling')OPT.handling=OPT.handling==='gta3'?'gta2':'gta3';else if(k==='season')OPT.season=OPT.season==='winter'?'summer':OPT.season==='summer'?'auto':'winter';else if(k==='steer')OPT.steer=OPT.steer==='wheel'?'stick':'wheel';else if(k==='btn')OPT.btn=OPT.btn<1?1:OPT.btn>1?0.85:1.2;else if(k==='msens')OPT.msens=OPT.msens<1?1:OPT.msens>1?0.6:1.6;
+    if(k==='floaty')OPT.floaty=OPT.floaty===false;else if(k==='cam')OPT.camMode=(camMode()+1)%CAMV.length;else if(k==='pad')OPT.pad=OPT.pad==='classic'?'modern':'classic';else if(k==='handling')OPT.handling=OPT.handling==='gta3'?'gta2':'gta3';else if(k==='season')OPT.season=OPT.season==='winter'?'summer':OPT.season==='summer'?'auto':'winter';else if(k==='steer')OPT.steer=OPT.steer==='wheel'?'stick':'wheel';else if(k==='btn')OPT.btn=OPT.btn<1?1:OPT.btn>1?0.85:1.2;else if(k==='msens')OPT.msens=OPT.msens<1?1:OPT.msens>1?0.6:1.6;
     else if(k==='fs'){try{if(document.fullscreenElement)document.exitFullscreen();else{document.documentElement.requestFullscreen().catch(()=>{});}}catch(_){}setTimeout(()=>openPanel('options'),300);return;}else if(k==='sound'){toggleMute();}else if(k==='city'){openPanel('newcity');return;}else if(k==='keys'||k==='padmap'){openPanel(k);return;}else if(k==='ps2'){OPT.ps2=OPT.ps2===false;}else{OPT[k]=!OPT[k];if(k==='mirror')mirrorOn=OPT.mirror;}
     saveOpts();openPanel('options');});
   p.querySelectorAll('[data-yes]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('gc_city_seed',String(((Math.random()*2**31)|0)||7))}catch(_){}location.reload();});

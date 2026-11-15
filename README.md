@@ -31,6 +31,9 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.3.1
+- **Floatier jumps:** off a ramp your car flies higher and hangs in the air for almost twice as long, and you can twist it mid-air with the steering. Jumping on foot goes a little higher too. Stunt bonuses are scaled so the longer air doesn't flood you with cash. Options → Jumps switches back to REALISTIC.
+
 ## What's new in v5.3
 - **Ammu-Nation is a real store:** both gun shops are brick storefronts on their own lots with lit windows and a neon trim at night. Walk in through the door (no more loading into a back room): the clerk is behind the counter with guns on the pegboard, display tables, an armor mannequin and ammo crates. Step onto the glowing pad in front of anything to buy it, or onto AMMO REFILL to top up every gun you carry. Cars can't fit through the door.
 - **Swimming:** walk off a beach or a bank, or dive off a bridge or the pier, and you swim instead of hitting an invisible wall. Diving in doesn't hurt. You swim at under half speed with no weapons, and walk out where the shore is low.

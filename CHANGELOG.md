@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.3.1
+- Floatier jumps: lower gravity for your car in the air, higher launches off ramps, mid-air steering twist, a higher on-foot jump; Options → Jumps restores realistic jumps.
+
 ## v5.3.0
 - Ammu-Nation is a walk-in store on its own lot (moved to the nearest free lot): storefront outside; counter, clerk, racks, displays and buy pads inside; ammo refill. The view switches to the inside when you (or the camera) are in it.
 - Swimming in any water; no fall damage into water; climbing out at low shores.
