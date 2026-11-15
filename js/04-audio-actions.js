@@ -235,12 +235,13 @@ function carAir(c,dt){
   }
 }
 // ---- police helicopter (4+ stars): searchlight, sees over buildings, shoots at 5+ ----
-let heli=null;
+let heli=null,heliGone=0;
 function updateHeli(dt){
   const s=stars(),tg=player.car||player;
-  if(!heli&&(s>=4||(s>=2&&!player.car&&(player.jz||0)>45))&&game.state==='play'){const a=R()*TAU;heli={x:player.x+Math.cos(a)*1100,y:player.y+Math.sin(a)*1100,z:170,a:0,vx:0,vy:0,hp:420,shootT:2,fall:0,rot:0,snd:0};note('Police helicopter overhead!');}
+  const wanted=s>=4||(s>=2&&!player.car&&(player.jz||0)>45);
+  if(!heli&&wanted&&game.state==='play'&&!(heliGone>game.t)){const a=R()*TAU;heli={x:player.x+Math.cos(a)*1100,y:player.y+Math.sin(a)*1100,z:170,a:0,vx:0,vy:0,hp:420,shootT:2,fall:0,rot:0,snd:0};note('Police helicopter overhead!');}
   if(!heli)return;
-  const h=heli;h.rot+=dt*40;
+  const h=heli;h.rot+=dt*40;h.lost=wanted?0:(h.lost||0)+dt;const wantHeli=h.lost<4; // a brief dip (a cutscene, a dialog, a star blinking out) doesn't send it home
   // at 4 stars and up, a SWAT team ropes down from the chopper near you (GTA III)
   if(s>=4&&h.fall<=0&&game.state==='play'){h.dropT=(h.dropT==null?6:h.dropT)-dt;
     if(h.dropT<=0&&hyp(h.x-tg.x,h.y-tg.y)<300){h.dropT=rr(16,24);let n=0;for(let i=0;i<3;i++){const x=h.x+rr(-26,26),y=h.y+rr(-26,26);if(solidPx(x,y))continue;
@@ -248,13 +249,15 @@ function updateHeli(dt){
       if(n){radioMsg('DISPATCH: SWAT team deploying from the air unit.');sfx('door',0.5);}}}
   if(h.fall>0){h.fall-=dt;h.z=Math.max(0,h.z-dt*190);h.a+=dt*6;if(R()<0.7)puff(h.x,h.y,rr(-20,20),rr(-20,20),rr(.6,1.2),rr(10,16),'#333','smoke');if(h.fall<=0||h.z<=GH(h.x,h.y)+5){explode(h.x,h.y,'player');heli=null;}return;}
   let gx,gy;
-  if(s>=5&&game.state==='play'){const ang=game.t*0.5;gx=tg.x+Math.cos(ang)*230+(tg.vx||0)*0.8;gy=tg.y+Math.sin(ang)*230+(tg.vy||0)*0.8;}
-  else{gx=h.x+(h.x-player.x);gy=h.y+(h.y-player.y);}
-  const dx=gx-h.x,dy=gy-h.y,d=hyp(dx,dy)||1,mx=s>=5?Math.min(340,d*1.6):300;
+  // while you're wanted it stays on you: a tight orbit at 5+ stars, a wider searching circle below that.
+  // Only once you've lost the stars does it peel off and leave (it used to fly away at 4 stars, vanish and respawn elsewhere)
+  if(wantHeli){const tight=s>=5,ang=game.t*(tight?0.5:0.3)+(h.ph||(h.ph=R()*TAU)),r=tight?230:330;gx=tg.x+Math.cos(ang)*r+(tg.vx||0)*0.8;gy=tg.y+Math.sin(ang)*r+(tg.vy||0)*0.8;}
+  else{const ax=h.x-tg.x,ay=h.y-tg.y,al=hyp(ax,ay)||1;gx=h.x+ax/al*600;gy=h.y+ay/al*600;}
+  const dx=gx-h.x,dy=gy-h.y,d=hyp(dx,dy)||1,mx=wantHeli?Math.min(s>=5?340:300,d*1.6):300;
   h.vx=lerp(h.vx,dx/d*mx,Math.min(1,dt*1.5));h.vy=lerp(h.vy,dy/d*mx,Math.min(1,dt*1.5));h.x+=h.vx*dt;h.y+=h.vy*dt;
   h.a=lerpAng(h.a,Math.atan2(tg.y-h.y,tg.x-h.x),Math.min(1,dt*1.5));h.z=lerp(h.z,GH(h.x,h.y)+125,Math.min(1,dt));
   const pd=hyp(tg.x-h.x,tg.y-h.y);
-  if(s<5&&pd>1700){heli=null;return;}
+  if(!wantHeli&&pd>1700){heli=null;heliGone=game.t+20;return;}
   h.snd-=dt;if(h.snd<=0){h.snd=0.11;const v=clamp(1-pd/1100,0,1);if(v>0.02)noise(0.06,130,'lowpass',0.25*v);}
   if(s>=6&&game.state==='play'&&pd<420){h.shootT-=dt;if(h.shootT<=0){h.shootT=rr(1.1,1.8);for(let i=0;i<4;i++)setTimeout(()=>{if(!heli||heli.fall>0)return;const aa=npcAim(Math.atan2(tg.y-heli.y,tg.x-heli.x),true);fireBullet(heli.x,heli.y,aa,900,'cop',6,'b',5);sfx('smg',0.35);},i*90);}}
   // your bullets and rockets can bring it down

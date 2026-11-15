@@ -1,4 +1,4 @@
 {
-  "version": "5.5.0",
-  "notes": "Loose parts (hanging bumpers, popped bonnets, sprung doors), road rage, crowds at crashes, people chatting and reacting to your radio, three-car safehouse garages, and steal-to-order jobs for the docks."
+  "version": "5.5.1",
+  "notes": "Fix: the police helicopter stays on you while you are wanted instead of flying off, vanishing and reappearing somewhere else."
 }

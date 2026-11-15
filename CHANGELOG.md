@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.5.1
+- Fix: at 4 stars the police helicopter flew away from you, got removed at 1,700 units out and respawned somewhere random, over and over. It now circles and searches while you're wanted (a tight orbit at 5+ stars), only leaves once the stars have been gone for a few seconds, and doesn't come straight back after leaving.
+
 ## v5.5.0
 - **Cars fall apart like in GTA III.** Each end and side of a car keeps its own damage: a battered front or back leaves the bumper hanging and then knocks it off, a smashed front pops the bonnet, and a hit on the side springs that door open. A spray shop fixes it all.
 - **Street life.** Rear-end someone and they may get out and come for you (and drag you out if you sit there). A crash draws a crowd of gawkers. People stop to chat in pairs. Park with music on and people nearby dance along or tell you to turn it down.
