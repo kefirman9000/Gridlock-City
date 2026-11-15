@@ -1,4 +1,4 @@
 {
-  "version": "5.8.0",
-  "notes": "Ride in cabs to your waypoint, a weapon wheel, cover, witnesses, walk-in safehouses, elevators and a rooftop helipad, the bank job, busier streets, phone contacts, more car styling, a completion list, chess, a batting cage and bowling, city sounds, a river ferry, smarter traffic and a new character model."
+  "version": "5.8.1",
+  "notes": "Fewer instant stars (blowing up a car or stealing one only brings the cops if one sees it), the camera follows where the car is going and the steering eases in."
 }

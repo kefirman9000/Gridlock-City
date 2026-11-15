@@ -104,9 +104,7 @@ function tryEnterCar(){
   if(best.driver&&hyp(best.vx,best.vy)>90)return;
   const wasCop=best.driver==='cop',hadDriver=!!best.driver;
   if(hadDriver){const jp=ejectDriver(best,!wasCop);if(jp&&!wasCop&&best.gang==null&&!best.vip&&R()<0.3)startBrawl(jp,10,best);
-    let witness=false;for(const c of cars)if(c.driver==='cop'&&c!==best&&dist2(c.x,c.y,player.x,player.y)<450*450)witness=true;
-    for(const p of peds)if(p.cop&&!p.gone&&dist2(p.x,p.y,player.x,player.y)<400*400)witness=true;
-    if(witness||wasCop)crime(0,1);
+    if(wasCop||copWitness(player.x,player.y))crime(0,1);else crime(150,0);
   }
   if(best.t.police)crime(best.t.army?1000:0,1);
   if(!best.bought){STATS.stolen++;carAlarm(best);}best.bought=true;

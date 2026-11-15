@@ -81,6 +81,7 @@ function driveCar(c,thr,steer,hb,dt){if(c.t.plane){planeDrive(c,thr,steer,hb,dt)
   const G3H=c.driver==='player'&&OPT.handling==='gta3',H=hand(c),n=dt*TICK,isP=c.driver==='player',m=H.m*(isP?(G3H?1.4:1.05):1);
   // GTA III-style handling: the wheel turns in progressively instead of snapping, the car feels heavier and slides less
   if(G3H){c.sm=lerp(c.sm||0,steer,Math.min(1,dt*(Math.abs(steer)>Math.abs(c.sm||0)?4.2:9)));steer=c.sm;}
+  else if(isP){c.sm=lerp(c.sm||0,steer,Math.min(1,dt*(Math.abs(steer)>Math.abs(c.sm||0)?9:14)));steer=c.sm;}
   const g=c.g||(c.g={fg:false,bg:false,fb:false,pedal:0,bp:0,hbc:0});
   let vx=c.vx/(GT*TICK),vy=c.vy/(GT*TICK),w=c.va/TICK;
   const fx=Math.cos(c.a),fy=Math.sin(c.a),speed=hyp(vx,vy),aligned=vx*fx+vy*fy>=0;
@@ -359,7 +360,7 @@ function carExplode(c){
   if(c.driver&&c.driver!=='player'){c.driver=null;}
   c.ai=null;
   explode(c.x,c.y,c.burnBy);
-  if(c.burnBy==='player'){crime(c.t.police?500:200,1);chaos();addMoney((c.t.police?250:100)*combo.n);if(frenzy&&frenzy.kind==='cars')frenzyHit();if(c.gang!=null){addRespect(c.gang,-0.6);addRespect(rivalOf(c.gang),0.3);}}
+  if(c.burnBy==='player'){crime(c.t.police?500:200,c.t.police||copWitness(c.x,c.y)?1:0);chaos();addMoney((c.t.police?250:100)*combo.n);if(frenzy&&frenzy.kind==='cars')frenzyHit();if(c.gang!=null){addRespect(c.gang,-0.6);addRespect(rivalOf(c.gang),0.3);}}
   if(nearPlayer(c.x,c.y,520))slowT=Math.max(slowT,0.4);
   if(mission&&mission.type==='hit'&&mission.car===c)missionPass();
 }

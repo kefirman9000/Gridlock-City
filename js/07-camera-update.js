@@ -405,7 +405,7 @@ function update(dt){
       // mouse (captured) or right stick swing the camera round the car; it drifts back behind you once you leave it alone and drive
       const orb=(mouse.look||0)*0.0033*(OPT.msens||1)+(pad.on&&OPT.pad==='classic'?pad.rx*2.6*dt:0);mouse.look=0;
       if(orb){cam.corb=angDiff((cam.corb||0)+orb,0);cam.cidle=0;}else{cam.cidle=(cam.cidle||0)+dt;if(cam.cidle>1.2&&s>40)cam.corb=lerpAng(cam.corb||0,0,Math.min(1,dt*1.8));}
-      want=c.a+(cam.corb||0);
+      {const va=Math.atan2(c.vy,c.vx),fwd=c.vx*Math.cos(c.a)+c.vy*Math.sin(c.a)>0,k=fwd&&!c.t.heli&&!c.t.plane?clamp((s-40)/140,0,0.75):0;want=lerpAng(c.a,va,k)+(cam.corb||0);}
       dist=94+Math.min(56,s*0.075)+(big?28:0);hgt=42+Math.min(14,s*0.02)+(big?12:0);rate=orb?30:3.2;
       // GTA III: Q / E (L2 / R2) look left and right; both together look behind
       const lq=kd.KeyQ||tbtn.lookl.on,le=kd.KeyE||tbtn.lookr.on;if(lq&&le){want+=PI;rate=18;}else if(lq){want-=PI/2;rate=14;dist*=0.8;}else if(le){want+=PI/2;rate=14;dist*=0.8;}}

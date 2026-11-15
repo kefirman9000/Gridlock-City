@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.8.1
+- Fewer instant stars: blowing up a car (other than a cop car) or pulling someone out of one only brings the cops if a cop sees it; otherwise it adds a little heat or a civilian has to report it. A car alarm only counts if a nearby cop can see you.
+- Driving: the camera follows the direction the car is travelling instead of its nose, so turns no longer swing the whole view round, and keyboard steering eases in over a moment instead of snapping to full lock.
+
 ## v5.8.0
 - Cab rides: press F at a taxi to ride to your waypoint (or steal it); the cab drives itself through traffic, SPACE skips the trip, and you pay at the end. Call a cab from the phone.
 - Weapon wheel: hold X, point at a weapon (or press 1-9) and let go; time slows while it's open.

@@ -363,7 +363,7 @@ function updateShouts(dt){shoutT-=dt;for(const p of peds)if(p.say&&p.say.t>0)p.s
   if(hornT>0.3&&player.car)for(const p of peds)if(dist2(p.x,p.y,player.car.x,player.car.y)<150*150&&R()<0.2)shout(p,'honk');}
 // ---------- car alarms on parked cars ----------
 let alarm=null;
-function carAlarm(c){if(c.driver||c.t.boat||c.t.heli||R()>0.3)return;alarm={c,t:6};note('Car alarm!');for(const k of cars)if(k.driver==='cop'&&dist2(k.x,k.y,c.x,c.y)<500*500){crime(0,1);break;}}
+function carAlarm(c){if(c.driver||c.t.boat||c.t.heli||R()>0.3)return;alarm={c,t:6};note('Car alarm!');for(const k of cars)if(k.driver==='cop'&&dist2(k.x,k.y,c.x,c.y)<500*500&&los(k.x,k.y,player.x,player.y)){crime(0,1);break;}}
 function updateAlarm(dt){if(!alarm)return;alarm.t-=dt;if(Math.floor(alarm.t*4)!==Math.floor((alarm.t+dt)*4))sfx('ring',0.25);if(alarm.t<=0||player.car!==alarm.c)alarm=null;}
 function extTick9(dt){updateShouts(dt);updateAlarm(dt);pedLife(dt);}
 // ---------- v5.5: street life (GTA III) ----------
