@@ -443,7 +443,7 @@ function swimPost(dt){
     if(!inW){const sz=player.swimZ;if(g<=sz+4){player.swim=false;player.jz=0;player.jv=0;player.peak=0;} // a low bank or a beach: just walk out
       else{player.x=SWlx;player.y=SWly;player.vx*=0.3;player.vy*=0.3;}} // too high: pull yourself up (mantlePre) or find a lower spot
     if(player.swim){const sz=waterZ(player.x,player.y);player.swimZ=sz;player.jz=sz-g-13+Math.sin(game.t*3)*0.7;player.jv=0;player.peak=player.jz;
-      if(player.x<-300||player.y<-300||player.x>WPX+300||player.y>WPX+300){player.x=SWlx;player.y=SWly;note('Too far out. Swim back to shore');}
+      if(player.x<-HM+320||player.y<-HM+320||player.x>WPX+HM-320||player.y>WPX+HM-320){player.x=SWlx;player.y=SWly;note('Too far out. Swim back to shore');}
       if(hyp(player.vx,player.vy)>30&&R()<dt*8)puff(player.x+rr(-4,4),player.y+rr(-4,4),rr(-20,20),rr(-20,20),0.5,rr(2,3),'#dcecff','smoke');}}
   else if(inW){const sz=waterZ(player.x,player.y);if(player.jz<=sz-g+3){
     const fall=Math.max(0,-(player.jv||0));player.swim=true;player.swimZ=sz;player.jz=sz-g-13;player.jv=0;player.peak=player.jz;

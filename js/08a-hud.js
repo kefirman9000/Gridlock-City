@@ -123,7 +123,7 @@ function drawHUD(){
   // round radar, GTA III-style
   const mr=ms/2;ctx.save();ctx.beginPath();ctx.arc(mcx,mcy,mr,0,TAU);ctx.fillStyle='#111';ctx.fill();ctx.clip();
   ctx.save();ctx.translate(mcx,mcy);ctx.rotate(rot);ctx.scale(k,k);ctx.translate(-player.x/T,-player.y/T);
-  ctx.imageSmoothingEnabled=false;ctx.globalAlpha=0.92;ctx.drawImage(mmc,0,0);ctx.globalAlpha=1;
+  ctx.imageSmoothingEnabled=false;ctx.globalAlpha=0.92;if(typeof ISLEMAP!=='undefined')ctx.drawImage(ISLEMAP,-ISLEO,-ISLEO);ctx.drawImage(mmc,0,0);ctx.globalAlpha=1;
   for(const k in TURF){const bi=+k;ctx.fillStyle='rgba(192,124,255,.35)';ctx.fillRect((bi%NB)*P+4,Math.floor(bi/NB)*P+4,10,10);}
   {const hp2=NB/2*P,zr=[[0,0,hp2,hp2],[hp2,0,W,hp2],[0,hp2,hp2,W]];for(let g=0;g<3;g++){const r=zr[g];ctx.fillStyle=GANGS[g].col;ctx.globalAlpha=0.13;ctx.fillRect(r[0],r[1],r[2]-r[0],r[3]-r[1]);}ctx.globalAlpha=1;}
   ctx.restore();ctx.imageSmoothingEnabled=true;

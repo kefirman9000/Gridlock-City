@@ -34,6 +34,12 @@ suspension pitch (`c.susp`, added in a `drawCar3` wrapper), grass slowdown, car-
 Since v5.10 also brake/reverse lights (`c.brk`/`c.rev`, drawn in 08v), tire smoke, backfires, grime (`c.dirt`), glass shards (wraps `damageCar`),
 parachutes (`player.chute`, bail out via the `exitCar` wrapper), cop flashlights (in a `drawPed3` wrapper; ZOFF already includes the ped's jz there) and screen glare/streaks (wraps `render`).
 
+## The island (v5.11)
+The terrain grid reaches `HM`=2200 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
+`COAST` in 08-render shapes the coastline after the land types are set (no `R()`); the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`
+(08f, one pixel per tile, offset `ISLEO` tiles) under `mmc`; `bigMapGeom()` returns the island box (`gx`,`gy`,`gs`) and the city box (`ox`,`oy`,`s`).
+Note `ISLE` is already taken (the river island). Cars that drive into deep water sink (`sinkTick` in 08f).
+
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).
 There is no depth buffer, so draw order is depth. Past bugs from breaking those rules: see-through ambulance,

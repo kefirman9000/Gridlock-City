@@ -172,8 +172,8 @@ const OFFROAD=[];
     const cps=[];let cur=st;for(let n=0;n<11;n++){let pickd=null;for(const c of cand){if(c.used)continue;const d=hyp(c.x-cur.x,c.y-cur.y);if(d<230||d>620||!clear(cur,c))continue;if(cps.some(q=>hyp(q.x-c.x,q.y-c.y)<160)||hyp(c.x-st.x,c.y-st.y)<160)continue;pickd=c;break;}
       if(!pickd)break;pickd.used=true;cps.push(pickd);cur=pickd;}
     if(cps.length<6)return;OFFROAD.push({id,name,x:st.x,y:st.y,cps});SIGNS.push({x:st.x,y:st.y,text:'OFF-ROAD RUN',bg:'#8a5a2a',fg:'#ffffff',h:34,on:()=>true});};
-  mk(1,'Farm Scramble',WPX+170,260,WPX+HM-260,WPX-260,WPX+330,(6*P+2)*T);
-  mk(2,'Hill Climb',300,-HM+260,RIVX0*T-200,-170,(4*P)*T,-420);})();
+  mk(1,'Farm Scramble',WPX+170,260,WPX+1400-260,WPX-260,WPX+330,(6*P+2)*T);
+  mk(2,'Hill Climb',300,-1400+260,RIVX0*T-200,-170,(4*P)*T,-420);})();
 function offStart(o){missionHeatOff();const c0=o.cps[0],d=hyp(c0.x-o.x,c0.y-o.y);ACT={kind:'off',run:o,cps:o.cps,i:0,timer:d/200+6,t:0,tg:c0};showBig('GO!',o.name,'#ffd600',1);}
 function offTick(dt){const a=ACT,c=player.car;a.timer-=dt;a.t+=dt;
   if(!c||c.wreck||a.timer<=0){showBig(a.timer<=0?'OUT OF TIME':'RUN OVER',a.run.name+' failed','#ff4040',2.2);sfx('fail');actEnd();return;}

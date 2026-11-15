@@ -149,3 +149,27 @@ const STREAKS=[];
 // ---- the full map: right-click, ESC, pausing or leaving the window closes it ----
 cv.addEventListener('contextmenu',e=>{if(BIGMAP){BIGMAP=false;e.preventDefault();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)BIGMAP=false;});
+
+// ================= v5.11: the island on the maps =================
+// One pixel per tile, covering the land and sea out to the edge of the world; the city's own map (mmc) is drawn over the middle.
+const ISLEO=Math.floor((HM-120)/T),ISLEMAP=document.createElement('canvas');
+(function(){const N=W+2*ISLEO;ISLEMAP.width=ISLEMAP.height=N;const m=ISLEMAP.getContext('2d'),img=m.createImageData(N,N),D=img.data;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=(i-ISLEO+0.5)*T,y=(j-ISLEO+0.5)*T,o=(j*N+i)*4;D[o+3]=255;
+    if(x>=0&&y>=0&&x<WPX&&y<WPX){D[o+3]=0;continue;}
+    const gi=(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0),t=TTYPE[gi],h=HMAP[gi];let r,g,b;
+    if(t===1||t===0||h<0){const k=t===0?0.18:clamp(-h/110,0,1);r=48-26*k;g=96-40*k;b=140-44*k;}
+    else{const c=TCOL[gi],sh=SHMAP[gi];r=(c&255)*sh;g=((c>>8)&255)*sh;b=((c>>16)&255)*sh;if(t===6){r=g=b=230;}}
+    D[o]=r;D[o+1]=g;D[o+2]=b;}
+  m.putImageData(img,0,0);})();
+
+// ---- drive off the shore and the car goes under; you swim out (deep water is solid to cars, so this takes over at the edge) ----
+function sinkTick(dt){const c=player.car;
+  if(c&&!c.sinkT&&!c.t.boat&&!c.t.heli&&!c.t.plane&&!c.t.rc&&!(c.air>0)&&!c.wreck&&game.state==='play'){const ca=Math.cos(c.a),sa=Math.sin(c.a),vf=c.vx*ca+c.vy*sa;
+    if(Math.abs(vf)>45){const s=Math.sign(vf),fx=c.x+ca*s*(c.t.L/2+10),fy=c.y+sa*s*(c.t.L/2+10),tx=Math.floor(fx/T),ty=Math.floor(fy/T);
+      if(tileAt(tx,ty)===WATER&&!shallowTile(tx,ty)&&GH(fx,fy)<3){c.sinkT=0.01;c.sx=fx;c.sy=fy;c.svx=ca*s*90;c.svy=sa*s*90;sfx('splat',1);shake=Math.max(shake,4);
+        for(let i=0;i<24;i++)puff(fx+rr(-14,14),fy+rr(-14,14),rr(-90,90),rr(-90,90),rr(0.5,1),rr(4,8),'#dceefa','smoke');}}}
+  for(const k of cars){if(!k.sinkT)continue;k.sinkT+=dt;k.vx=k.vy=0;k.va=0;k.x+=(k.sx-k.x)*Math.min(1,dt*3);k.y+=(k.sy-k.y)*Math.min(1,dt*3);k.az=-k.sinkT*18;k.pitch=Math.min(0.35,k.sinkT*0.3);
+    if(R()<dt*12)puff(k.x+rr(-10,10),k.y+rr(-10,10),rr(-10,10),rr(-10,10),0.6,rr(2,4),'#e8f4ff','smoke');
+    if(k===player.car&&k.sinkT>1.1){player.car=null;k.driver=null;player.x=k.x;player.y=k.y;player.jz=0;player.jv=0;player.vx=player.vy=0;player.a=player.body=k.a;note('Your car sank. Swim for the shore');}
+    if(k.sinkT>2.4){const i=cars.indexOf(k);if(i>=0)cars.splice(i,1);}}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);sinkTick(dt);}}

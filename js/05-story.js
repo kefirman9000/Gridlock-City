@@ -491,8 +491,8 @@ function crossOK(p,tx,ty,cd){const mx=tx%P,my=ty%P;
 // ---------- big map (tap the minimap, or press TAB) ----------
 let BIGMAP=false;
 window.addEventListener('keydown',e=>{if(e.code==='Tab'&&game.started){BIGMAP=!BIGMAP;e.preventDefault();}});
-function drawBigMap(sc){const s=Math.min(VW,VH)*0.92,ox=(VW-s)/2,oy=(VH-s)/2,k=s/WPX,k_=k;
-  ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(0,0,VW,VH);ctx.imageSmoothingEnabled=false;ctx.drawImage(mmc,ox,oy,s,s);ctx.imageSmoothingEnabled=true;
+function drawBigMap(sc){const G=bigMapGeom(),s=G.s,ox=G.ox,oy=G.oy,k=G.k,k_=k;
+  ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(0,0,VW,VH);ctx.imageSmoothingEnabled=false;if(typeof ISLEMAP!=='undefined')ctx.drawImage(ISLEMAP,G.gx,G.gy,G.gs,G.gs);ctx.drawImage(mmc,ox,oy,s,s);ctx.imageSmoothingEnabled=true;
   const P2=(x,y)=>[ox+x*k,oy+y*k],icon=(x,y,col,t)=>{const[a,b]=P2(x,y);ctx.fillStyle=col;ctx.fillRect(a-6,b-6,12,12);ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.strokeRect(a-6,b-6,12,12);ctx.fillStyle='#000';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,a,b+.5);};
   for(const k in TURF){const bi=+k,[a,b2]=P2((bi%NB)*P*T+4*T,Math.floor(bi/NB)*P*T+4*T);ctx.fillStyle='rgba(192,124,255,.45)';ctx.fillRect(a,b2,10*T*k_,10*T*k_);}
   for(const b of BOSSES){const[a,bb2]=P2(b.pt.x,b.pt.y);bossBlip(ctx,a,bb2,b,22);}
@@ -506,9 +506,9 @@ function drawBigMap(sc){const s=Math.min(VW,VH)*0.92,ox=(VW-s)/2,oy=(VH-s)/2,k=s
   const tg=objectiveTarget();if(tg){const gp=gpsRoute(tg);if(gp){ctx.beginPath();const[p0,p1]=P2((player.car||player).x,(player.car||player).y);ctx.moveTo(p0,p1);for(const q of gp){const[x,y]=P2(q.x,q.y);ctx.lineTo(x,y);}ctx.strokeStyle='#ffd600';ctx.lineWidth=3;ctx.stroke();}}
   if(tg){const[a,b]=P2(tg.x,tg.y);ctx.fillStyle='#ffd600';ctx.beginPath();ctx.arc(a,b,6+Math.sin(game.t*6)*2,0,TAU);ctx.fill();ctx.stroke();}
   {const o=player.car||player,[a,b]=P2(o.x,o.y);ctx.save();ctx.translate(a,b);ctx.rotate(o.a);ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-6);ctx.lineTo(-2,0);ctx.lineTo(-6,6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-  hudText(touchMode?'tap to close':'TAB or ESC to close',VW/2,oy+s-14,Math.round(13*sc),'#fff','center',`600 ${Math.round(13*sc)}px system-ui`);
-  hudText('★ stunt jump  RC toy cars  4 off-road run  ✈ airstrip',VW/2,oy+32,Math.round(12*sc),'#ddd','center',`600 ${Math.round(12*sc)}px system-ui`);
-  hudText('! job  H safehouse  R race  $ spray  ~ boat  W guns  A cars  E export  P pizza',VW/2,oy+16,Math.round(12*sc),'#ddd','center',`600 ${Math.round(12*sc)}px system-ui`);}
+  hudText(touchMode?'tap to close':'TAB or ESC to close',VW/2,G.gy+G.gs-14,Math.round(13*sc),'#fff','center',`600 ${Math.round(13*sc)}px system-ui`);
+  hudText('★ stunt jump  RC toy cars  4 off-road run  ✈ airstrip',VW/2,G.gy+32,Math.round(12*sc),'#ddd','center',`600 ${Math.round(12*sc)}px system-ui`);
+  hudText('! job  H safehouse  R race  $ spray  ~ boat  W guns  A cars  E export  P pizza',VW/2,G.gy+16,Math.round(12*sc),'#ddd','center',`600 ${Math.round(12*sc)}px system-ui`);}
 
 // ---------- mobile: dynamic resolution, background pause, keep the screen awake ----------
 let frameAvg=16,dynT=0,DYN=1;

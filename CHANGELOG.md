@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.11.0
+- The world is an island: the hills, woods and farmland around the city run down to a wandering coastline (headlands, coves, rounded corners, beaches and rocky points) and then open sea all the way to the edge of the world. No more invisible wall at the end of the hills; the edge is far out at sea.
+- The world is bigger (the land and sea beyond the city reach about 2,000 out).
+- The full map and the radar show the whole island and the sea around it, not just the city square; you can set a waypoint anywhere on it.
+- Drive into deep water (the river or the sea) and the car goes under; you swim out. Swimming is no longer cut off just past the city edge.
+- A few sandbars and grassy points off South Beach.
+
 ## v5.10.1
 - The full map (from the pause menu or TAB) could stay stuck open: clicking on it sets a waypoint, and ESC paused the game under it. Now ESC or P closes the map first, right-click closes it, and pausing or leaving the window closes it too.
 

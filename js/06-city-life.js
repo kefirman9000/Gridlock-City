@@ -575,8 +575,8 @@ function updateCrew(dt){
 // ================= v4.12: WAYPOINTS, MISSION REPLAY, GANG WARS, CREW UPGRADES, REPUTATION, TURF PRESSURE, POLICE =================
 // ---------- your own waypoint: click or tap the big map (TAB) to set it, again on it to clear it ----------
 let WAYPOINT=null,roofRun=null;
-function bigMapGeom(){const s=Math.min(VW,VH)*0.92;return{ox:(VW-s)/2,oy:(VH-s)/2,k:s/WPX,s};}
-function bigMapTap(sx,sy){const g=bigMapGeom();if(sx<g.ox||sy<g.oy||sx>g.ox+g.s||sy>g.oy+g.s)return false;const x=(sx-g.ox)/g.k,y=(sy-g.oy)/g.k;
+function bigMapGeom(){const gs=Math.min(VW,VH)*0.96,E=typeof ISLEO!=='undefined'?ISLEO*T:0,k=gs/(WPX+2*E),gx=(VW-gs)/2,gy=(VH-gs)/2;return{ox:gx+E*k,oy:gy+E*k,k,s:WPX*k,gx,gy,gs};}
+function bigMapTap(sx,sy){const g=bigMapGeom();if(sx<g.gx||sy<g.gy||sx>g.gx+g.gs||sy>g.gy+g.gs)return false;const x=(sx-g.ox)/g.k,y=(sy-g.oy)/g.k;
   if(WAYPOINT&&hyp(x-WAYPOINT.x,y-WAYPOINT.y)<16/g.k){WAYPOINT=null;note('Waypoint cleared');return true;}WAYPOINT={x,y};sfx('pickup',0.3);note('Waypoint set. Follow the route on the map');return true;}
 function updateWaypoint(){if(WAYPOINT&&hyp((player.car||player).x-WAYPOINT.x,(player.car||player).y-WAYPOINT.y)<70){WAYPOINT=null;note('You\'ve arrived');sfx('pass',0.4);}}
 function bigMapExtras(P2,icon,kk){

@@ -114,7 +114,7 @@ function decalSkid(x1,y1,x2,y2){const d=hyp(x2-x1,y2-y1),n=Math.max(1,Math.ceil(
 const LMS=8,LMW=(WPX/LMS)|0,LMAP=new Float32Array(LMW*LMW);
 for(const s of streetLights){const cx=s.x/LMS,cy=s.y/LMS,R0=150/LMS;for(let j=-R0;j<=R0;j++)for(let i=-R0;i<=R0;i++){const d=Math.sqrt(i*i+j*j)/R0;if(d>=1)continue;const X=(cx+i)|0,Y=(cy+j)|0;if(X<0||Y<0||X>=LMW||Y>=LMW)continue;LMAP[Y*LMW+X]=Math.min(1.1,LMAP[Y*LMW+X]+(1-d)*(1-d)*0.95);}}
 // ---------- terrain: rolling city hills, mountains north and west, ocean south, farmland east ----------
-const HS=16,HM=1400,HN=Math.ceil((WPX+2*HM)/HS)+2,HMAP=new Float32Array(HN*HN),SHMAP=new Float32Array(HN*HN),TTYPE=new Uint8Array(HN*HN),TCOL=new Uint32Array(HN*HN);
+const HS=16,HM=2200,HM0=1400,HN=Math.ceil((WPX+2*HM)/HS)+2,HMAP=new Float32Array(HN*HN),SHMAP=new Float32Array(HN*HN),TTYPE=new Uint8Array(HN*HN),TCOL=new Uint32Array(HN*HN);
 function vnoise(x,y,s){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
   const h=(a,b)=>(hash(a*31+s*7919,b*17-s*104729)&65535)/65535,a=h(ix,iy),b=h(ix+1,iy),c=h(ix,iy+1),d=h(ix+1,iy+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
 const fbm=(x,y,s)=>vnoise(x,y,s)*0.55+vnoise(x*2.1,y*2.1,s+1)*0.28+vnoise(x*4.3,y*4.3,s+2)*0.17;
@@ -172,7 +172,7 @@ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(y<WPX)
 function GH(x,y){let gx=(x+HM)/HS,gy=(y+HM)/HS;if(gx<0)gx=0;else if(gx>HN-2.001)gx=HN-2.001;if(gy<0)gy=0;else if(gy>HN-2.001)gy=HN-2.001;
   const ix=gx|0,iy=gy|0,fx=gx-ix,fy=gy-iy,i=iy*HN+ix,a=HMAP[i],b=HMAP[i+1],c=HMAP[i+HN],d=HMAP[i+HN+1];return a+(b-a)*fx+(c-a)*fy+(a-b-c+d)*fx*fy;}
 // trees on the hills, guard rails / sea wall along the city limits, a few farmhouses
-for(let y=-HM+200;y<WPX+HM-200;y+=56)for(let x=-HM+200;x<WPX+HM-200;x+=56){
+for(let y=-HM0+200;y<WPX+HM0-200;y+=56)for(let x=-HM0+200;x<WPX+HM0-200;x+=56){
   const jx=x+(hash(x,y)%40)-20,jy=y+((hash(y,x)>>8)%40)-20,[e,side]=edgeOf(jx,jy);if(e<70)continue;
   const gi=(((jy+HM)/HS)|0)*HN+(((jx+HM)/HS)|0),t=TTYPE[gi],r=(hash(jx*3,jy*7)%1000)/1000;
   if((t===4&&r<0.7)||(t===3&&r<0.08)||(t===8&&r<0.05))addTree(jx,jy,side===1?(r<0.03?'round':'pine'):(r<0.25?'round':'pine'),rr(1,1.5));
@@ -181,6 +181,30 @@ for(let s=20;s<WPX;s+=40){const gap=[3,9,15].some(iy=>Math.abs(s-(iy*P+2)*T)<70)
 for(let i=0;i<9;i++){const y=rr(300,WPX-300),x=WPX+rr(160,700);if(GH(x,y)>150)continue;
   buildings.push({x,y,w:rr(70,100),h:rr(60,80),hg:0.95,col:pick(['#a8322a','#c9b79c','#8a5a3a']),st:'house',roof:pick(['#5a2a22','#3e4652']),rx:true,chim:R()<0.5,door:0,ac:[],outside:true});}
 
+// v5.11: the land ends in open sea all round. The coast wanders (headlands, coves, rounded corners) a long way out from the city;
+// hills and fields slope down to beaches or rocks, then deep water out to the edge of the world. Uses no R(): the city's stream is untouched.
+const COAST={L:(x,y,side)=>{const n1=fbm(x/1250,y/1250,31),n2=fbm(x/420,y/420,32),n3=fbm(x/160,y/160,33);
+  let L=(side===3?1150:1480)+760*(n1-0.5)+300*(n2-0.5)+70*(n3-0.5);
+  // keep the off-road runs, the farms and the airstrip on dry land
+  if(side===1&&y>0&&y<WPX)L=Math.max(L,1290);if(side===0&&x>200&&x<RIVX0*T)L=Math.max(L,1260);return L;}};
+for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS,k=j*HN+i;
+  if(TTYPE[k]===0&&(y>WPX||x>WPX||x<0||y<0)&&HMAP[k]===0)continue; // the subway hall and the off-map rooms stay as they are
+  if(y>WPX&&x>-40&&x<WPX+40){ // the south shore: a few sandbars and grassy points off the beach, clear of the pier and the river mouth
+    if(Math.abs(x-LM.beach.x)<520||(x>RIVX0*T-200&&x<RIVX1*T+200))continue;const d=y-WPX,Ls=Math.min(380,-60+2000*Math.max(0,fbm(x/700,y/700,35)-0.4)+160*(fbm(x/240,y/240,36)-0.5));
+    if(d<Ls&&d>60){const h=Math.max(HMAP[k],2+(Ls-d)*0.06),n=fbm(x/90,y/90,34);HMAP[k]=h;if(h<8){TTYPE[k]=2;TCOL[k]=packC(212+n*12,194+n*10,148+n*8);}else{TTYPE[k]=3;TCOL[k]=packC(96+n*20,118+n*18,62+n*10);}}
+    continue;}
+  const dx=Math.max(-x,0,x-WPX),dy=Math.max(-y,0,y-WPX);if(dx<=0&&dy<=0)continue;
+  const d=Math.hypot(dx,dy),[e,side]=edgeOf(x,y),L=COAST.L(x,y,y>WPX?(x<0?3:1):side);
+  if(d<L-420)continue;
+  const h0=HMAP[k],w=smooth01((d-(L-420))/420);let h=lerp(h0,-46,w);if(d>L)h=Math.min(h,-14-Math.min(90,(d-L)*0.12));
+  HMAP[k]=h;const n=fbm(x/90,y/90,34);
+  if(h<0){TTYPE[k]=1;TCOL[k]=0;}
+  else if(h<10){if(h0>170&&n>0.45){TTYPE[k]=5;TCOL[k]=packC(112+n*30,108+n*26,100+n*22);}else{TTYPE[k]=2;TCOL[k]=packC(212+n*12,194+n*10,148+n*8);}}
+  else if(h<26&&TTYPE[k]!==9&&TTYPE[k]!==7){TTYPE[k]=3;TCOL[k]=packC(96+n*20,118+n*18,62+n*10);}}
+for(let j=1;j<HN-1;j++)for(let i=1;i<HN-1;i++){const k=j*HN+i,dx=(HMAP[k+1]-HMAP[k-1])/(2*HS),dy=(HMAP[k+HN]-HMAP[k-HN])/(2*HS);SHMAP[k]=clamp(1+(-dx*0.6+dy*0.8)*1.6,0.55,1.4);}
+{const wet=(x,y)=>{const t=TTYPE[(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0)];return t===1||t===2;};
+ for(let i=trees.length-1;i>=0;i--){const t=trees[i];if((t.x<0||t.y<0||t.x>WPX||t.y>WPX)&&wet(t.x,t.y))trees.splice(i,1);}
+ for(let i=buildings.length-1;i>=0;i--){const b=buildings[i];if(b.outside&&(wet(b.x,b.y)||wet(b.x+b.w,b.y+b.h)))buildings.splice(i,1);}}
 for(const b of buildings)if(b.outside)OUTB.push(b);
 for(const b of buildings){b.id=++uid;b.base=Math.min(GH(b.x,b.y),GH(b.x+b.w,b.y),GH(b.x,b.y+b.h),GH(b.x+b.w,b.y+b.h))-1;if(!b.st)b.st='conc';b.ws=b.ws||22;b.wf=b.wf||.5;b.wh=b.wh||.55;b.rgb=rgbOf(b.col);if(b.roof)b.rrgb=rgbOf(b.roof);if(b.awn)b.argb=rgbOf(b.awn);if(b.nc)b.nrgb=rgbOf(b.nc);}
 // facade details picked per building from its id (no effect on the city's random stream): cornices on old brick and
