@@ -652,19 +652,26 @@ const SUBWAY=[{n:'Westside',p:ixPt(2,4)},{n:'Old Town',p:ixPt(4,13)},{n:'Times S
   if(!s.p)s.p=policeSpawn?{x:policeSpawn.x+3*T,y:policeSpawn.y}:ixPt(15,13);const q={x:s.p.x+2.5*T,y:s.p.y+2.5*T};const w=walkable(tileAt(Math.floor(q.x/T),Math.floor(q.y/T)))?q:walkNear(q.x,q.y,60);s.x=w.x;s.y=w.y;
   props.push({x:s.x,y:s.y,k:'subway',a:0});SIGNS.push({x:s.x,y:s.y,text:'SUBWAY',bg:'#1d7a3a',fg:'#ffffff',h:30,on:()=>true});return s;});
 // the station hall is built off the south edge of the map; every stop looks like this one
-const HX0=HTX0*T,HX1=HTX1*T,HY0=HTY0*T,HY1=HTY1*T,HPL=10;
-const inHall=(x,y)=>x>HX0-40&&x<HX1+40&&y>HY0-40&&y<HY1+40;
+const HX0=HTX0*T,HX1=HTX1*T,HY0=HTY0*T,HY1=HTY1*T,HPL=10,HCY0=(HTY0-4)*T,HCXP=HCX0*T,HGY=HY0+T*0.8;
+const inHall=(x,y)=>x>HX0-40&&x<HX1+40&&y<HY1+40&&(y>HY0-40||(x>HCXP-40&&y>HCY0-40));
 const SUBHALL=[];
 {const cy=(HY0+HY1)/2;
- SUBHALL.push({x:(HX0+HX1)/2,y:HY0+T,k:'hwall',a:0,hl:(HX1-HX0)/2,hw:T/2,rad:500,ht:70},{x:(HX0+HX1)/2,y:HY1-T,k:'hwall',a:0,hl:(HX1-HX0)/2,hw:T/2,rad:500,ht:70},
+ SUBHALL.push({x:(HX0+HCXP+T)/2,y:HY0+T,k:'hwall',a:0,hl:(HCXP+T-HX0)/2,hw:T/2,rad:420,ht:70},{x:(HX0+HX1)/2,y:HY1-T,k:'hwall',a:0,hl:(HX1-HX0)/2,hw:T/2,rad:500,ht:70},
    {x:HX0+T,y:cy,k:'hwall',a:0,hl:T/2,hw:(HY1-HY0)/2,rad:100,ht:70},{x:HX1-T,y:cy,k:'hwall',a:0,hl:T/2,hw:(HY1-HY0)/2,rad:100,ht:70});
  SUBHALL.push({x:(HX0+HX1)/2-30,y:HY0+T*2,k:'hplat',a:0,hl:(HX1-HX0)/2-90,hw:T-1,rad:420,ht:20});
  for(const ry of[HY0+T*3.3,HY0+T*3.7])SUBHALL.push({x:(HX0+HX1)/2,y:ry,k:'hrail',a:0,hl:(HX1-HX0)/2-T,rad:420,ht:4});
- for(let x=HX0+80;x<HX1-60;x+=110)SUBHALL.push({x,y:HY0+T*1.6,k:'hlight',a:0,rad:20,ht:66},{x,y:HY0+T*1.3,k:'hsign',a:0,rad:20,ht:40});
- SUBHALL.push({x:HX1-T*3.2,y:HY0+T*2,k:'hstair',a:0,rad:60,ht:60});
+ for(let x=HX0+80;x<HX1-60;x+=110){SUBHALL.push({x,y:HY0+T*1.6,k:'hlight',a:0,rad:20,ht:66});if(x<HCXP)SUBHALL.push({x,y:HY0+T*1.3,k:'hsign',a:0,rad:20,ht:40});}
+ // the concourse: floor at platform height, walls, stairs up to the street in its north-east corner
+ const ccx=(HCXP+T+HX1-T)/2,cchl=(HX1-HCXP-2*T)/2,ccy=(HCY0+T+HY0+T)/2,cchw=(HY0-HCY0)/2;
+ SUBHALL.push({x:ccx,y:ccy,k:'hconc',a:0,hl:cchl,hw:cchw,rad:200,ht:12});
+ SUBHALL.push({x:(HCXP+HX1)/2,y:HCY0+T/2,k:'hwall',a:0,hl:(HX1-HCXP)/2,hw:T/2,rad:220,ht:70},{x:HCXP+T/2,y:(HCY0+HY0+T)/2,k:'hwall',a:0,hl:T/2,hw:(HY0+T-HCY0)/2,rad:90,ht:70},
+   {x:HX1-T/2,y:(HCY0+HY0)/2,k:'hwall',a:0,hl:T/2,hw:(HY0-HCY0)/2,rad:90,ht:70});
+ for(let x=HCXP+T*2;x<HX1-T*2;x+=110)SUBHALL.push({x,y:HCY0+T*1.6,k:'hlight',a:0,rad:20,ht:66});
+ WALKS.push({x:ccx,y:ccy,a:0,hl:cchl,hw:cchw,h0:HPL,h1:HPL});
+ SUBHALL.push({x:HX1-T*3.2,y:HCY0+T*2.5,k:'hstair',a:0,rad:60,ht:60});
  WALKS.push({x:(HX0+HX1)/2-30,y:HY0+T*2,a:0,hl:(HX1-HX0)/2-90,hw:T-1,h0:HPL,h1:HPL});
  // the exit stairs are a ramp you climb (rendering rule 4), not a block you can walk into and vanish inside
- for(let i=0;i<8;i++){const h=HPL+(i+1)*7;WALKS.push({x:HX1-T*3.2+i*8-28,y:HY0+T*2,a:0,hl:4,hw:T*0.9,h0:h,h1:h});}}
+ for(let i=0;i<8;i++){const h=HPL+(i+1)*7;WALKS.push({x:HX1-T*3.2+i*8-28,y:HCY0+T*2.5,a:0,hl:4,hw:T*0.9,h0:h,h1:h});}}
 const utrain={x:HX0-600,v:0,wait:0,cars:3,len:88};
 let SUB=null,subCool=0;
 function utrainCar(i){return{x:utrain.x-i*(utrain.len+6),y:HY0+T*3.5,a:0,z:0};}
@@ -674,15 +681,16 @@ function updateUtrain(dt){const stop=(HX0+HX1)/2+utrain.len;
   else{utrain.v=Math.min(420,utrain.v+180*dt);utrain.x+=utrain.v*dt;if(utrain.x>HX1+900){utrain.x=HX0-700;utrain.v=380;}}}
 function updateSubway(dt){subCool-=dt;if(subCool>0||player.car||player.riding||DLG.open||game.state!=='play')return;
   if(SUB){// exit stairs at the east end of the hall
-    if(player.x>HX1-T*4.6&&player.y<HY0+T*2.8&&player.x<HX1-T*1.6){const o=SUBWAY[SUB.from];SUB=null;fadeIn=1;player.x=o.x;player.y=o.y+30;player.jz=0;subCool=3;showBig(o.n.toUpperCase(),'Subway exit','#7dff8a',1.6);return;}
+    if(player.x>HX1-T*4.6&&Math.abs(player.y-(HCY0+T*2.5))<T*1.2&&player.x<HX1-T*1.6&&(player.jz||0)>HPL+20){const o=SUBWAY[SUB.from];SUB=null;fadeIn=1;player.x=o.x;player.y=o.y+30;player.jz=0;subCool=3;showBig(o.n.toUpperCase(),'Subway exit','#7dff8a',1.6);return;}
     return;}
   if(mission&&!(mission.opts&&mission.opts.subOK))return;
   for(let i=0;i<SUBWAY.length;i++){const s=SUBWAY[i];if(dist2(s.x,s.y,player.x,player.y)>30*30)continue;subCool=3;
     if(stars()>=3){note('Cops are watching the stations. Lose some stars first.');return;}
-    if(money<5){note('The subway costs $5');return;}addMoney(-5);enterHall(i,false);
+    enterHall(i,false); // the $5 fare is paid at the turnstiles now
     if(stars()>0){seenT=99;lastSeenX=s.x;lastSeenY=s.y;}return;}}
-function enterHall(i,arrived){SUB={from:i};fadeIn=1;player.x=HX1-T*5.4;player.y=HY0+T*2;player.jz=HPL;player.jv=0;player.a=player.body=PI;
-  showBig(SUBWAY[i].n.toUpperCase()+' STATION',arrived?'Take the stairs up to the street':'Wait for the train on the platform','#7dff8a',2.2);}
+function enterHall(i,arrived){SUB={from:i,paid:arrived};fadeIn=1;player.jv=0;player.a=player.body=PI;
+  if(arrived){player.x=(HX0+HX1)/2+60;player.y=HY0+T*2;player.jz=HPL;}else{player.x=HX1-T*5.2;player.y=HCY0+T*2.5;player.jz=HPL;}
+  showBig(SUBWAY[i].n.toUpperCase()+' STATION',arrived?'Through the turnstiles and up the stairs to the street':'$5 at the turnstiles, then wait on the platform','#7dff8a',2.2);}
 function subBoard(){if(!SUB||utrain.wait<0.4||player.y<HY0+T*2.2||Math.abs(player.x-(HX0+HX1)/2)>200)return false;
   const opts=SUBWAY.map((o,i)=>[o,i]).filter(([o,i])=>i!==SUB.from&&WOK(o.x,o.y)).slice(0,5).map(([o,i])=>[o.n.toUpperCase(),()=>{fadeIn=1;sfx('door');note('Riding to '+o.n+'...');utrain.wait=0.01;setTimeout(()=>{enterHall(i,true);utrain.x=(HX0+HX1)/2+utrain.len;utrain.wait=0.01;},900);}]);
   say([['Subway','Where to?']],null,opts.concat([['STAY',()=>{},'no']]));return true;}

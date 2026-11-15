@@ -95,7 +95,7 @@ function updateAudio(){
 // ================= GAME ACTIONS =================
 function tryEnterCar(){
   let best=null,bd=1e9;
-  for(const c of cars){if(c.wreck||c.burn>=0)continue;const d=hyp(c.x-player.x,c.y-player.y);if(d<c.t.L/2+32&&d<bd){bd=d;best=c;}}
+  for(const c of cars){if(c.wreck||c.burn>=0||Math.abs((c.az||0)-(player.jz||0))>34)continue;const d=hyp(c.x-player.x,c.y-player.y);if(d<c.t.L/2+32&&d<bd){bd=d;best=c;}}
   if(!best)return;
   if(best.driver&&hyp(best.vx,best.vy)>90)return;
   const wasCop=best.driver==='cop',hadDriver=!!best.driver;
@@ -120,6 +120,7 @@ function exitCar(force){
   const ca=Math.cos(c.a),sa=Math.sin(c.a),off=c.t.Wd/2+12;
   const cands=[[c.x+sa*off,c.y-ca*off],[c.x-sa*off,c.y+ca*off],[c.x+ca*(c.t.L/2+12),c.y+sa*(c.t.L/2+12)],[c.x-ca*(c.t.L/2+12),c.y-sa*(c.t.L/2+12)]];
   let spot=cands[0];for(const s of cands)if(!solidPx(s[0],s[1])){spot=s;break;}
+  if((c.az||0)>12){const want=c.az;for(const s of cands)if(Math.abs(footFloor(s[0],s[1],want+6)[0]-want)<14){spot=s;break;}player.jz=footFloor(spot[0],spot[1],want+6)[0];player.jv=0;} // up on a deck
   player.x=spot[0];player.y=spot[1];player.vx=c.vx*0.3;player.vy=c.vy*0.3;
   c.driver=null;c.traffic=true;player.car=null;player.body=c.a;player.a=c.a;sfx('door');unseatCrew(c);
 }
@@ -204,14 +205,16 @@ function carRamps(c){
       c.air=1;c.airT=0;c.az=r.h;c.vz=vd>140?clamp(vd*0.52,90,380):0;c.pitch=c.rampP;
       if(c===player.car&&c.vz>0){if(OPT.slowmo)slowT=Math.max(slowT,0.55);sfx('rocket',0.35);usjLaunch(c,r);}}
   }
+  garageCar(c);
 }
 function carAir(c,dt){
   if(!(c.air>0)){ // on the ground: ride the ramp and let the suspension settle after a landing
     c.az=lerp(c.az||0,c.rampZ||0,Math.min(1,dt*18));c.pitch=lerp(c.pitch||0,c.rampP||0,Math.min(1,dt*7));return;}
   c.airT+=dt;c.vz-=900*dt;c.az+=c.vz*dt;
   const sp=Math.max(80,hyp(c.vx,c.vy));c.pitch=lerp(c.pitch,clamp(Math.atan2(c.vz,sp)*0.85,-0.45,0.45),Math.min(1,dt*3.5));
-  if(c.az<=0){
-    const imp=-c.vz;c.az=0;c.vz=0;c.air=0;c.pitch=-0.05-clamp(imp/2600,0,0.16);c.vx*=0.95;c.vy*=0.95;c.va*=0.5;
+  const gfl=garageFloor(c);
+  if(c.az<=gfl){
+    const imp=-c.vz;c.az=gfl;c.vz=0;c.air=0;c.pitch=-0.05-clamp(imp/2600,0,0.16);c.vx*=0.95;c.vy*=0.95;c.va*=0.5;
     if(imp>560)damageCar(c,(imp-560)*0.05,c.driver==='player'?'player':null);
     for(let k=0;k<6;k++)puff(c.x+rr(-15,15),c.y+rr(-15,15),rr(-60,60),rr(-60,60),rr(.4,.8),rr(6,10),'#9a9a9a','smoke');
     if(c===player.car){shake=Math.max(shake,4+imp/70);sfx('crash',clamp(imp/700,0.25,0.7));usjLand(c);

@@ -129,7 +129,7 @@ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){
   HMAP[k]=h;
 }
 // the subway hall is flat concrete
-for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(x<HX0-48||x>HX1+48||y<HY0-48||y>HY1+48)continue;HMAP[j*HN+i]=0;}
+for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(x<HX0-48||x>HX1+48||y<HCY0-48||y>HY1+48)continue;HMAP[j*HN+i]=0;}
 // the river surface sits at one level; bridge decks rise from shore to shore (the big one arches high)
 const RIVL=-12;
 for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(x<RIVX0*T+12||x>RIVX1*T-12||y<0||y>WPX)continue;HMAP[j*HN+i]=RIVL;}
@@ -163,7 +163,7 @@ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){
 }
 window.__terrainReady=true;
 for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(y<WPX)continue;const k=j*HN+i;
-  if(x>HX0-48&&x<HX1+48&&y>HY0-48&&y<HY1+48){TTYPE[k]=0;TCOL[k]=y>HY0+T*3?packC(58,52,48):packC(150,148,142);continue;}
+  if(x>HX0-48&&x<HX1+48&&y>HCY0-48&&y<HY1+48){TTYPE[k]=0;TCOL[k]=y>HY0+T*3?packC(58,52,48):packC(150,148,142);continue;}
   for(const r of ROOMLIST)if(x>r.x0-48&&x<r.x1+48&&y>r.y0-48&&y<r.y1+48){HMAP[k]=0;TTYPE[k]=0;const ch=((i+j)&1)&&r.id!=='safe';TCOL[k]=packC(r.floor[0]+(ch?14:0),r.floor[1]+(ch?14:0),r.floor[2]+(ch?14:0));}}
 function GH(x,y){let gx=(x+HM)/HS,gy=(y+HM)/HS;if(gx<0)gx=0;else if(gx>HN-2.001)gx=HN-2.001;if(gy<0)gy=0;else if(gy>HN-2.001)gy=HN-2.001;
   const ix=gx|0,iy=gy|0,fx=gx-ix,fy=gy-iy,i=iy*HN+ix,a=HMAP[i],b=HMAP[i+1],c=HMAP[i+HN],d=HMAP[i+HN+1];return a+(b-a)*fx+(c-a)*fy+(a-b-c+d)*fx*fy;}
@@ -467,6 +467,7 @@ function drawBuilding(b,fg){
   ZOFF=b.base;const det=b.dn<650&&fg<0.75;
   if(b.st==='house'){drawHouse(b,fg,det);return;}
   if(b.st==='cont'){drawCont(b,fg);return;}
+  if(b.st==='cath'){drawCath(b,fg);return;}
   const x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h,top=b.hg*BH,above=CZ>top;
   if(!above)roofStuff(b,top,fg,det);
   walls(b,x0,y0,x1,y1,0,top,fg,det,true);
@@ -491,6 +492,7 @@ function roofStuff(b,top,fg,det){
 }
 const BILLC=[[220,60,50],[40,120,200],[240,190,40],[60,170,90],[200,80,170],[240,120,40]];
 function roofProps(b,x0,y0,x1,y1,z,fg){
+  if(b.st==='garage'){garageRoof(b,fg);return;}
   const cx=(x0+x1)/2,cy=(y0+y1)/2;
   if(b.wt){const wx=x0+(x1-x0)*0.3,wy=y0+(y1-y0)*0.35;obox(wx,wy,0,6,0.8,z,z+9,[50,40,34],null,fg);obox(wx,wy,0,0.8,6,z,z+9,[50,40,34],null,fg);obox(wx,wy,0,7,7,z+9,z+24,[112,80,54],[84,62,46],fg);}
   if(b.ant){obox(cx,cy,0,1.2,1.2,z,z+46,[150,150,155],null,fg);if(proj(cx,cy,z+46))glow(PX,PY,2*PK,'#ff3030',0.3+0.6*(Math.floor(game.t*1.5)%2));}
@@ -507,6 +509,7 @@ function wall(ax,ay,bx,by,z0,z1,b,k,fg,det,gr){
   const st=b.st;
   const za=gr?GH(ax,ay)-ZOFF-1:z0,zb=gr?GH(bx,by)-ZOFF-1:z0;
   quad(ax,ay,za,bx,by,zb,bx,by,z1,ax,ay,z1,lit(b.rgb,st==='glass'?k*0.85:k,fg));
+  if(st==='garage'){garageWall(ax,ay,bx,by,z0,z1,b,k,fg,det);return;}
   if(!det)return;
   const len=hyp(bx-ax,by-ay),dx=(bx-ax)/len,dy=(by-ay)/len,nx=dy,ny=-dx,H=z1-z0,nf=Math.max(1,Math.round(H/(BH/2))),fh=H/nf,litOn=LIGHTK>0.12;
   if(b.ts&&H>BH*2.5){const nsc=len>140?2:1;for(let i=0;i<nsc;i++){const s0=len*(i+0.12)/nsc,s1=len*(i+0.88)/nsc,za=z0+BH*0.9+((b.id+i)%3)*BH*0.6,zb=Math.min(z1-BH*0.4,za+BH*(1.6+((b.id*7+i)%4)*0.5));if(zb<=za+8)continue;
@@ -902,6 +905,7 @@ function drawProp3(o,fg){
       if(!proj(o.x,o.y,0))return;BX=PX;BY=PY;BK=PK;L3.globalAlpha=0.75;
       for(let i=0;i<8;i++){const ph=(game.t*1.4+i/8)%1,sx=Math.sin(i*2.4)*9*ph,z=15+ph*22-ph*ph*26;bb(sx-0.8,z,sx+0.8,z+2,'#cfe8ff');}
       bb(-1,15,1,34,'#e4f2ff');L3.globalAlpha=1;return;}
+    default:placesProp(o,fg);
   }
 }
 
@@ -972,7 +976,7 @@ function drawBullet3(b){
   L3.strokeStyle='rgba(255,240,170,.95)';L3.lineWidth=1;L3.beginPath();L3.moveTo(x1,y1);L3.lineTo(PX,PY);L3.stroke();}
 
 // raised things the player can stand on or climb: drawn before the player whenever the player is up on them
-const UNDERFOOT=new Set(['plank','elstair','elplat','eltrack','elcorner','elgap','hplat','hstair','hrail','ladder']);
+const UNDERFOOT=new Set(['plank','elstair','elplat','eltrack','elcorner','elgap','hplat','hstair','hrail','ladder','gramp','pier','pierend','hconc']);
 // ---------- spatial index of everything that doesn't move (keeps the bigger city fast) ----------
 const GC=512,GOFF=HM,GN=Math.ceil((WPX+2*HM)/GC)+1;let SGRID=null;
 function buildGrid(){SGRID=Array.from({length:GN*GN},()=>({b:[],s:[]}));
@@ -1099,12 +1103,12 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
     cand.sort((a,b)=>a[0]-b[0]);if(heli&&heli.fall<=0&&stars()>=5){const tg=player.car||player;heads.push([tg.x-60,tg.y,1,0,120,1]);}for(let i=0;i<Math.min(7,cand.length);i++){const c=cand[i][1],ca=Math.cos(c.a),sa=Math.sin(c.a);heads.push([c.x+ca*c.t.L/2,c.y+sa*c.t.L/2,ca,sa,c===player.car?300:200]);}}
   // underground (subway hall) or indoors: a dark ceiling instead of the sky and the far skyline
   if(inHall(CX,CY)||(typeof roomAt==='function'&&roomAt(CX,CY))){L3.fillStyle='#1c1d20';L3.fillRect(0,0,LW,LH);L3.fillStyle='#26282c';for(let y=4;y<HOR;y+=9)L3.fillRect(0,y,LW,1);}
-  else drawSky(top,bot,lightLvl,warm);
+  else{drawSky(top,bot,lightLvl,warm);farMarks();}
   renderGround(heads);
   // ---- flat things on the ground (drawn before anything stands on them) ----
   const R0=FOG1+60;
   const vis=(x,y,rad)=>{const dx=x-CX,dy=y-CY,f=dx*CC+dy*CS;if(f<-rad||f>R0)return false;const r=-dx*CS+dy*CC;return Math.abs(r)<=(f+rad)*HALF+rad*2;};
-  if(inHall(CX,CY)){ZOFF=0;quad(HX0,HY0,66,HX1,HY0,66,HX1,HY1,66,HX0,HY1,66,'rgb(26,28,30)');}
+  if(inHall(CX,CY)){ZOFF=0;quad(HX0,HCY0,66,HX1,HCY0,66,HX1,HY1,66,HX0,HY1,66,'rgb(26,28,30)');}
   {const rm=roomAt(CX,CY);if(rm){ZOFF=0;quad(rm.x0,rm.y0,68,rm.x1,rm.y0,68,rm.x1,rm.y1,68,rm.x0,rm.y1,68,rm.id==='club'?'rgb(10,6,16)':'rgb(40,40,44)');}}
 
   for(const c of cars){if(!vis(c.x,c.y,60))continue;ZOFF=GH(c.x,c.y);const fg=fogAt((c.x-CX)*CC+(c.y-CY)*CS);flat(c.x+2,c.y+2,c.a,c.t.L/2+2,c.t.Wd/2+2,0.3,`rgba(0,0,0,${0.3*(1-fg)})`);}
@@ -1182,6 +1186,10 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
     if(pi)for(const it of ITEMS){const tr=it.kind===22&&player.jz>EL_H+18;if(!tr&&(it.kind!==13||!it.o.k||!UNDERFOOT.has(it.o.k)))continue;
       const dx=it.o.x-player.x,dy=it.o.y-player.y,r=tr?60:(it.o.rad||24)+14;if(dx*dx+dy*dy>r*r)continue;
       if(it.slot>pi.slot)pi.slot=it.slot;if(it.slot===pi.slot&&it.f<=pi.f)pi.f=it.f-0.01;}}
+  // cars up on a raised prop (the garage ramp) go after it the same way
+  for(const ci of ITEMS){if(ci.kind!==0&&ci.kind!==14)continue;const c=ci.o;if(!c.t||!((c.az||0)>2))continue;
+    for(const it of ITEMS){if(it.kind!==13||!it.o.k||!UNDERFOOT.has(it.o.k))continue;const dx=it.o.x-c.x,dy=it.o.y-c.y,r=(it.o.rad||24)+24;if(dx*dx+dy*dy>r*r)continue;
+      if(it.slot>ci.slot)ci.slot=it.slot;if(it.slot===ci.slot&&it.f<=ci.f)ci.f=it.f-0.01;}}
   ITEMS.sort((a,b)=>a.slot-b.slot||b.f-a.f);
   let ii=0;
   for(let bi=0;bi<=vb.length;bi++){

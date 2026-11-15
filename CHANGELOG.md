@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.2.0
+- A drivable parking garage (outside ramps to a second deck and the roof, parapets, and a rooftop kicker that counts as a unique stunt jump).
+- The South Beach pier: a boardwalk over the beach water with food stands and a fishing spot at the end.
+- An Old Town cathedral with a tall spire that shows over the city from far away, plus candles and confession at the door.
+- A subway concourse with a token booth (monthly pass) and turnstiles; the fare is paid at the gates and can be jumped for a wanted star.
+- Code: the new places live in `js/08c-places.js`, placed after the city is built without touching its random stream.
+
 ## v5.1.1
 - No more bright vertical streaks in the river under a bridge deck.
 

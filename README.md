@@ -31,6 +31,12 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.2
+- **Parking garage:** drive up the outside ramps to the second deck and the roof, then launch off the rooftop kicker (it counts as a unique stunt jump). The decks have parapets, the open levels glow at night, and you can get out and walk around up top.
+- **South Beach pier:** a boardwalk out over the water past the Ferris wheel, with a hot dog stand and an ice cream stand that heal you, lamps after dark, and a fishing spot at the end where you can cast for anything from an old boot to a $300 tuna.
+- **Old Town cathedral:** nave, aisles, transept and apse with stained glass that glows at night, and a west tower with a tall copper spire you can pick out over the roofs from across the city, its red light blinking at night. The priest at the door will light you a candle or, for a price, hear a confession that makes the cops lose interest.
+- **Subway concourse:** the stairs now come down into a concourse with a token booth and three turnstiles in front of the platform. The $5 fare is paid at the gates, a $60 monthly pass opens them for free, and jumping the turnstile works but costs you a wanted star.
+
 ## What's new in v5.1
 - **Fixes:** on-screen messages no longer stack on top of each other or repeat, signs stop growing to fill the screen when you're right next to them, the camera pulls in instead of sitting inside a wall beside you, and the KEEP OUT banner shows once per trip onto the closed east side.
 - **Wet streets:** after rain the roads stay dark and wet for a few minutes, with puddles that reflect the sky by day and the street lights at night. Heavy storms pull the fog in so the far city fades.

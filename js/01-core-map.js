@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='5.1.1',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.2.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -38,7 +38,7 @@ function rrect(x,y,w,h,r){ctx.beginPath();if(ctx.roundRect){ctx.roundRect(x,y,w,
 const T=32,P=14,NB=18,W=NB*P+4,WPX=W*T;
 const ROAD=0,WALK=1,BLD=2,GRASS=3,TREE=4,LOT=5,SPRAY=6,CRUSH=7,WATER=8;
 const map=new Uint8Array(W*W);
-const tileAt=(x,y)=>(x<0||y<0||x>=W||y>=W)?(x>=HTX0&&x<HTX1&&y>=HTY0&&y<HTY1?hallTile(x,y):y>=W?oobRoom(x,y):countryTile(x,y)):map[y*W+x];
+const tileAt=(x,y)=>(x<0||y<0||x>=W||y>=W)?(x>=HTX0&&x<HTX1&&y>=HTY0-(x>=HCX0?4:0)&&y<HTY1?hallTile(x,y):y>=W?oobRoom(x,y):countryTile(x,y)):map[y*W+x];
 function oobRoom(x,y){if(!window.__roomsReady)return countryTile(x,y);const t=roomTile(x,y);return t<0?countryTile(x,y):t;}
 // outside the city: drive and walk on the fields, hills and beaches; the sea is water; the world ends near the terrain edge
 function countryTile(tx,ty){if(!window.__terrainReady)return BLD;const px=(tx+.5)*T,py=(ty+.5)*T;
@@ -125,7 +125,8 @@ function diagSpotNear(x,y){for(let i=0;i<DIAGS.length;i++){const d=DIAGS[i],[t,s
 // Some street segments are closed and turned into pedestrian plazas and park paths, so the city isn't a perfect grid:
 // blocks merge into superblocks, streets end in T-junctions and bends.
 const HTX0=28,HTX1=54,HTY0=W+13,HTY1=W+18; // the subway hall, off the south edge of the map
-function hallTile(tx,ty){return tx>HTX0&&tx<HTX1-1&&ty>HTY0&&ty<HTY1-1?WALK:BLD;}
+const HCX0=HTX1-12; // the concourse (ticket booth, turnstiles, stairs) sits north of the platform's east end
+function hallTile(tx,ty){if(ty<=HTY0&&tx>=HCX0)return tx>HCX0&&tx<HTX1-1&&ty>HTY0-4?WALK:BLD;return tx>HTX0&&tx<HTX1-1&&ty>HTY0&&ty<HTY1-1?WALK:BLD;}
 const CUT=new Set();
 const segKey=(ix,iy,dd)=>dd===0?'h'+ix+','+iy:dd===2?'h'+(ix-1)+','+iy:dd===1?'v'+ix+','+iy:'v'+ix+','+(iy-1);
 function linkBase(ix,iy,dd){if(dd===0&&ix>=NB||dd===2&&ix<=0||dd===1&&iy>=NB||dd===3&&iy<=0)return false;if(dd===1||dd===3)return ix!==7;const a=dd===0?ix:ix-1;return(a!==6&&a!==7)||BRIDGES.includes(iy);}
