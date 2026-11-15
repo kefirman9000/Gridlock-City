@@ -158,6 +158,8 @@ function update(dt){
     }else if(c.driver!=='player'){
       if(Math.abs(c.vx)+Math.abs(c.vy)>1||Math.abs(c.va)>0.01)driveCar(c,0,0,true,dt);
     }
+    // parked cars that have come to rest go to sleep: no integration until something moves them (a bump wakes them up)
+    if(!c.driver&&!c.wreck&&c.burn<0&&!(c.air>0)&&!c.towedBy&&c!==player.car&&Math.abs(c.vx)+Math.abs(c.vy)<1&&Math.abs(c.va)<0.01){c.zz=(c.zz||0)+1;if(c.zz>30){c.vx=c.vy=0;c.va=0;continue;}}else c.zz=0;
     // integrate
     carRamps(c);carAir(c,dt);
     if(!(c.air>0)&&!c.t.tank&&!c.t.boat&&!c.t.heli&&(c.driver||Math.abs(c.vx)+Math.abs(c.vy)>30)){const gx=GH(c.x+10,c.y)-GH(c.x-10,c.y),gy=GH(c.x,c.y+10)-GH(c.x,c.y-10);
@@ -183,7 +185,7 @@ function update(dt){
     else if(!c.wreck&&c.hp<c.t.hp*0.35){c.smokeT-=dt;if(c.smokeT<=0){c.smokeT=0.08;const ca=Math.cos(c.a),sa=Math.sin(c.a);puff(c.x+ca*c.t.L*0.35,c.y+sa*c.t.L*0.35,rr(-10,10),rr(-25,-5),rr(.8,1.4),rr(6,10),c.hp<c.t.hp*0.15?'#2a2a2a':'#888','smoke');}}
     else if(c.wreck&&R()<0.15)puff(c.x+rr(-8,8),c.y+rr(-8,8),rr(-8,8),rr(-20,-5),rr(1.5,2.5),rr(8,14),'#333','smoke');
   }
-  for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++)carPair(active[i],active[j]);
+  for(let i=0;i<active.length;i++){const A=active[i],as=A.zz>30;for(let j=i+1;j<active.length;j++){const B=active[j];if(as&&B.zz>30)continue;carPair(A,B);}}
   if(player.car){player.x=player.car.x;player.y=player.car.y;player.a=player.car.a;}
 
   // ---- peds ----

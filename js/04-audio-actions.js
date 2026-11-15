@@ -16,7 +16,7 @@ function initAudio(){
 }
 const RADIO=[{name:'KRUD 88.6',tag:'gutter punk',bpm:172,kind:'punk'},{name:'NEON 101',tag:'night-drive synth',bpm:114,kind:'synth'},{name:'BASSLINE 104.5',tag:'street beats',bpm:88,kind:'hiphop'},{name:'CHATTER 96.1',tag:'talk radio',bpm:100,kind:'talk'},{name:'RADIO OFF',tag:'',kind:'off',bpm:100}];
 const radio={st:0,step:0,next:0,bar:0};
-function setStation(i){radio.st=((i%RADIO.length)+RADIO.length)%RADIO.length;if(player.car)player.car.radio=radio.st;radio.step=0;radio.bar=0;if(AC)radio.next=AC.currentTime+0.05;const st=RADIO[radio.st];radioBanner={text:st.name,sub:st.tag,t:2.6};}
+function setStation(i){radio.st=((i%RADIO.length)+RADIO.length)%RADIO.length;if(player.car)player.car.radio=radio.st;radio.lastSt=-1;const st=RADIO[radio.st];radioBanner={text:st.name,sub:st.tag,t:2.6};}
 function rv(t,dur,freq,type,vol,slide,lp){const o=AC.createOscillator();o.type=type;o.frequency.setValueAtTime(freq,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);const g=AC.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.005);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);let n=o;if(lp){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=lp;o.connect(f);n=f;}n.connect(g);g.connect(radioG);o.start(t);o.stop(t+dur+0.02);}
 function rn(t,dur,freq,type,vol){const sN=AC.createBufferSource();sN.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=AC.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);sN.connect(f);f.connect(g);g.connect(radioG);sN.start(t,R());sN.stop(t+dur+0.02);}
 const kick=(t,v)=>rv(t,0.16,130,'sine',v||0.9,38);
@@ -26,29 +26,31 @@ const nfq=semi=>110*Math.pow(2,semi/12);
 const PROG=[[0,-4,3,-2],[0,-2,-4,-5],[0,3,-2,5]];
 function radioTick(){
   try{
-  if(radio.next<AC.currentTime)radio.next=AC.currentTime+0.05;
-  const S=RADIO[radio.st],sd=60/S.bpm/4;
+  const S=RADIO[radio.st];if(S.kind==='talk'||S.kind==='off')return;
+  // the station's own clock decides where in which song we are (see RCLK in 06-city-life.js)
+  const sd=60/S.bpm/4,off=RCLK[radio.st]+performance.now()/1000-AC.currentTime;
+  if(radio.next<AC.currentTime||radio.lastSt!==radio.st){radio.lastSt=radio.st;radio.next=Math.ceil((off+AC.currentTime+0.05)/sd)*sd-off;}
   while(radio.next<AC.currentTime+0.15){
-    const t=radio.next,s=radio.step%16;
-    if(S.kind==='talk'){radio.next+=sd;radio.step++;continue;}
-    if(s===0)radio.bar++;
-    const root=PROG[radio.st%PROG.length][Math.floor(radio.bar/2)%4];
+    const t=radio.next,T=off+t,seg=Math.floor(T/RCYC),ph=T-seg*RCYC;radio.next+=sd;
+    if(ph>=RSONG-0.05)continue; // between songs: the DJ or the ads have the air
+    const step=Math.floor(ph/sd+1e-6),s=step%16,bar=Math.floor(step/16),v=hash(seg,radio.st*7+1),alt=(v>>>4)&1,end=ph>RSONG-3;
+    if(end&&s!==0)continue;
+    const tr=[0,2,-3,5,-2,3][v%6],root=PROG[(radio.st+v)%PROG.length][Math.floor(bar/2)%4]+tr;
     if(S.kind==='punk'){
-      if(s===0||s===8||s===10)kick(t);if(s===4||s===12)snare(t);if(s%2===0)hat(t,0.15);
-      if(s%2===0){rv(t,sd*1.8,nfq(root+12),'sawtooth',0.07,0,1600);rv(t,sd*1.8,nfq(root+19),'sawtooth',0.05,0,1600);}
+      if(s===0||s===8||s===10||(alt&&s===14))kick(t);if(s===4||s===12)snare(t);if(s%2===0)hat(t,0.15);
+      if(s%2===0){rv(t,sd*1.8,nfq(root+12),'sawtooth',0.07,0,1600);rv(t,sd*1.8,nfq(root+(alt?17:19)),'sawtooth',0.05,0,1600);}
       if(s%4===0)rv(t,sd*3.5,nfq(root-12),'square',0.12,0,500);
     }else if(S.kind==='synth'){
       if(s%4===0)kick(t);if(s===4||s===12)snare(t,0.45);if(s%4===2)hat(t,0.25);
-      const ch=[0,3,7,12,15,12,7,3];rv(t,sd*0.9,nfq(root+12+ch[s%8]),'square',0.045,0,2400);
+      const ch=alt?[0,7,12,15,19,15,12,7]:[0,3,7,12,15,12,7,3];rv(t,sd*0.9,nfq(root+12+ch[s%8]),'square',0.045,0,2400);
       if(s%2===0)rv(t,sd*1.6,nfq(root-12),'sawtooth',0.1,0,380);
       if(s===0)rv(t,sd*15,nfq(root+24),'triangle',0.04);
     }else if(S.kind==='hiphop'){
       const sw=(s%2===1)?sd*0.25:0;
-      if(s===0||s===7||s===10)kick(t,1);if(s===4||s===12)snare(t,0.7);if(s%2===0||s===15)hat(t+sw,s%4===2?0.3:0.16);
+      if(s===0||s===7||s===10||(alt&&s===3))kick(t,1);if(s===4||s===12)snare(t,0.7);if(s%2===0||s===15)hat(t+sw,s%4===2?0.3:0.16);
       if(s===0||s===10)rv(t,sd*5,nfq(root-24),'sine',0.3);
-      const pent=[0,3,5,7,10,12];if((s===0||s===6||s===8||s===14)&&((radio.bar*7+s)%3!==0))rv(t,sd*3,nfq(root+12+pent[(radio.bar*3+s)%6]),'triangle',0.08);
+      const pent=[0,3,5,7,10,12];if((s===0||s===6||s===8||s===14)&&((bar*7+s)%3!==0))rv(t,sd*3,nfq(root+12+pent[(bar*3+s+v)%6]),'triangle',0.08);
     }
-    radio.next+=sd;radio.step++;
   }
   }catch(e){}
 }
@@ -222,7 +224,9 @@ function carAir(c,dt){
   const sp=Math.max(80,hyp(c.vx,c.vy));c.pitch=lerp(c.pitch,clamp(Math.atan2(c.vz,sp)*0.85,-0.45,0.45),Math.min(1,dt*3.5));
   const gfl=garageFloor(c);
   if(c.az<=gfl){
-    const imp=-c.vz;c.az=gfl;c.vz=0;c.air=0;c.airSpin=0;c.pitch=-0.05-clamp(imp/2600,0,0.16);c.vx*=0.95;c.vy*=0.95;c.va*=0.5;
+    const imp=-c.vz;c.az=gfl-Math.min(7,imp/110);c.vz=0;c.air=0;c.airSpin=0; // the body squats on its springs, then rides back up
+    if(imp>320){const ca=Math.cos(c.a),sa=Math.sin(c.a);for(const e of[1,-1])for(let k=0;k<5;k++)puff(c.x+ca*c.t.L*0.48*e+rr(-6,6),c.y+sa*c.t.L*0.48*e+rr(-6,6),c.vx*0.4+rr(-120,120),c.vy*0.4+rr(-120,120),rr(.15,.35),2,'#ffd27a','spark');}
+    if(c===player.car)cam.h=Math.max(12,cam.h-Math.min(16,imp/45));c.pitch=-0.05-clamp(imp/2600,0,0.16);c.vx*=0.95;c.vy*=0.95;c.va*=0.5;
     if(imp>560)damageCar(c,(imp-560)*0.05,c.driver==='player'?'player':null);
     for(let k=0;k<6;k++)puff(c.x+rr(-15,15),c.y+rr(-15,15),rr(-60,60),rr(-60,60),rr(.4,.8),rr(6,10),'#9a9a9a','smoke');
     if(c===player.car){shake=Math.max(shake,4+imp/70);sfx('crash',clamp(imp/700,0.25,0.7));usjLand(c);
