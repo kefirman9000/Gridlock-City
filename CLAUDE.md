@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js` and `js/08c-places.js` between 08 and 09), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js` and `js/08c-places.js` between 08 and 09), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -43,6 +43,13 @@ Generation uses the seeded `R()` stream. Adding calls to `R()`/`pick()`/`rr()` i
 whole city for every saved seed and moves the hidden packages in old saves. New generation steps use their own
 seeded stream (see `livedIn()` after `genMap()`).
 
+## Radio
+Each station runs on its own clock (`stClock(i)`, random start per page load), so tuning away and back picks up where it would be. `radioNow(st)` says what is on at that moment;
+`radioTick()` in 04 synthesizes the song for the current 100 s segment (75 s song, then a DJ or ad break). Spoken lines go through `talkSay` (speechSynthesis).
+
+## Story jobs
+Mission steps live in the chapters in `js/05-story.js`. A `drive` step can take `minZ` (the car must be at least that high, e.g. the garage roof).
+
 ## Releasing
 Bump `VERSION` (top of `js/01-core-map.js`), the `#verTxt` text in `index.html`, `version.json` (version + one-line notes) and the cache name in
-`sw.js`; update the README features list. GitHub Pages serves `main`.
+`sw.js`; update the README (keep only the latest two "What's new" sections; older ones live in CHANGELOG.md) and add a CHANGELOG.md entry. GitHub Pages serves `main`.

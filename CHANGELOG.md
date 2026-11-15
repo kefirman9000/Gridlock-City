@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.4.0
+- **Live radio.** Every station keeps running while you're away: it starts at a random point and when you tune back in you pick up wherever it has got to. Songs have names, the music stations have spoken DJ breaks (SKIDS on KRUD, LUCINDA on NEON, LOW TIDE on BASSLINE) and ad breaks, and the talk station has a much longer show with Marty Vance and his callers, all read out loud.
+- **Four new jobs:** Vince's *Top Floor* (garage roof), Dex's *Pier Pressure* and *Container Job* (pier and docks), Lin's *Sanctuary* (cathedral).
+- **Heavier landings:** the car squats, throws sparks on a hard hit and the camera dips.
+- Parked cars sleep when nobody is near them, so busy streets run faster; loading a save made with an older city layout says that collectibles start over.
+- Code: vehicle drawing moved to `js/08v-vehicles.js`, radio content to `js/06r-radio.js`; smoke tests cover swimming, the garage deck, gun shops, the cathedral, jumps, ponds, the radio clock, the new jobs and parked-car sleep.
+
 ## v5.3.3
 - The rear-view mirror is off by default (Options or N turns it on).
 

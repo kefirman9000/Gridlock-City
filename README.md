@@ -31,35 +31,16 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.4
+- **Live radio.** Every station keeps running while you're away: it starts at a random point and when you tune back in you pick up wherever it has got to. Songs have names, the music stations have spoken DJ breaks (SKIDS on KRUD, LUCINDA on NEON, LOW TIDE on BASSLINE) and ad breaks, and the talk station has a much longer show with Marty Vance and his callers, all read out loud.
+- **Four new jobs:** Vince's *Top Floor* (garage roof), Dex's *Pier Pressure* and *Container Job* (pier and docks), Lin's *Sanctuary* (cathedral).
+- **Heavier landings:** the car squats, throws sparks on a hard hit and the camera dips.
+- Parked cars sleep when nobody is near them, so busy streets run faster; loading a save made with an older city layout says that collectibles start over.
+
 ## What's new in v5.3.3
 - **No mirror by default:** the rear-view mirror box no longer appears while you drive unless you turn it on (Options → Rear-view mirror while driving, or N).
 
-## What's new in v5.3.2
-- **Tidier diagonal avenues:** their sidewalks use the same paving as the neighbourhood around them (brick in the Lotus Quarter, granite uptown and so on) and run right up to the buildings, with no slivers of bare asphalt alongside.
-- **The cathedral square:** the old park pond no longer pokes out from under the cathedral's front; the block is paved as a church square.
-- **Splash through ponds and fountains:** cars can drive through park ponds and plaza fountains (slowly, throwing up spray). The river and the sea are still deep water.
-
-## What's new in v5.3.1
-- **Floatier jumps:** off a ramp your car flies higher and hangs in the air for almost twice as long, and you can twist it mid-air with the steering. Jumping on foot goes a little higher too. Stunt bonuses are scaled so the longer air doesn't flood you with cash. Options → Jumps switches back to REALISTIC.
-
-## What's new in v5.3
-- **Ammu-Nation is a real store:** both gun shops are brick storefronts on their own lots with lit windows and a neon trim at night. Walk in through the door (no more loading into a back room): the clerk is behind the counter with guns on the pegboard, display tables, an armor mannequin and ammo crates. Step onto the glowing pad in front of anything to buy it, or onto AMMO REFILL to top up every gun you carry. Cars can't fit through the door.
-- **Swimming:** walk off a beach or a bank, or dive off a bridge or the pier, and you swim instead of hitting an invisible wall. Diving in doesn't hurt. You swim at under half speed with no weapons, and walk out where the shore is low.
-- **Pulling yourself up:** jump into anything just out of reach (a low roof, a garage deck, a wall, a car roof, the pier) and you grab the edge and climb on. Swimming into a high bank or the pier does the same.
-
-## What's new in v5.2
-- **Parking garage:** drive up the outside ramps to the second deck and the roof, then launch off the rooftop kicker (it counts as a unique stunt jump). The decks have parapets, the open levels glow at night, and you can get out and walk around up top.
-- **South Beach pier:** a boardwalk out over the water past the Ferris wheel, with a hot dog stand and an ice cream stand that heal you, lamps after dark, and a fishing spot at the end where you can cast for anything from an old boot to a $300 tuna.
-- **Old Town cathedral:** nave, aisles, transept and apse with stained glass that glows at night, and a west tower with a tall copper spire you can pick out over the roofs from across the city, its red light blinking at night. The priest at the door will light you a candle or, for a price, hear a confession that makes the cops lose interest.
-- **Subway concourse:** the stairs now come down into a concourse with a token booth and three turnstiles in front of the platform. The $5 fare is paid at the gates, a $60 monthly pass opens them for free, and jumping the turnstile works but costs you a wanted star.
-
-## What's new in v5.1
-- **Fixes:** on-screen messages no longer stack on top of each other or repeat, signs stop growing to fill the screen when you're right next to them, the camera pulls in instead of sitting inside a wall beside you, and the KEEP OUT banner shows once per trip onto the closed east side.
-- **Wet streets:** after rain the roads stay dark and wet for a few minutes, with puddles that reflect the sky by day and the street lights at night. Heavy storms pull the fog in so the far city fades.
-- **Water and street detail:** the river has slow swells and a sky sheen toward the distance, lanes show worn tire tracks, people cast shadows, and sidewalks have trash-bag piles, parked bikes and A-frame shop signs.
-- **New places:** Pixel Palace (an arcade: $5 a game, with prizes and a jackpot) and The Corner Tap (a bar: drinks and wings heal you).
-- **New landmarks:** a TV tower with a blinking beacon on a downtown plaza, a brick clock tower in Old Town with faces lit at night, and a Ferris wheel on South Beach whose gondolas light up after dark.
-- **Rooftops and street life:** about twice as many planks link the rooftops, more joggers run the parks at dawn and dusk, and partygoers fill Downtown, Times Square and the Lotus Quarter late at night.
+Older release notes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.
