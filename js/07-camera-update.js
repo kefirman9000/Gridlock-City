@@ -42,7 +42,7 @@ function footLook(dt){
   LOCK.rx0=pad.on?pad.rx:0;mouse.turn=0;mouse.look=0;
   if(orbit){cam.base+=orbit;cam.idle=0;}else cam.idle+=dt;
   // after a moment without touching the camera it drifts back behind you while you move (but not when you run at it)
-  if(!LOCK.t&&!mlLocked()&&cam.idle>0.7&&player.moving){const d=Math.abs(angDiff(player.body,cam.base));if(d<2.1)cam.base=lerpAng(cam.base,player.body,Math.min(1,dt*2.4*(1-d/2.4)));}
+  {const ti=touchMode?0.45:0.7,tr=touchMode?3.4:2.4;if(!LOCK.t&&!mlLocked()&&lookT.id===null&&cam.idle>ti&&player.moving){const d=Math.abs(angDiff(player.body,cam.base));if(d<2.1)cam.base=lerpAng(cam.base,player.body,Math.min(1,dt*tr*(1-d/2.4)));}}
 }
 function baseScale(){return clamp(Math.sqrt(VW*VH)/900*(VH>VW?0.86:1),0.5,2.2)}
 
@@ -406,13 +406,14 @@ function update(dt){
     if(player.car){const c=player.car,s=hyp(c.vx,c.vy),big=c.t.truck||c.t.tank||c.t.swat;
       // mouse (captured) or right stick swing the camera round the car; it drifts back behind you once you leave it alone and drive
       const orb=(mouse.look||0)*0.0033*(OPT.msens||1)+(pad.on&&OPT.pad==='classic'?pad.rx*2.6*dt:0);mouse.look=0;
-      if(orb){cam.corb=angDiff((cam.corb||0)+orb,0);cam.cidle=0;}else{cam.cidle=(cam.cidle||0)+dt;if(cam.cidle>1.2&&s>40)cam.corb=lerpAng(cam.corb||0,0,Math.min(1,dt*1.8));}
+      if(orb||lookT.id!==null){if(orb)cam.corb=angDiff((cam.corb||0)+orb,0);cam.cidle=0;}else{cam.cidle=(cam.cidle||0)+dt;if(cam.cidle>1.2&&s>40)cam.corb=lerpAng(cam.corb||0,0,Math.min(1,dt*1.8));}
       {const va=Math.atan2(c.vy,c.vx),fwd=c.vx*Math.cos(c.a)+c.vy*Math.sin(c.a)>0,k=fwd&&!c.t.heli&&!c.t.plane?clamp((s-40)/140,0,0.75):0;want=lerpAng(c.a,va,k)+(cam.corb||0);}
       dist=94+Math.min(56,s*0.075)+(big?28:0);hgt=42+Math.min(14,s*0.02)+(big?12:0);rate=orb?30:3.2;
       // GTA III: Q / E (L2 / R2) look left and right; both together look behind
       const lq=kd.KeyQ||tbtn.lookl.on,le=kd.KeyE||tbtn.lookr.on;if(lq&&le){want+=PI;rate=18;}else if(lq){want-=PI/2;rate=14;dist*=0.8;}else if(le){want+=PI/2;rate=14;dist*=0.8;}}
     else if(GTA3MOVE()&&cam.base!=null&&!player.riding){want=cam.base;dist=LOCK.t?84:92;hgt=LOCK.t?44:40;rate=mlLocked()?30:14;}
     else{want=player.body;dist=96;hgt=40;rate=7;}
+    if(touchMode&&VH>VW){dist*=1.18;hgt*=1.22;}
     if(kd.KeyC||mouse.mdown||tbtn.look.on){want+=PI;rate=18;cam.lookT=0.25;}else if(cam.lookT>0){cam.lookT-=dt;rate=18;}
     {const sp=player.car?hyp(player.car.vx,player.car.vy):0,stickY=pad.on&&((!player.car&&GTA3MOVE())||(player.car&&OPT.pad==='classic'));
      const py=(mouse.lookY||0)*0.0028*(OPT.msens||1)*(OPT.invertY?-1:1)+(stickY?pad.ry*1.7*dt*(OPT.invertY?-1:1):0);mouse.lookY=0;

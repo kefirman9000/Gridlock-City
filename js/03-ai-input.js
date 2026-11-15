@@ -322,7 +322,7 @@ cv.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault();});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 
 // touch
-const joy={id:null,ox:0,oy:0,x:0,y:0,active:false},aimJoy={id:null,ox:0,oy:0,x:0,y:0,active:false};
+const joy={id:null,ox:0,oy:0,x:0,y:0,active:false},aimJoy={id:null,ox:0,oy:0,x:0,y:0,active:false},lookT={id:null,x:0,y:0}; // lookT: a drag that turns the camera
 const tbtn={cam:{id:null,on:false},scope:{id:null,on:false},lookl:{id:null,on:false},lookr:{id:null,on:false},phone:{id:null,on:false},horn:{id:null,on:false},nos:{id:null,on:false},gas:{id:null,on:false},rev:{id:null,on:false},look:{id:null,on:false},fire:{id:null,on:false},car:{id:null,on:false},brake:{id:null,on:false},gun:{id:null,on:false},radio:{id:null,on:false},pause:{id:null,on:false}};
 function touchScale(){return clamp(Math.min(VW,VH)/420,0.72,1.2)*(OPT.btn||1)}
 function btnLayout(){const s=touchScale(),pad=16*s,bx=VW-pad,by=VH-pad-8;
@@ -355,13 +355,18 @@ function onTouch(e){
         if(hitBtn==='radio'&&player.car)setStation(radio.st+1);if(hitBtn==='pause')togglePause();if(hitBtn==='phone')phoneMenu();}
       else if(x<VW*0.5&&y>VH*0.3&&joy.id===null){
         joy.id=t.identifier;joy.ox=clamp(x,JH.r,VW*0.5);joy.oy=clamp(y,VH*0.3,VH-JH.r*0.6);joy.x=0;joy.y=0;joy.active=true;}
-      else if(x>=VW*0.5&&y>VH*0.22&&aimJoy.id===null){aimJoy.id=t.identifier;aimJoy.ox=x;aimJoy.oy=y;aimJoy.x=0;aimJoy.y=0;aimJoy.active=true;}
+      else if(x>=VW*0.5&&y>VH*0.5&&aimJoy.id===null){aimJoy.id=t.identifier;aimJoy.ox=x;aimJoy.oy=y;aimJoy.x=0;aimJoy.y=0;aimJoy.active=true;}
+      // anywhere else that isn't a button (the upper part of the screen): drag to look around
+      else if(lookT.id===null&&y>VH*0.08){lookT.id=t.identifier;lookT.x=x;lookT.y=y;}
     }else if(e.type==='touchmove'){
       if(t.identifier===joy.id){let dx=x-joy.ox,dy=y-joy.oy;const l=hyp(dx,dy),m=JH.r;if(l>m){dx=dx/l*m;dy=dy/l*m}joy.x=dx/m;joy.y=dy/m;}
       if(t.identifier===aimJoy.id){let dx=x-aimJoy.ox,dy=y-aimJoy.oy;const l=hyp(dx,dy),m=JH.r*0.8;if(l>m){dx=dx/l*m;dy=dy/l*m}aimJoy.x=dx/m;aimJoy.y=dy/m;}
+      if(t.identifier===lookT.id){const dx=x-lookT.x,dy=y-lookT.y;lookT.x=x;lookT.y=y;const k=(OPT.msens||1)*420/Math.max(320,Math.min(VW,VH));
+        if(player.car)mouse.look=(mouse.look||0)+dx*1.9*k;else mouse.turn=(mouse.turn||0)+dx*1.05*k;mouse.lookY=(mouse.lookY||0)+dy*0.9*k;}
     }else{
       if(t.identifier===joy.id){joy.id=null;joy.active=false;joy.x=joy.y=0;}
       if(t.identifier===aimJoy.id){aimJoy.id=null;aimJoy.active=false;aimJoy.x=aimJoy.y=0;}
+      if(t.identifier===lookT.id)lookT.id=null;
       for(const k in tbtn)if(tbtn[k].id===t.identifier){tbtn[k].id=null;tbtn[k].on=false;}
     }
   }

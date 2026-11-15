@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.21.0
+- Touch: a drag that starts on the upper part of the screen (not on a button, the move stick or the aim stick) turns and tilts the camera, on foot and in cars; the aim/fire stick now starts in the lower half of the right side. A one-time tip explains it.
+- Touch: on foot the camera swings back behind you after 0.45 s (was 0.7) and faster; in a car it waits while you're dragging.
+- Portrait phones: the camera sits 18% further back and 22% higher, and the view is wider (FOC 0.64 of the width, was 0.74).
+
 ## v5.20.0
 - Gangs: killing a member costs 0.4 respect (0.2 during a story job; was 0.7). Members shoot on sight at -3 (was -2) and gang cars hunt you at -4 (was -3); a new label "They don't like you" sits between. Respect below zero drifts back toward neutral (about +0.5 a minute) while you're not wanted and nobody is shooting at you, with a note when a gang stops shooting on sight. Angry members give up once you're 500 away.
 - Police: firing back at, or killing, a gang member who is shooting at you is self-defence: it no longer counts as a crime, even with a cop watching. Hitting bystanders or cops still does.

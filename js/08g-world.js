@@ -624,3 +624,7 @@ function gangCalm(dt){if(game.state!=='play')return;const fight=underFire()||sta
     if(was<=-3&&respect[g]>-3)note(GANGS[g].name+' have cooled off. They won\'t shoot on sight now');}
   for(const p of peds)if(p.gang!=null&&p.angry>0&&dist2(p.x,p.y,player.x,player.y)>500*500)p.angry=0;}
 {const f=cityTick;cityTick=function(dt){f(dt);gangCalm(dt);}}
+
+// ================= v5.21: a camera you can steer on phones =================
+// Drag anywhere on the upper part of the screen (away from the buttons and sticks) to look around; it settles back behind you on its own.
+{const f=cityTick;cityTick=function(dt){f(dt);if(touchMode&&!STATS.tlook&&game.t>4){STATS.tlook=1;note('Tip: drag the upper part of the screen to look around');}}}

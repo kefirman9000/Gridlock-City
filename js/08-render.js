@@ -50,7 +50,7 @@ function resizeLow(){
   const asp=VW/VH;
   const dk=typeof DYN==='number'?DYN:1;
   if(asp>=1){LH=Math.round(180*dk);LW=clamp(Math.round(LH*asp),Math.round(240*dk),Math.round(420*dk));HOR=Math.round(LH*.4);FOC=Math.round(LH*.9);}
-  else{LW=Math.round(200*dk);LH=clamp(Math.round(LW/asp),Math.round(240*dk),Math.round(440*dk));HOR=Math.round(LH*.37);FOC=Math.round(LW*.74);}
+  else{LW=Math.round(200*dk);LH=clamp(Math.round(LW/asp),Math.round(240*dk),Math.round(440*dk));HOR=Math.round(LH*.37);FOC=Math.round(LW*.64);}
   HOR0=HOR;FOC0=FOC;
   HW=LW/2;HALF=HW/FOC;
   lowc.width=LW;lowc.height=LH;L3.imageSmoothingEnabled=false;

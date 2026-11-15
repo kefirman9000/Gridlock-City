@@ -1,4 +1,4 @@
 {
-  "version": "5.20.0",
-  "notes": "Gang and police balance: grudges heal over time, gangs only shoot on sight when they really hate you, shooting back at attackers isn't a crime, and turf counterattacks are rare and end."
+  "version": "5.21.0",
+  "notes": "A better camera on phones: drag the upper screen to look around, it follows you sooner, and portrait mode sees further ahead."
 }
