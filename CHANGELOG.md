@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.24.0
+- Terrain jumps: a carAir wrapper (end of 08g) tracks each car's vertical speed from the ground under it. When the ground falls away more than 1.4 below where a free-falling car would be (and the car is doing at least 190), the car takes off with that vertical speed. Airborne cars now fly on an absolute arc (`c._za`), so the ground moving under them no longer drags them down or up, and on landing on a downslope only the speed into the slope counts as impact.
+- Helicopters, boats, tanks, planes, RC cars, towed cars and cars in the parking garage keep the old behaviour.
+
 ## v5.23.0
 - Loading screen: index.html loads the 18 scripts one after another (same order and shared scope) and lets the page draw between them, with a progress bar and messages; `window.GC_READY` is set when everything has loaded (the tests wait for it).
 - The pager and phone-ring sounds are a soft triangle-wave chime (they were three sharp square-wave beeps at 2.2-2.6 kHz, which sounded like a horn when the dock foreman's order and Nico's intro arrived at the start); one at most every 1.5 s, and no texts during the first 7 s of play.

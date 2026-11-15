@@ -1,4 +1,4 @@
 {
-  "version": "5.23.0",
-  "notes": "A loading screen with a progress bar while the city is built, and a soft chime for texts instead of the harsh beeps at the start."
+  "version": "5.24.0",
+  "notes": "Cars jump off hills, crests and banks with real momentum, not just off ramps; flights over downhills last longer and landings on slopes are softer."
 }

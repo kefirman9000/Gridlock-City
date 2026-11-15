@@ -31,13 +31,12 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.24
+- **Jump off anything**: take a crest, a bank or the edge of a hill fast and the car leaves the ground with the speed it was climbing at, like real physics, not only off the ramps. Flights over a downhill last longer, landing on a downslope is soft, and big drops still hurt. Stunt bonuses count for these too.
+
 ## What's new in v5.23
 - **Loading screen**: a progress bar while the city, the island and the traffic are built, instead of a blank page.
 - **No more beeping at the start**: texts and pages now play a soft two-note chime (they were sharp square-wave beeps), and the first texts wait until you've had a few seconds in the game.
-
-## What's new in v5.22
-- **Audio balance**: car horns go through the main volume (they used to skip it and were about twice as loud), softer and quieter with distance, and only one at a time; a compressor evens out sudden peaks and phones get a gentle treble cut. New **Effects volume** and **Radio volume** settings (effects default to medium on phones).
-- **Phone camera**: tap the upper screen to put the camera straight back behind you; walking sideways no longer swings the camera round (no more circling when you strafe).
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

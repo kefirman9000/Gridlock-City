@@ -628,3 +628,25 @@ function gangCalm(dt){if(game.state!=='play')return;const fight=underFire()||sta
 // ================= v5.21: a camera you can steer on phones =================
 // Drag anywhere on the upper part of the screen (away from the buttons and sticks) to look around; it settles back behind you on its own.
 {const f=cityTick;cityTick=function(dt){f(dt);if(touchMode&&!STATS.tlook&&game.t>4){STATS.tlook=1;note('Tip: drag the upper screen to look around, tap it to put the camera behind you');}}}
+
+// ================= v5.24: cars jump off hills, not just ramps =================
+// A car on the ground moves up and down with the land; its vertical speed is how fast the ground under it rises or falls.
+// When the ground drops away faster than gravity can pull the car down (a crest taken fast, a bank, the edge of a hill),
+// the car leaves the ground carrying that vertical speed and flies on its own arc. In the air its height is tracked against
+// the world, not the ground under it, so going off a crest over a downhill gives a long flight, and landing on a downslope
+// is soft (only the speed into the slope counts as impact).
+{const f=carAir;carAir=function(c,dt){const t=c.t;
+  if(t.heli||t.boat||t.tank||t.plane||t.rc||c.towedBy||c.sunk||dt<=0){c._zg=null;c._za=null;return f(c,dt);}
+  const gh=GH(c.x,c.y),fl=FLOATY()&&c===player.car;
+  if(c.air>0){if(c._za==null)c._za=gh+(c.az||0);
+    c.az=c._za-gh; // height above whatever is under the car now
+    const nz=c.az+(c.vz-(fl?(c.vz>0?520:620):900)*dt)*dt,gfl=garageFloor(c);
+    if(nz<=gfl){const gn=GH(c.x+c.vx*dt,c.y+c.vy*dt),vg=(gn-gh)/dt;if(vg<0)c.vz=Math.min(0,c.vz-vg*0.85);} // landing on a downslope: only the speed into the slope hurts
+    f(c,dt);if(c.air>0)c._za=gh+c.az;else{c._za=null;c._zg=gh;c._vg=0;}return;}
+  f(c,dt);
+  const garage=c._gx!=null||(c.rampZ||0)>0.5,sp=hyp(c.vx,c.vy);
+  if(c._zg==null||garage||sp<120){c._zg=gh;c._vg=0;return;}
+  const vg=(gh-c._zg)/dt,G=fl?(c._vg>0?520:620):900,ball=c._zg+c._vg*dt-0.5*G*dt*dt; // where a free car would be now
+  if(sp>190&&gh<ball-1.4&&c._vg>-260){c.air=1;c.airT=0;c.vz=c._vg;c._za=ball;c.az=ball-gh;c.pitch=clamp(Math.atan2(c._vg,sp),-0.4,0.4);c._zg=null;
+    if(c===player.car&&c._vg>60&&OPT.slowmo)slowT=Math.max(slowT,0.3);return;}
+  c._vg=lerp(c._vg,clamp(vg,-600,600),0.6);c._zg=gh;}}
