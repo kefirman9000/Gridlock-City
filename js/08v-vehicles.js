@@ -47,9 +47,19 @@ function drawBike3(c,fg,t,hl,hw,a){const ca=Math.cos(a),sa=Math.sin(a),col=rgbOf
   if(c.down&&!c.driver){ // knocked over: lying on its side
     for(const s of[-1,1])obox(c.x+ca*hl*0.7*s,c.y+sa*hl*0.7*s,a,5,4.5,0,1.8,[20,20,22],null,fg);
     obox(c.x,c.y,a,hl*0.55,6,0.8,3.6,col,mixA(col,[255,255,255],0.2),fg);obox(c.x+ca*hl*0.55-sa*5,c.y+sa*hl*0.55+ca*5,a,1.5,4,0.5,2.5,[60,60,64],null,fg);return;}
-  for(const s of[-1,1])obox(c.x+ca*hl*0.7*s,c.y+sa*hl*0.7*s,a,5,1.6,0,9,[20,20,22],null,fg);
-  obox(c.x,c.y,a,hl*0.55,2.6,6,12,col,mixA(col,[255,255,255],0.2),fg);obox(c.x+ca*hl*0.55,c.y+sa*hl*0.55,a,1.5,4,11,15,[60,60,64],null,fg);
-  if(c.driver){const sh=c.driver==='player'?[217,115,31]:c.driver==='cop'?[43,76,155]:[120,90,70];obox(c.x-ca*3,c.y-sa*3,a,3.5,4,12,24,sh,null,fg);obox(c.x-ca*2,c.y-sa*2,a,2.6,2.6,24,30,[30,30,34],[40,40,44],fg);}}
+  // v5.25: a bike reads as a bike from behind too: rear fender and tail light, seat, wide bars, exhaust, and a rider leaning forward
+  // with his legs out to the sides (he used to be an upright box that hid the bike and looked like someone standing on the road).
+  // The parts are drawn back to front from the camera, so they overlap properly from any side.
+  const P=[],B=(f,l,bl,bw,z0,z1,cc,tp,lit2)=>P.push([c.x+ca*f-sa*l,c.y+sa*f+ca*l,bl,bw,z0,z1,cc,tp,lit2]),dk=[24,24,26],mt=[70,70,76];
+  for(const s of[-1,1])B(hl*0.68*s,0,5,1.6,0,9.5,dk);B(-hl*0.62,0,3.4,2.2,8.5,10,dk);B(-hl*0.84,0,0.5,1.6,8.4,10.2,LIGHTK>0.1||c.brk?[255,50,40]:[150,30,26],null,LIGHTK>0.1||c.brk);
+  B(-hl*0.12,0,hl*0.32,2.4,10.5,12.5,[30,30,32]);B(hl*0.12,0,hl*0.3,3.2,7,13,col,mixA(col,[255,255,255],0.22));B(hl*0.12,2.6,4,0.9,4,6,mt);
+  B(hl*0.5,0,1.4,1.4,9,15,mt);B(hl*0.52,0,0.8,5.4,14.5,15.6,dk);B(hl*0.66,0,0.6,1.8,10.5,12.5,LIGHTK>0.1?[255,244,200]:[200,200,190],null,LIGHTK>0.1);
+  if(c.driver){const pl=c.driver==='player'&&typeof plook==='function'?plook():null,cv=v=>Array.isArray(v)?v:rgbOf(v),sh=pl?cv(pl.b):c.driver==='cop'?[43,76,155]:[120,90,70],pants=pl?cv(pl.p):c.driver==='cop'?[28,34,60]:[44,46,66];
+    for(const s of[-1,1]){B(-hl*0.08,s*3.4,3.2,1.2,8,12.5,pants);B(hl*0.12,s*3.6,1.2,1.2,5,9,pants);}
+    B(hl*0.02,0,3.2,3.4,12.5,20.5,sh);B(hl*0.16,0,1.6,1.4,18,20,sh);for(const s of[-1,1])B(hl*0.3,s*3,2.6,0.9,16.5,18,sh);
+    B(hl*0.12,0,2.5,2.5,20.5,26.5,c.driver==='cop'?[20,24,40]:[30,30,34],[44,44,48]);}
+  P.sort((p,q)=>((q[0]-CX)**2+(q[1]-CY)**2)-((p[0]-CX)**2+(p[1]-CY)**2));
+  for(const q of P)obox(q[0],q[1],a,q[2],q[3],q[4],q[5],q[6],q[7]||null,fg,null,null,q[8]);}
 function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return;}if(t.bike){drawBike3(c,fg,t,hl,hw,a);return;}if(t.plane){drawPlaneP(c,fg,t,a);return;}if(t.heli){drawHeliP(c,fg,t,a);return;}if(t.rc){drawRC(c,fg,t,a);return;}
   const base=c.wreck?[40,36,33]:(c.flash>0?[255,255,255]:rgbOf(c.col));
   const dmg=c.wreck?1:clamp(0.55+0.45*c.hp/t.hp,0.55,1),lift=LIGHTK>0.2&&!c.wreck?0.16*LIGHTK:0,col=[(base[0]*dmg)*(1-lift)+255*lift*0.9,(base[1]*dmg)*(1-lift)+226*lift*0.9,(base[2]*dmg)*(1-lift)+170*lift*0.9]; // at night a warm street-light lift keeps cars readable
@@ -78,12 +88,28 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
   const front=(CX-c.x)*ca+(CY-c.y)*sa>0;
   if(t.bus){obox(c.x,c.y,a,hl,hw,4,36,col,mixA(col,[255,255,255],0.2),fg);NOTOP=true;obox(c.x,c.y,a,hl*0.94,hw+0.3,20,29,GLASS,null,fg);NOTOP=false;if((CX-c.x)*ca+(CY-c.y)*sa>hl*0.9)obox(c.x+ca*hl*0.97,c.y+sa*hl*0.97,a,hl*0.04,hw*0.86,12,30,GLASS,null,fg);return;}
   if(t.icecream){const cab=()=>{obox(c.x+ca*hl*0.7,c.y+sa*hl*0.7,a,hl*0.3,hw,4,20,col,null,fg);obox(c.x+ca*hl*0.92,c.y+sa*hl*0.92,a,hl*0.08,hw*0.86,12,19,GLASS,null,fg);};
-    const box=()=>{obox(c.x-ca*hl*0.3,c.y-sa*hl*0.3,a,hl*0.7,hw,4,30,col,[250,250,250],fg);obox(c.x-ca*hl*0.3,c.y-sa*hl*0.3,a,3,3,30,38,[230,190,120],[255,240,250],fg);};
+    // v5.25: a real ice cream van: pastel stripe, a serving hatch with an awning on the side you can see, rear windows, a cone on the roof
+    const lat=(CX-c.x)*-sa+(CY-c.y)*ca,sd=lat>0?1:-1,fwd=(CX-c.x)*ca+(CY-c.y)*sa,B=(f,l,bl,bw,z0,z1,cc,tp,lt)=>obox(c.x+ca*f-sa*l,c.y+sa*f+ca*l,a,bl,bw,z0,z1,cc,tp||null,fg,null,null,lt);
+    const box=()=>{B(-hl*0.3,0,hl*0.7,hw,4,30,col,[250,250,250]);if(c.wreck)return;
+      if(Math.abs(lat)>hw){NOTOP=true;B(-hl*0.3,sd*(hw+0.15),hl*0.7,0.12,9,11.5,[240,130,180]);B(-hl*0.22,sd*(hw+0.15),hl*0.34,0.12,15,24,LIGHTK>0.1?[255,226,170]:[44,40,48],null,LIGHTK>0.1);NOTOP=false;
+        B(-hl*0.22,sd*(hw+2.5),hl*0.36,2.5,24.5,25.6,[250,170,200],[255,200,220]);}
+      if(fwd<-hl){NOTOP=true;B(-hl-0.15,0,0.12,hw*0.06,6,28,mixA(col,[0,0,0],0.4));for(const l of[-1,1])B(-hl-0.15,l*hw*0.48,0.12,hw*0.34,19,27,GLASS);B(-hl-0.25,0,0.3,hw,4,6.5,[60,60,64]);NOTOP=false;}
+      B(-hl*0.3,0,1.6,1.6,30,34,[214,170,100]);B(-hl*0.3,0,2.6,2.6,34,38,[250,236,240],[255,246,250]);B(-hl*0.3,0,1.6,1.6,38,40,[240,150,180]);};
     if(front){box();cab();}else{cab();box();}return;}
   if(t.vx){fv=drawVX(c,fg,t,hl,hw,a,col,front,ca,sa);}
   else if(t.truck){
     const cab=()=>{fv=obox(c.x+ca*hl*0.66,c.y+sa*hl*0.66,a,hl*0.34,hw,4,26,col,null,fg);obox(c.x+ca*hl*0.66+ca*hl*0.28,c.y+sa*hl*0.66+sa*hl*0.28,a,hl*0.07,hw*0.86,14,24,GLASS,null,fg);};
-    const box=()=>obox(c.x-ca*hl*0.34,c.y-sa*hl*0.34,a,hl*0.66,hw,4,34,c.wreck?col:mixA(col,[255,255,255],.14),null,fg);
+    // v5.25: box trucks get rear doors and a bumper; the fire truck is its own shape: a lower body with a white band,
+    // a ladder on the roof and a light bar (it used to be the Hauler's plain red box)
+    const lat=(CX-c.x)*-sa+(CY-c.y)*ca,fwd=(CX-c.x)*ca+(CY-c.y)*sa,sd=lat>0?1:-1,B=(f,l,bl,bw,z0,z1,cc,tp,lt)=>obox(c.x+ca*f-sa*l,c.y+sa*f+ca*l,a,bl,bw,z0,z1,cc,tp||null,fg,null,null,lt);
+    const top=t.fire?24:34,bc=c.wreck?col:t.fire?col:mixA(col,[255,255,255],.14);
+    const box=()=>{obox(c.x-ca*hl*0.34,c.y-sa*hl*0.34,a,hl*0.66,hw,4,top,bc,null,fg);if(c.wreck)return;
+      if(Math.abs(lat)>hw){NOTOP=true;if(t.fire){B(-hl*0.34,sd*(hw+0.15),hl*0.66,0.12,11,13.5,[236,236,230]);for(const f of[-0.62,-0.34,-0.06])B(hl*f,sd*(hw+0.15),hl*0.11,0.12,14.5,22,mixA(col,[0,0,0],0.3));}
+        else B(-hl*0.34,sd*(hw+0.15),hl*0.66,0.12,5,6.5,[220,180,40]);NOTOP=false;}
+      if(fwd<-hl){NOTOP=true;B(-hl-0.15,0,0.12,hw*0.05,6,top-1,mixA(bc,[0,0,0],0.45));for(const l of[-1,1]){B(-hl-0.15,l*hw*0.55,0.12,hw*0.06,10,top-4,mixA(bc,[0,0,0],0.3));B(-hl-0.2,l*hw*0.86,0.12,1.4,5,7,[220,40,30],null,LIGHTK>0.1);}
+        B(-hl-0.3,0,0.4,hw,3.6,6,[48,48,52]);NOTOP=false;}
+      if(t.fire){for(const l of[-1,1])B(-hl*0.3,l*hw*0.42,hl*0.62,0.8,top,top+2.2,[200,200,206]);for(let i=0;i<7;i++)B(-hl*0.86+i*hl*0.19,0,0.6,hw*0.42,top+1.6,top+2.2,[200,200,206]);
+        B(hl*0.62,0,2,hw*0.7,26,28,[30,30,34]);for(const l of[-1,1])B(hl*0.62,l*hw*0.4,1.6,hw*0.22,26.5,28.5,Math.floor(game.t*4+l)%2?[255,40,40]:[255,230,200],null,true);}};
     if(front){box();cab();}else{cab();box();}
   }else if(t.ambulance){
     const cab=()=>{fv=obox(c.x+ca*hl*0.7,c.y+sa*hl*0.7,a,hl*0.3,hw,4,20,col,null,fg);obox(c.x+ca*hl*0.92,c.y+sa*hl*0.92,a,hl*0.08,hw*0.86,12,19,GLASS,null,fg);};
@@ -178,7 +204,8 @@ function drawVX(c,fg,t,hl,hw,a,col,front,ca,sa){
     const box=()=>{B(-hl*0.28,0,hl*0.72,hw,4,30,col,[236,236,232]);
       if(!wr){band(-hl*0.28,hl*0.42,14,24,LIGHTK>0.1?[255,214,150]:[54,46,40],LIGHTK>0.1);
         if(Math.abs(lat)>hw)B(-hl*0.28,side*(hw+3),hl*0.44,3,24,25.4,c.awn||[230,60,40]);
-        B(-hl*0.28,0,hl*0.36,1.2,30,38,[250,246,236],null,null,null,LIGHTK>0.1);}};
+        B(-hl*0.28,0,hl*0.36,1.2,30,38,[250,246,236],null,null,null,LIGHTK>0.1);
+        if(fwd<-hl){NOTOP=true;B(-hl-0.15,0,0.12,hw*0.06,6,28,mixA(col,[0,0,0],0.4));for(const l of[-1,1])B(-hl-0.15,l*hw*0.48,0.12,hw*0.34,19,27,G);B(-hl-0.25,0,0.3,hw,4,6.5,[60,60,64]);NOTOP=false;}}};
     if(front){box();cab();}else{cab();box();}
   }
   return fv;

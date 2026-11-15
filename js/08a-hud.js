@@ -180,8 +180,8 @@ function drawHUD(){
     radH=(lines.length+1)*lh;ctx.globalAlpha=1;}
   // ticker
   let ty=touchMode?VH*0.62:VH-40*sc;
-  if(game.t<12&&HINTMV<1.5&&game.state==='play'&&!touchMode)ty=VH-108*sc; // keep clear of the controls hint
-  if(radH&&!touchMode)ty=Math.min(ty,VH-34*sc-radH-8*sc); // and of the radio text
+  if(radH&&!touchMode)ty=Math.min(ty,VH-34*sc-radH-8*sc); // keep clear of the radio text
+  if(game.t<12&&HINTMV<1.5&&game.state==='play'&&!touchMode)ty=Math.min(ty,VH-108*sc); // and of the controls hint (both can be up at once)
   for(let i=ticker.length-1;i>=Math.max(0,ticker.length-2);i--){const t=ticker[i];ctx.globalAlpha=Math.min(1,t.t);hudText(t.text,VW/2,ty,Math.round(14*sc),'#fff','center',`${Math.round(15*sc)}px 'Archivo Black',Arial,sans-serif`);ty-=22*sc;}
   ctx.globalAlpha=1;
   // big message

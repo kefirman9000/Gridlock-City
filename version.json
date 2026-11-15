@@ -1,4 +1,4 @@
 {
-  "version": "5.24.0",
-  "notes": "Cars jump off hills, crests and banks with real momentum, not just off ramps; flights over downhills last longer and landings on slopes are softer."
+  "version": "5.25.0",
+  "notes": "Glitch sweep: bikes show their rider seated and a tail light, the fire truck gets a ladder and light bar, vans and trucks get proper backs, and the controls hint no longer overlaps the messages."
 }

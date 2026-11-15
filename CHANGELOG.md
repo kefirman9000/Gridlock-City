@@ -2,6 +2,11 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.25.0
+- From a screenshot sweep: drawBike3 rebuilt (fender, tail light, seat, bars, exhaust, headlight; the rider sits leaning forward with legs out and the player's outfit colours; parts sorted back to front).
+- The fire truck no longer shares the Hauler's plain box: lower body, white band, side lockers, roof ladder and a flashing light bar. Box trucks, the taco truck and the ice cream van get rear doors/windows, a bumper and lights; the ice cream van a pastel stripe, a lit serving hatch with an awning, and a cone on the roof.
+- HUD: with the radio text and the controls hint both up, the bottom messages now sit above both (they were pushed back down onto the hint).
+
 ## v5.24.0
 - Terrain jumps: a carAir wrapper (end of 08g) tracks each car's vertical speed from the ground under it. When the ground falls away more than 1.4 below where a free-falling car would be (and the car is doing at least 190), the car takes off with that vertical speed. Airborne cars now fly on an absolute arc (`c._za`), so the ground moving under them no longer drags them down or up, and on landing on a downslope only the speed into the slope counts as impact.
 - Helicopters, boats, tanks, planes, RC cars, towed cars and cars in the parking garage keep the old behaviour.
