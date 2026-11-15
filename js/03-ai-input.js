@@ -274,7 +274,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyB'&&game.started&&!game.paused&&game.state==='play')detonateBomb();
   if(e.code==='KeyM')toggleMute();
   if(e.code==='KeyV'&&game.started&&!game.paused)cycleCam();
-  if(e.code==='KeyN'&&!DLG.open){mirrorOn=!mirrorOn;OPT.mirror=mirrorOn;saveOpts();note(mirrorOn?'Rear-view mirror on':'Rear-view mirror off');}
+  if(e.code==='KeyN'&&!DLG.open){mirrorOn=!mirrorOn;OPT.rearview=mirrorOn;saveOpts();note(mirrorOn?'Rear-view mirror on':'Rear-view mirror off');}
   if(e.code==='KeyR'&&player.car)setStation(radio.st+1);
   if((e.code==='KeyP'||e.code==='Escape')&&game.started)togglePause();
 });
@@ -382,7 +382,7 @@ function pollPad(){let gp=null;try{const l=navigator.getGamepads?navigator.getGa
   else if(game.started){
     PADK.Space=b[0];PADK.KeyC=b[1];PADK.KeyH=b[2];PADK.KeyK=b[5];PADK.ShiftLeft=b[10]&&!!player.car;pad.run=b[10];PADK.KeyQ=false;PADK.KeyE=false;
     if(edge(3))pressed.enter=true;if(edge(4))pressed.swap=true;if(edge(9))togglePause();if(edge(8))BIGMAP=!BIGMAP;if(edge(11))cycleCam();
-    if(edge(12)&&player.car)setStation(radio.st+1);if(edge(13))phoneMenu();if(edge(14))recruitNear();if(edge(15)){mirrorOn=!mirrorOn;OPT.mirror=mirrorOn;saveOpts();}}
+    if(edge(12)&&player.car)setStation(radio.st+1);if(edge(13))phoneMenu();if(edge(14))recruitNear();if(edge(15)){mirrorOn=!mirrorOn;OPT.rearview=mirrorOn;saveOpts();}}
   // right stick aims relative to the camera (screen up = straight ahead)
   pad.aim=OPT.pad!=='classic'&&hyp(pad.rx,pad.ry)>0.35;if(pad.aim)pad.aimA=cam.yaw+Math.atan2(pad.rx,-pad.ry);
   // rumble with crashes and explosions

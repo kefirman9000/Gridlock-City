@@ -1,4 +1,4 @@
 {
-  "version": "5.3.2",
-  "notes": "Diagonal avenues get neighbourhood-matching sidewalks with no asphalt slivers, the cathedral's square is paved (no pond under its front), and cars can splash through park ponds and fountains."
+  "version": "5.3.3",
+  "notes": "The rear-view mirror is now off by default; turn it on in Options or with N."
 }

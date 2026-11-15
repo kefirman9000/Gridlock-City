@@ -1209,7 +1209,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
 }
 // ---------- rear-view mirror: the same world pass, run into a small buffer looking backward ----------
 const DEATH_T=3.4;let fadeIn=0,fadeLast=0;
-let MIRROR=false,mirrorOn=true,MIRH=0;try{mirrorOn=localStorage.getItem('gc_mirror')!=='0'}catch(_){}
+let MIRROR=false,mirrorOn=false,MIRH=0;
 const MWm=176,MHm=46,mirC=document.createElement('canvas'),mirX=mirC.getContext('2d'),mirG=document.createElement('canvas'),mirGX=mirG.getContext('2d');
 mirC.width=MWm;mirC.height=MHm;const mirImg=mirX.createImageData(MWm,MHm),mirBuf=new Uint32Array(mirImg.data.buffer);
 function mirrorShow(){return mirrorOn&&!!player.car&&!player.car.wreck&&!player.car.t.heli&&game.state==='play'&&!kd.KeyC&&!tbtn.look.on;}

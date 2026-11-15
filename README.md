@@ -20,7 +20,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 | C / middle mouse | LOOK | Hold to look behind |
 | Q / E | | On foot: previous / next weapon. In a car: look left / right (both: look behind); click while looking for a drive-by out that side |
 | V | | Camera view: close, normal, far, high |
-| N | | Rear-view mirror on/off |
+| N | | Rear-view mirror on/off (off by default) |
 | Mouse wheel | GUN | Switch weapon (fists are always there) |
 | B | | Set off a car bomb |
 | R | RADIO | Change radio station |
@@ -30,6 +30,9 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 | 1-9 / arrows + Enter | Tap | Pick a dialog answer |
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
+
+## What's new in v5.3.3
+- **No mirror by default:** the rear-view mirror box no longer appears while you drive unless you turn it on (Options → Rear-view mirror while driving, or N).
 
 ## What's new in v5.3.2
 - **Tidier diagonal avenues:** their sidewalks use the same paving as the neighbourhood around them (brick in the Lotus Quarter, granite uptown and so on) and run right up to the buildings, with no slivers of bare asphalt alongside.
