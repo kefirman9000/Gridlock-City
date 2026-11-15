@@ -31,6 +31,11 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.3.2
+- **Tidier diagonal avenues:** their sidewalks use the same paving as the neighbourhood around them (brick in the Lotus Quarter, granite uptown and so on) and run right up to the buildings, with no slivers of bare asphalt alongside.
+- **The cathedral square:** the old park pond no longer pokes out from under the cathedral's front; the block is paved as a church square.
+- **Splash through ponds and fountains:** cars can drive through park ponds and plaza fountains (slowly, throwing up spray). The river and the sea are still deep water.
+
 ## What's new in v5.3.1
 - **Floatier jumps:** off a ramp your car flies higher and hangs in the air for almost twice as long, and you can twist it mid-air with the steering. Jumping on foot goes a little higher too. Stunt bonuses are scaled so the longer air doesn't flood you with cash. Options → Jumps switches back to REALISTIC.
 

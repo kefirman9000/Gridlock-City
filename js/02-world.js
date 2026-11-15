@@ -24,6 +24,10 @@ function newAI(mode,dir,k,cruise){return{mode,dir,k,lastI:-1,turn:-1,sw:0,ti:0,t
 function laneFromHere(c){const ix=clamp(Math.round((c.x/T-2)/P),0,NB),iy=clamp(Math.round((c.y/T-2)/P),0,NB);let best=-1,bs=-9;
   for(let d=0;d<4;d++)if(linkOK(ix,iy,d)){const sc=Math.cos(angDiff(d*PI/2,c.a));if(sc>bs){bs=sc;best=d;}}
   if(best<0){acquireLane(c);return;}const cr=c.ai&&c.ai.cruise;c.ai=newAI('lane',best,(best===0||best===2)?iy:ix,cr);c.ai.lastI=ix*100+iy;}
+// park ponds and plaza fountains are shallow: cars can splash through them (slowly); the river and the sea are not
+function shallowTile(tx,ty){if(tx<0||ty<0||tx>=W||ty>=W)return false;const ti=ty*W+tx;if(map[ti]!==WATER||RIV[ti])return false;
+  const k=BLOCKK[Math.floor(ty/P)*NB+Math.floor(tx/P)];return k==='park'||k==='cpark'||k==='plaza'||k==='res';}
+const shallowAt=(x,y)=>shallowTile(Math.floor(x/T),Math.floor(y/T));
 function acquireLane(c){
   const d=((Math.round(c.a/(PI/2))%4)+4)%4;
   const k=(d===0||d===2)?clamp(Math.round((c.y/T-2)/P),0,NB):clamp(Math.round((c.x/T-2)/P),0,NB);
@@ -261,7 +265,7 @@ function carTiles(c){if(c.t.heli&&(c.alt||0)>30)return;
     const ca=Math.cos(c.a),sa=Math.sin(c.a);let any=false;
     for(const q of CARPTS){
       const rx=ca*q[0]*hl-sa*q[1]*hw,ry=sa*q[0]*hl+ca*q[1]*hw,px=c.x+rx,py=c.y+ry,tx=Math.floor(px/T),ty=Math.floor(py/T);
-      const SOL=c.t.boat?boatSolid:(x,y)=>(isSolid(tileAt(x,y))&&!garageSkip(c,x,y))||shopDoorTile(x,y);
+      const SOL=c.t.boat?boatSolid:(x,y)=>(isSolid(tileAt(x,y))&&!garageSkip(c,x,y)&&!shallowTile(x,y))||shopDoorTile(x,y);
       if(!SOL(tx,ty))continue;
       const cands=[[px-tx*T,-1,0],[tx*T+T-px,1,0],[py-ty*T,0,-1],[ty*T+T-py,0,1]].sort((a,b)=>a[0]-b[0]);
       let ch=cands[0];for(const k of cands)if(!SOL(tx+k[1],ty+k[2])){ch=k;break;}

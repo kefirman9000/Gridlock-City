@@ -1,4 +1,4 @@
 {
-  "version": "5.3.1",
-  "notes": "Floatier jumps: cars hang in the air longer off ramps and you can twist them mid-air with the steering; on-foot jumps go a little higher. Options \u2192 Jumps switches back to realistic."
+  "version": "5.3.2",
+  "notes": "Diagonal avenues get neighbourhood-matching sidewalks with no asphalt slivers, the cathedral's square is paved (no pond under its front), and cars can splash through park ponds and fountains."
 }

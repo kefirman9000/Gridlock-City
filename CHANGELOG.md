@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.3.2
+- Diagonal avenue sidewalks match the neighbourhood's paving and cover the asphalt slivers beside them; the cathedral block is a paved square; cars can drive through park ponds and fountains.
+
 ## v5.3.1
 - Floatier jumps: lower gravity for your car in the air, higher launches off ramps, mid-air steering twist, a higher on-foot jump; Options → Jumps restores realistic jumps.
 

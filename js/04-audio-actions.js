@@ -211,7 +211,10 @@ function carRamps(c){
 }
 function carAir(c,dt){
   if(!(c.air>0)){ // on the ground: ride the ramp and let the suspension settle after a landing
-    c.az=lerp(c.az||0,c.rampZ||0,Math.min(1,dt*18));c.pitch=lerp(c.pitch||0,c.rampP||0,Math.min(1,dt*7));return;}
+    c.az=lerp(c.az||0,c.rampZ||0,Math.min(1,dt*18));c.pitch=lerp(c.pitch||0,c.rampP||0,Math.min(1,dt*7));
+    if(!c.t.boat&&!c.t.heli&&shallowAt(c.x,c.y)){const k=Math.pow(0.45,dt),sp=hyp(c.vx,c.vy);c.vx*=k;c.vy*=k;
+      if(sp>30&&nearPlayer(c.x,c.y,700)&&R()<dt*sp*0.08)for(let i=0;i<3;i++)puff(c.x+rr(-14,14),c.y+rr(-14,14),c.vx*0.2+rr(-90,90),c.vy*0.2+rr(-90,90),rr(.3,.6),rr(4,8),'#d8ecff','smoke');}
+    return;}
   // floaty jumps (default): the player's car falls slower and you can twist it in the air with the steering
   const fl=FLOATY()&&c===player.car;c.airT+=dt;c.vz-=(fl?(c.vz>0?520:620):900)*dt;c.az+=c.vz*dt;
   if(fl){let st=0;if(kd.KeyA||kd.ArrowLeft)st-=1;if(kd.KeyD||kd.ArrowRight)st+=1;if(pad.on&&pad.lx)st=clamp(pad.lx*1.2,-1,1);if(joy.active)st=clamp(joy.x*1.4,-1,1);

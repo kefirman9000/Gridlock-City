@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='5.3.1',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.3.2',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -88,8 +88,16 @@ function diagPix(i,xi,yi,nz,tx,ty){const d=DIAGS[i],[t,sd]=diagRel(d,xi,yi),a=Ma
       else if(eg<=4){}
       else if(a<2.4&&a>0.6){r=168;g=137;b=58;}else if(Math.abs(a-28)<1&&(((t/18)|0)&1)){r=200;g=200;b=194;}else if(a>DHW-3){r=85;g=87;b=92;}}
     return[r,g,b];}
-  if(a<DSW){if(a<DHW+3)return[150,147,140];const c=140+nz;return[c,c-3,c-10];}
+  // the avenue's sidewalks use the same paving as the neighbourhood's own sidewalks, and run on over the bits of
+  // block the avenue cut into road (so there are no jagged asphalt slivers beside it)
+  if(a<DSW||(a<DSW+44&&map[ty*W+tx]===ROAD))return diagWalk(tx,ty,xi,yi,nz,a);
   return null;}
+function diagWalk(tx,ty,xi,yi,nz,a){const zt=ZT[ty*W+tx],u=xi&31,v=yi&31;
+  if(a<DHW+3)return[150,147,140]; // the curb
+  if(zt===3){if((v&7)===0||((u+((v>>3)&1)*8)&15)===0)return[98,82,74];return[138+nz*2,80+nz,62+nz];}
+  if(zt===2){if(u===0||v===0)return[120,120,118];return[148+nz,148+nz,144+nz];}
+  if(zt===0){if((u&15)===0||(v&15)===0)return[98,98,104];return[122+nz,122+nz,128+nz];}
+  if(u===0||v===0)return[82,78,72];return[104+nz,99+nz,92+nz];}
 function diagAvenues(){const sp=new Set();for(const k in SPECIAL)sp.add(k);
   const isSpecialTile=(tx,ty)=>{const bx=Math.floor(tx/P),by=Math.floor(ty/P);return sp.has(bx+','+by)&&tx%P>=4&&ty%P>=4;};
   DIAGS.forEach((d,i)=>{const x0=Math.floor(Math.min(d.ax,d.bx)/T)-4,x1=Math.ceil(Math.max(d.ax,d.bx)/T)+4,y0=Math.floor(Math.min(d.ay,d.by)/T)-4,y1=Math.ceil(Math.max(d.ay,d.by)/T)+4;

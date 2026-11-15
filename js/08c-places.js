@@ -317,6 +317,9 @@ const CATH=(()=>{let best=null,bd=1e18;
   if(!best)return null;const{x0,y0}=best,bxp=(x0+1)*T,byp=y0*T,w=6*T,h=3*T;
   clearRect(bxp-4,byp-4,bxp+w+4,byp+h+4);
   for(let ty=y0;ty<y0+3;ty++)for(let tx=x0+1;tx<x0+7;tx++)PARKT[ty*W+tx]=0;
+  // the old park's pond would sit half-under the west front: pave the whole block as a church square instead
+  for(let ty=y0-1;ty<y0+9;ty++)for(let tx=x0-1;tx<x0+9;tx++){const ti=ty*W+tx;if(map[ti]===WATER&&!RIV[ti]){map[ti]=WALK;PARKT[ti]=3;}}
+  for(let i=props.length-1;i>=0;i--){const o=props[i];if(o.x>(x0-1)*T&&o.x<(x0+9)*T&&o.y>(y0-1)*T&&o.y<(y0+9)*T&&/pond|lily|duck|reed/.test(o.k||''))props.splice(i,1);}
   const b=lateBuilding({x:bxp,y:byp,w,h,hg:2.4,col:'#aaa290',st:'cath',kind:'cath'});
   props.push({x:bxp-10,y:byp+h/2-26,k:'bench',a:PI/2},{x:bxp-10,y:byp+h/2+26,k:'bench',a:PI/2});
   return{b,door:{x:bxp-8,y:byp+h/2},tx:bxp+24,ty:byp+h/2};})();
