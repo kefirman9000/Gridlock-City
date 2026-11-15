@@ -232,12 +232,16 @@ function drawHeli3(h,fg){
   for(let i=0;i<2;i++){const ra=h.rot+i*PI/2,rc=Math.cos(ra),rs=Math.sin(ra);if(proj(h.x+rc*30,h.y+rs*30,16)){const x1=PX,y1=PY;if(proj(h.x-rc*30,h.y-rs*30,16)){L3.strokeStyle='rgba(15,15,18,.7)';L3.lineWidth=1;L3.beginPath();L3.moveTo(x1,y1);L3.lineTo(PX,PY);L3.stroke();}}}
   if(proj(h.x-ca*36,h.y-sa*36,19))glow(PX,PY,2*PK,Math.floor(game.t*3)%2?'#ff3030':'#3a7bff',0.8);
   // searchlight beam
-  if(h.fall<=0&&LIGHTK>0.1){const tg=player.car||player;if(proj(h.x,h.y,-2)){const x0=PX,y0=PY;const gz=GH(h.x,h.y);ZOFF=GH(tg.x,tg.y);
+  if(h.fall<=0&&LIGHTK>0.1){const tg=player.car||player;const hz=ZOFF;if(proj(h.x,h.y,-2)){const x0=PX,y0=PY;const gz=GH(h.x,h.y);ZOFF=GH(tg.x,tg.y);
+    // v5.28: no depth buffer, so the shaft and the pool used to paint straight over buildings. The shaft is only drawn when nothing
+    // stands between the heli and you, and the pool is cut short wherever it would run up into a building.
+    let clear=true;for(let k=1;k<12&&clear;k++){const t=k/12,bx=lerp(h.x,tg.x,t),by=lerp(h.y,tg.y,t),b=bldAt(bx,by);if(b&&roofAbs(b,bx,by)>lerp(hz,ZOFF,t))clear=false;}
+    const poolR=t=>{let r=R0;const c=Math.cos(t),s=Math.sin(t);while(r>6&&bldAt(tg.x+c*r,tg.y+s*r))r-=4;return r;};
     // the beam: from the heli down to a pool of light around you. Its foot is measured across the view (it used to be measured
     // along the world x axis, so looking along x squashed it into a hard line that cut across the screen)
     const rx=-Math.sin(cam.yaw),ry=Math.cos(cam.yaw),R0=28;
     if(x0>-LW&&x0<LW*2&&y0>-LH&&proj(tg.x-rx*R0,tg.y-ry*R0,0)){const xa=PX,ya=PY;if(proj(tg.x+rx*R0,tg.y+ry*R0,0)){const xb=PX,yb=PY;
-      L3.globalCompositeOperation='lighter';L3.globalAlpha=0.10*LIGHTK;L3.fillStyle='#fff6d0';L3.beginPath();L3.moveTo(x0-1,y0);L3.lineTo(x0+1,y0);L3.lineTo(xb,yb);L3.lineTo(xa,ya);L3.closePath();L3.fill();
-      L3.globalAlpha=0.16*LIGHTK;L3.beginPath();let f2=true;for(let i=0;i<16;i++){const t=i/16*TAU;if(!proj(tg.x+Math.cos(t)*R0,tg.y+Math.sin(t)*R0,0.5))continue;if(f2){L3.moveTo(PX,PY);f2=false;}else L3.lineTo(PX,PY);}
+      L3.globalCompositeOperation='lighter';L3.globalAlpha=0.10*LIGHTK;L3.fillStyle='#fff6d0';if(clear){L3.beginPath();L3.moveTo(x0-1,y0);L3.lineTo(x0+1,y0);L3.lineTo(xb,yb);L3.lineTo(xa,ya);L3.closePath();L3.fill();}
+      L3.globalAlpha=0.16*LIGHTK;L3.beginPath();let f2=true;for(let i=0;i<16;i++){const t=i/16*TAU,r=poolR(t);if(!proj(tg.x+Math.cos(t)*r,tg.y+Math.sin(t)*r,0.5))continue;if(f2){L3.moveTo(PX,PY);f2=false;}else L3.lineTo(PX,PY);}
       L3.closePath();L3.fill();L3.globalAlpha=1;L3.globalCompositeOperation='source-over';}}}}
 }

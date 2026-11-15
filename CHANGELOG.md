@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.28.0
+- 08v drawHeli3: searchlight shaft skipped when a building between heli and target is taller than the beam (sampled 12 times along it); pool radius shrunk per angle until outside bldAt.
+- 08-render drawPart3: smoke puffs are 4 ellipses filled as one path (no alpha stacking).
+
 ## v5.27.0
 - ETUN (08h): portal pads on the river edge at street row 12 (map tiles re-set to ROAD, HMAP levelled, `tportal` prop); the tube is an off-map ROOMLIST room (`etun`, roomTile wrapped) south of the subway with a `tun:true` RING path (cars are removed at its ends in aiRing). `etunTick` (chained on g3Tick) moves the player/car between portals and the tube; closed until cityOpen(); districtAt and extrasMap wrapped.
 - Car slope tilt: `slopeTick` (08h) sets c.tp/c.tr from GH under the wheels for cars within 900 px of the player; 08v adds c.tp to PIT and sets ROL (new, roll about the long axis in oboxP).
