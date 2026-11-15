@@ -94,7 +94,7 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     const cx2=c.x-ca*hl*0.12,cy2=c.y-sa*hl*0.12;
     const spoil=()=>{if(!U.spoiler||c.wreck)return;const sx=c.x-ca*hl*0.86,sy=c.y-sa*hl*0.86;for(const e of[-1,1])obox(sx-sa*hw*0.6*e,sy+ca*hw*0.6*e,a,0.8,0.8,bz,bz+4,[30,30,34],null,fg);obox(sx,sy,a,2.4,hw*0.95,bz+4,bz+5.2,col,mixA(col,[255,255,255],0.15),fg);};
     if(front)spoil();
-    obox(cx2,cy2,a,hl*(low?0.4:0.48),hw*0.84,bz,cz,c.wreck?[20,20,20]:U.tint?[24,28,34]:GLASS,roof,fg);
+    obox(cx2,cy2,a,hl*(low?0.4:0.48),hw*0.84,bz,cz,c.wreck?[20,20,20]:c.dmg&&(c.dmg.f+c.dmg.r+c.dmg.L+c.dmg.R)>LOOSE.lose*1.3?mixA(U.tint?[24,28,34]:GLASS,[196,204,212],0.42):U.tint?[24,28,34]:GLASS,roof,fg);
     if(!front)spoil();
     if(!c.wreck){
       if(t.police){const on=(c.ai&&(c.ai.mode==='chase'||c.ai.pursuit))||(c.driver==='player'&&heat>0),ph=Math.floor(game.t*8)%2;

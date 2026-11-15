@@ -2,6 +2,15 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.15.0
+- Buildings cast shadows on the streets that follow the sun: long in the morning and evening, short at noon, faint under cloud and gone at night.
+- Wet roads at night: a soft, faint smear of light from lamps, headlights, tail lights and neon. The old hard stripes under every light are gone.
+- Windows light up through the evening and go dark one by one after midnight; only a few are on before dawn.
+- Surf rolls in on the beaches and the sand is darker where it's wet. Lightning bolts flash across the sky in storms. Boats leave a white wake.
+- People carry umbrellas in the rain, walk along on their phones, and smoke in doorways.
+- Neon signs on shopfronts (bars, diners, hotels, pawn shops, noodle places...), glowing at night, a few flickering.
+- Badly damaged cars have cracked windows, and a hard hit leaves the front or back end crumpled lower.
+
 ## v5.14.3
 - Crooked side streets and avenues stop at the edge of the street they meet, and the street draws its own surface, lines and crossings there (the diagonal's road and paint used to run on into the other road). Their centre lines are wide enough to stay a clean line at an angle (they broke up into a chain of dots), and side streets lose the stray zebra stripes.
 - The beltway and its spurs are graded like real roads: no steeper than about 1 in 8, with each spur an even climb from the street to the beltway (some were steep ramps).

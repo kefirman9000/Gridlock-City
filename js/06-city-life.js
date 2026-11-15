@@ -815,7 +815,8 @@ function updateWeatherFx(dt){steamT-=dt;
     for(let j=-14;j<=14;j++)for(let i=-14;i<=14;i++){const tx=tx0+i,ty=ty0+j;if(tx<0||ty<0||tx>=W||ty>=W)continue;const ti=ty*W+tx;if(map[ti]!==ROAD||DIAGT[ti]||TILEH[ti]%29!==0)continue;
       puff((tx+.5)*T+rr(-3,3),(ty+.5)*T+rr(-3,3),rr(-8,8),rr(-8,8),rr(1.4,2.2),rr(5,8),'#e8ecf0','smoke');}}}}
 // a reflection under a light on wet ground: a soft streak below where the light meets the road
-function wetGlint(gx,gy,ly,col,a){if(rain<0.3||LIGHTK<0.1)return;const len=Math.min(40,Math.max(4,(gy-ly)*0.55));L3.globalCompositeOperation='lighter';L3.fillStyle=col;
+// (retired in v5.15: hard stripes under every light looked fake; the ground raster now draws soft reflections itself, see REFL)
+function wetGlint(gx,gy,ly,col,a){return;if(rain<0.3||LIGHTK<0.1)return;const len=Math.min(40,Math.max(4,(gy-ly)*0.55));L3.globalCompositeOperation='lighter';L3.fillStyle=col;
   for(let k=0;k<4;k++){L3.globalAlpha=a*rain*LIGHTK*(1-k/4)*0.35;L3.fillRect(R2(gx-1.5+k*0.3),R2(gy+k*len/4),3,Math.max(1,R2(len/4)));}L3.globalAlpha=1;L3.globalCompositeOperation='source-over';}
 // ---------- the countryside: hay bales, a windmill and dirt jumps on the farm roads ----------
 function initCountry(){{const ys=[3,9,15].map(iy=>(iy*P+2)*T);

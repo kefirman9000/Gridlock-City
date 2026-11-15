@@ -335,6 +335,15 @@ for(const b of buildings){const h=hash(b.id*7+3,b.id*13+11);
 // ---- a climbable city: roof ladders run from the sidewalk up to the roof, and every flat roof can be walked on ----
 const BMAP=new Int32Array(W*W).fill(-1);
 buildings.forEach((b,i)=>{for(let ty=Math.floor(b.y/T);ty<Math.ceil((b.y+b.h)/T);ty++)for(let tx=Math.floor(b.x/T);tx<Math.ceil((b.x+b.w)/T);tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)BMAP[ty*W+tx]=i;});
+// v5.15 look: sun shadows on the ground, night reflections on wet roads, windows that light and go dark with the hour,
+// a lightning bolt in the sky (all set up each frame by lookPrep() in 08g-world.js)
+let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null;
+const SHD=[10,22,38,60,90,130,180,240,310,400];
+// cached on an 8-unit grid (0 = not worked out yet, 1 = in sun, 2 = in shade); lookPrep() clears it when the sun has moved
+const SHCW=W*4,SHC=new Uint8Array(SHCW*SHCW);
+function sunShade(wx,wy){const ci=((wy>>3)*SHCW+(wx>>3));let v=SHC[ci];if(!v){v=sunShade0(((wx>>3)<<3)+4,((wy>>3)<<3)+4)<1?2:1;SHC[ci]=v;}return v===2?SUNSH.shade:1;}
+function sunShade0(wx,wy){for(let i=0;i<SHD.length;i++){const d=SHD[i],need=d*SUNSH.tan;if(need>760)break;const b=bldAt(wx+SUNSH.dx*d,wy+SUNSH.dy*d);
+  if(b){const H=(b.tier?b.tier.hg2:b.hg)*BH;if(H>need)return SUNSH.shade;}}return 1;}
 function bldAt(x,y){const tx=Math.floor(x/T),ty=Math.floor(y/T);if(tx<0||ty<0||tx>=W||ty>=W)return null;const i=BMAP[ty*W+tx];if(i<0)return null;const b=buildings[i];return x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h?b:null;}
 function roofAbs(b,x,y){if(b.st==='house')return b.base+b.hg*BH+8;const t=b.tier;if(t&&x>b.x+t.ins&&x<b.x+b.w-t.ins&&y>b.y+t.ins&&y<b.y+b.h-t.ins)return b.base+t.hg2*BH;return b.base+b.hg*BH;}
 // wall ends for each face, in the order walls() draws them: 0 north, 1 east, 2 south, 3 west
@@ -522,6 +531,7 @@ function renderGround(heads){
       const d=DEC[(yi>>1)*DW+(xi>>1)];
       if(d){if(d===1){r*=.42;g*=.42;b*=.42;}else if(d===2){r=104+nz*3;g=10;b=12;}else if(d===3){r*=.55;g*=.53;b*=.5;}else{r*=.22;g*=.22;b*=.22;}}
       const gi=(((yi+HM)/HS)|0)*HN+(((xi+HM)/HS)|0),sh=0.88+0.12*SHMAP[gi];r*=sh;g*=sh;b*=sh;
+      if(SUNSH.on&&t!==2){const s=sunShade(wx,wy);if(s<1){r*=s;g*=s;b*=s;}}
       let lr=ar,lg=ag,lb=ab;
       if(snk>0.02&&t!==8){const k=snk*(t===0?0.22:t===2?0.1:0.72);r+=(236-r)*k;g+=(240-g)*k;b+=(246-b)*k;}
       if(flk>0.02&&hh<9&&(t===0||t===1||t===5)&&!dp){const k=flk*clamp((9-hh)/6,0,1)*0.65;r+=(40-r)*k;g+=(74-g)*k;b+=(100-b)*k;if(((((xi*0.5+yi*1.3)|0)+gt*2)&63)<2){r+=40*k;g+=50*k;b+=50*k;}}
@@ -529,9 +539,17 @@ function renderGround(heads){
         for(let i=0;i<nh;i++){const hd=heads[i],ex=wx-hd[0],ey=wy-hd[1],fd=ex*hd[2]+ey*hd[3];if(fd<=0||fd>hd[4])continue;const ld=Math.abs(-ex*hd[3]+ey*hd[2]),wd=fd*0.42+8;if(ld<wd)li+=(1-fd/hd[4])*(1-ld/wd)*1.3;}
         if(li>0){if(li>1.4)li=1.4;li*=lk*(1+pw*1.2);lr+=li;lg+=li*0.8;lb+=li*0.52;}}
       r*=lr;g*=lg;b*=lb;
+      // wet road at night: lamps, headlights and tail lights stretch into streaks toward the camera
+      // soft and short: a faint smear that grows toward the light and fades at its edges, like light on a wet street
+      if(WETK>0.15&&lk>0.1&&(t===0||dp)&&REFL.length){for(let i=0;i<REFL.length;i++){const q=REFL[i],ex=wx-CX,ey=wy-CY,al=ex*q.ux+ey*q.uy,u=(al/q.L-0.6)/0.38;if(u<=0||u>1.04)continue;
+          const lat=Math.abs(-ex*q.uy+ey*q.ux),w=2.5+al*0.022;if(lat>=w)continue;const e=1-lat/w,k=e*e*Math.min(1,u)*Math.min(1,u)*q.k*WETK*lk*0.32;r+=q.r*k;g+=q.g*k;b+=q.b*k;}}
     }else{
       const xi=wx|0,yi=wy|0,gi=(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0),tt=TTYPE[gi],nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
-      if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
+      if(tt===1&&COAST.D&&!water){const dd=COAST.D[gi];if(dd<3){const w=Math.sin(game.t*1.6-dd*2.1+(wx+wy)*0.003);r=32+nz;g=84+nz*2;b=126+nz*2;
+          // surf: lines of white water rolling in to the shore
+          if(w>0.3||dd<0.9){const k=Math.min(1,(dd<0.9?0.55:0)+(w-0.3)*1.4)*(1-dd/3);r+=(232-r)*k;g+=(240-g)*k;b+=(242-b)*k;}
+          const fz=Math.min(0.5,f/1300);r+=(fr-r)*fz;g+=(fgc-g)*fz;b+=(fb-b)*fz;}else{r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}}
+      else if(tt===1||water){r=32+nz;g=84+nz*2;b=126+nz*2;if(!flat&&(((((wx*0.5+wy*1.3)|0)+gt*2)&63)<3)){r+=60;g+=70;b+=60;}const sw=Math.sin(wx*0.03+wy*0.02+game.t*1.1)*7,fz=Math.min(0.5,f/1300);r+=sw+(fr-r)*fz;g+=sw+(fgc-g)*fz;b+=sw+(fb-b)*fz;}
       else if(tt===10){const sh=SHMAP[gi],hw=RING.hw,ia=RDI[gi],ib=RDI2[gi];let al=1e9,s=0,main=false,onAny=false;
         // the nearer road decides, but a road's tarmac always wins over another road's shoulder (no grey wedges at junctions)
         if(ia>=0){const e=RDP[ia],d=roadLat(e,wx,wy);al=d;s=RLS;main=e.main;}
@@ -542,7 +560,7 @@ function renderGround(heads){
         else if(al<hw+4){r=112+nz;g=106+nz;b=92+nz;}
         else{const c=ROLD[gi]||0xff406a3a;r=(c&255)+nz*2-7;g=((c>>8)&255)+nz*2-7;b=((c>>16)&255)+nz-3;}
         r*=sh;g*=sh;b*=sh;}
-      else{const c=TCOL[gi]||0xff406a3a,sh=SHMAP[gi];r=((c&255)+nz*2-7)*sh;g=(((c>>8)&255)+nz*2-7)*sh;b=(((c>>16)&255)+nz-3)*sh;
+      else{const c=TCOL[gi]||0xff406a3a,sh=SHMAP[gi]*(tt===2&&COAST.D&&COAST.D[gi]<1.6?0.78:1);r=((c&255)+nz*2-7)*sh;g=(((c>>8)&255)+nz*2-7)*sh;b=(((c>>16)&255)+nz-3)*sh;
         if(tt===7&&(xi&3)===0){r*=0.85;g*=0.85;b*=0.85;}if(snk>0.02){const k=snk*0.8;r+=(236-r)*k;g+=(240-g)*k;b+=(246-b)*k;}}
       r*=ar;g*=ag;b*=ab;
     }
@@ -587,6 +605,8 @@ function drawSky(top,bot,lightLvl,warm0){
    for(const c of CLOUDS){const d=angDiff(c[0]+game.t*0.003,cam.yaw);if(Math.abs(d)>1.2)continue;const x=HW+Math.tan(d)*FOC,y=HOR*(1-c[1])+4,w=c[2]*(1+rain*0.5),hh=c[3];
      for(const[ox,oy,sx,sy]of[[0,0,1,1],[-0.45,0.25,0.6,0.7],[0.45,0.2,0.65,0.75]]){const rx=w*sx,ry=hh*sy;for(let yy=-ry;yy<=ry;yy++){const ww=Math.round(rx*Math.sqrt(Math.max(0,1-(yy*yy)/(ry*ry))));L3.fillRect(R2(x+ox*w-ww),R2(y+oy*hh+yy),ww*2,1);}}}
    L3.globalAlpha=1;}
+  if(BOLT&&lightning>0.45){const d=angDiff(BOLT.a,cam.yaw);if(Math.abs(d)<1.1){const x0=HW+Math.tan(d)*FOC;L3.strokeStyle=`rgba(235,240,255,${Math.min(1,lightning)})`;L3.lineWidth=1;L3.beginPath();
+    let px=x0,py=HOR*0.12;L3.moveTo(px,py);for(const[dx,dy]of BOLT.p){px+=dx;py+=dy;L3.lineTo(px,Math.min(py,HOR));}L3.stroke();}}
   // far mountains toward the north and west
   {L3.fillStyle=rgbS(mixA(FOGC,[60,70,90],0.35));for(let x=0;x<LW;x+=2){const ang=cam.yaw+Math.atan((x-HW)/FOC),w=Math.max(0,-Math.sin(ang))+Math.max(0,-Math.cos(ang))*0.8;if(w<=0.02)continue;const hh=w*(16+8*Math.sin(ang*5+1)+5*Math.sin(ang*13)+3*Math.sin(ang*29));if(hh>0)L3.fillRect(x,R2(HOR-hh),2,R2(hh)+1);}}
   // distant skyline
@@ -682,7 +702,7 @@ function wall(ax,ay,bx,by,z0,z1,b,k,fg,det,gr){
     const nm=Math.max(1,Math.floor(len/16));L3.beginPath();for(let i=1;i<nm;i++){const sx=i*len/nm,pa=ax+dx*sx,pb=ay+dy*sx;quadP(pa,pb,z0,pa+dx*1.3,pb+dy*1.3,z0,pa+dx*1.3,pb+dy*1.3,z1,pa,pb,z1);}L3.fillStyle=lit(b.rgb,k*0.6,fg);L3.fill();
     // a soft band of sky reflection
     if(!litOn){const zr=z0+H*0.55;quadP;L3.beginPath();quadP(ax,ay,zr,bx,by,zr+H*0.08,bx,by,zr+H*0.16,ax,ay,zr+H*0.08);L3.fillStyle=lit(mixA(b.rgb,[230,240,250],0.45),k,fg);L3.globalAlpha=0.35;L3.fill();L3.globalAlpha=1;}
-    if(litOn){L3.beginPath();let any=false;for(let fl=0;fl<Math.min(nf,18);fl++)for(let i=0;i<nm;i++){if((hash(b.id*13+i,fl*5+(ax|0))&7)>=3)continue;const s0=i*len/nm+1.3,s1=(i+1)*len/nm,za=z0+fl*fh+fh*0.24,zb=z0+(fl+1)*fh-0.5;quadP(ax+dx*s0,ay+dy*s0,za,ax+dx*s1,ay+dy*s1,za,ax+dx*s1,ay+dy*s1,zb,ax+dx*s0,ay+dy*s0,zb);any=true;}if(any){L3.fillStyle=lit(WARM,0.5+0.4*LIGHTK,fg,true);L3.fill();}
+    if(litOn){L3.beginPath();let any=false;for(let fl=0;fl<Math.min(nf,18);fl++)for(let i=0;i<nm;i++){if((hash(b.id*13+i,fl*5+(ax|0))&255)>=WINLIT)continue;const s0=i*len/nm+1.3,s1=(i+1)*len/nm,za=z0+fl*fh+fh*0.24,zb=z0+(fl+1)*fh-0.5;quadP(ax+dx*s0,ay+dy*s0,za,ax+dx*s1,ay+dy*s1,za,ax+dx*s1,ay+dy*s1,zb,ax+dx*s0,ay+dy*s0,zb);any=true;}if(any){L3.fillStyle=lit(WARM,0.5+0.4*LIGHTK,fg,true);L3.fill();}
       L3.beginPath();any=false;for(let fl=0;fl<Math.min(nf,18);fl++)for(let i=0;i<nm;i++){if((hash(b.id*13+i,fl*5+(ax|0))&7)!==3)continue;const s0=i*len/nm+1.3,s1=(i+1)*len/nm,za=z0+fl*fh+fh*0.24,zb=z0+(fl+1)*fh-0.5;quadP(ax+dx*s0,ay+dy*s0,za,ax+dx*s1,ay+dy*s1,za,ax+dx*s1,ay+dy*s1,zb,ax+dx*s0,ay+dy*s0,zb);any=true;}if(any){L3.fillStyle=lit(COOLW,0.5+0.4*LIGHTK,fg,true);L3.fill();}}
     if(gr){quad(ax,ay,0,bx,by,0,bx,by,fh*0.8,ax,ay,fh*0.8,litOn?lit([255,226,170],0.7,fg,true):lit([30,38,48],1,fg));}
     return;

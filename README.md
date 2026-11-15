@@ -31,15 +31,14 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.15
+- **Building shadows** that follow the sun, **soft wet-road reflections**, **windows** that light up and go dark through the night.
+- **Surf**, **lightning bolts**, **boat wakes**, **umbrellas, phones and smokers**, **neon shop signs**, **cracked glass and crumpled cars**.
+
 ## What's new in v5.14 (patches)
 - **Traffic on the beltway, spurs and farm roads**, always on the road; smooth road edges and clean junctions; graded roads.
 - Crooked side streets stop cleanly at the streets they meet.
 - **ERROR LOG** in the pause menu (copy or download it to report a problem), and the game no longer freezes on an error.
-
-## What's new in v5.14
-- **Three new stations:** drum & bass, reggae and house, each with its own DJ.
-- **Better songs** with hooks and sections; **music keeps playing under the voices**; **no dead air or repeated lines**; quieter voices.
-- **Much more to listen to:** new talk-show segments, ads and DJ chatter, and DJs who introduce songs.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

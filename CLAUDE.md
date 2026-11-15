@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js` and `js/08f-gta3.js` between 08 and 09), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js` and `js/08g-world.js` between 08 and 09), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -33,6 +33,10 @@ with an `until` step), busier streets, phone (`TEXTS`, mechanic), completion (`c
 suspension pitch (`c.susp`, added in a `drawCar3` wrapper), grass slowdown, car-fire calls (wraps `updateFire`) and mission times (`STATS.mtime`).
 Since v5.10 also brake/reverse lights (`c.brk`/`c.rev`, drawn in 08v), tire smoke, backfires, grime (`c.dirt`), glass shards (wraps `damageCar`),
 parachutes (`player.chute`, bail out via the `exitCar` wrapper), cop flashlights (in a `drawPed3` wrapper; ZOFF already includes the ped's jz there) and screen glare/streaks (wraps `render`).
+
+`js/08g-world.js` (v5.15): `lookPrep()` sets up the sun (`SUNSH`; shadows are cached in `SHC` and cleared when the sun moves), wet-road reflections (`REFL`, `WETK`)
+and window lights (`WINLIT`) for the renderer each frame; also lightning bolts (`BOLT`), boat wakes, umbrellas/phones/smokers (a `drawPed3` wrapper), neon shop signs
+(a `walls` wrapper; building fields `nsg`/`nsC`/`nsF`, because `b.neon` was already taken) and damage sag. Later v5.15 batches add gameplay and city pieces here too.
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
