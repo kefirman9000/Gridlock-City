@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.5.2
+- Like GTA III / Vice City, you can start story missions, replays, races, RC Wreckers, off-road runs and vigilante/taxi/ambulance/fire duty while wanted, and starting one calls off the chase (stars cleared, cops back to patrol, the chopper heads home). The docks and the safehouse door still want you clean.
+
 ## v5.5.1
 - Fix: at 4 stars the police helicopter flew away from you, got removed at 1,700 units out and respawned somewhere random, over and over. It now circles and searches while you're wanted (a tight orbit at 5+ stars), only leaves once the stars have been gone for a few seconds, and doesn't come straight back after leaving.
 

@@ -586,10 +586,10 @@ function bigMapExtras(P2,icon,kk){
   if(WAYPOINT){const[a,b2]=P2(WAYPOINT.x,WAYPOINT.y);ctx.fillStyle='#ff4fa8';ctx.beginPath();ctx.moveTo(a,b2);ctx.lineTo(a-7,b2-16);ctx.lineTo(a+7,b2-16);ctx.closePath();ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.stroke();}
   ctx.font='600 12px system-ui';ctx.fillStyle='#ddd';ctx.textAlign='center';const g=bigMapGeom();ctx.fillText(touchMode?'Tap the map to set a waypoint · tap outside to close':'Click to set a waypoint · TAB to close',VW/2,g.oy+g.s+14);}
 // ---------- replay finished story missions from the pause menu ----------
-function missionsHTML(){let h='<h2>MISSIONS</h2><p class="note">Replay any story mission you\'ve finished, for half the pay. Lose the cops first.</p>';
+function missionsHTML(){let h='<h2>MISSIONS</h2><p class="note">Replay any story mission you\'ve finished, for half the pay. Starting one calls off any police chase.</p>';
   CHAPTERS.forEach((ch,g)=>{h+=`<p style="color:${GANGS[g].col};margin:10px 0 2px">${BOSSES[g].name}</p>`;ch.forEach((m,i)=>{const done=i<STORY.prog[g];h+=`<div class="opt"><span>${done?m.title:'<i style="color:#666">locked</i>'}</span>${done?`<button data-rep="${g},${i}">REPLAY</button>`:''}</div>`;});});
   if(STORY.fin)h+=`<div class="opt"><span>${FINALE.title}</span><button data-rep="f">REPLAY</button></div>`;return h;}
-function replayMission(key){if(mission||stars()>0||game.state!=='play'){note(stars()>0?'Lose the cops first':'Finish what you\'re doing first');return;}
+function replayMission(key){if(mission||game.state!=='play'){note('Finish what you\'re doing first');return;}
   const def=key==='f'?FINALE:CHAPTERS[+key.split(',')[0]][+key.split(',')[1]],g=key==='f'?0:+key.split(',')[0];togglePause();runMission(def,{sub:'Replay',replay:true});mission.g=g;mission.gang=-1;}
 // ---------- gang wars: start one on a rival block (phone), hold out against three waves ----------
 let GWAR=null;

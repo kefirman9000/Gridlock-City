@@ -518,6 +518,10 @@ const KIND_TYPE={police:'police',swat:'swat',fbi:'fbi',army:'armytruck',tank:'ta
 function npcAim(a,moving){const D10=10*PI/180,D16=16*PI/180;let r;
   if(moving){r=Math.floor(R()*5);if(r===0)r=Math.floor(R()*5);}else r=Math.floor(R()*3);
   return a+[0,-D10,D10,-D16,D16][r];}
+// starting a mission or a job calls the chase off, as in GTA III / Vice City: the cops drop it and go back to patrol
+function missionHeatOff(){if(stars()<=0)return;clearHeat();
+  for(const q of peds)if(q.cop&&q.state==='cop'&&!q.heavy){q.state='walk';q.alert=0;}
+  radioMsg('DISPATCH: We lost the suspect. All units, resume patrol.');note('The cops call off the chase');}
 function clearHeat(){
   heat=0;evadeT=0;seenT=0;
   for(const c of cars)if(c.ai&&c.ai.mode==='chase'){acquireLane(c);}

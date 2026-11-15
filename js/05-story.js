@@ -233,7 +233,7 @@ const FINALE={title:'Gridlock',pay:25000,steps:[
 function storyAvail(g){if(!cityOpen()&&g!==0&&!(g===2&&STORY.prog[2]===0))return null;if(STORY.prog[g]<CHAPTERS[g].length)return CHAPTERS[g][STORY.prog[g]];if(!STORY.fin&&STORY.prog.every((p,i)=>p>=CHAPTERS[i].length)&&g===0)return FINALE;return null;}
 // ---- the mission runner (story missions and races use it) ----
 function runMission(def,opts){
-  sfx('pass');mission={type:'story',def,opts:opts||{},title:def.title,desc:'',timer:9999,max:9999,steps:def.steps,si:-1,gang:-1,tgt:null,ring:false,x:0,y:0,clock:0};
+  missionHeatOff();sfx('pass');mission={type:'story',def,opts:opts||{},title:def.title,desc:'',timer:9999,max:9999,steps:def.steps,si:-1,gang:-1,tgt:null,ring:false,x:0,y:0,clock:0};
   if(opts&&opts.boss&&def.steps[0]&&def.steps[0].k==='talk')cutStart(opts.boss);
   else showBig(def.title.toUpperCase(),opts&&opts.sub||'','#ffcc00',2.6);
   stepNext();}
@@ -327,7 +327,6 @@ function updateBosses(){for(const b of BOSSES){if(dist2(b.pt.x,b.pt.y,player.x,p
     if(!mission&&!DLG.open&&!player.car&&game.state==='play'&&(hasJob?onMk:dist2(p.x,p.y,player.x,player.y)<44*44)&&!b.cool){
       const ch=storyAvail(b.g);b.cool=true;
       if(!ch){say([[b.name,STORY.fin?'Gridlock City is yours. Enjoy it.':!cityOpen()?'I don\'t know you yet. Go see Vince in Old Town, then we\'ll talk.':'Nothing for you today. Check with the others.']]);}
-      else if(stars()>0){say([[b.name,'You\'re bringing heat to my door! Lose the cops first.']]);}
       else{const g=b.g;runMission(ch,{sub:GANGS[g].name,boss:p});mission.g=g;mission.gang=-1;}}
     if(dist2(p.x,p.y,player.x,player.y)>90*90&&dist2(b.mk.x,b.mk.y,player.x,player.y)>60*60)b.cool=false;}}
 
@@ -422,8 +421,7 @@ function updateHorn(dt){const c=player.car,on=!!(c&&(kd.KeyH||tbtn.horn.on)&&gam
   else if(hornT>=0){if(hornT<=0.22&&c&&c.t.tow)towToggle(c);
     else if(hornT<=0.22&&c&&dutyKind(c)){
       if(mission){note('Finish your mission first');}
-      else if(!duty&&stars()>(dutyKind(c)==='vig'?1:0)){note('Lose the cops first');}
-      else{duty=!duty;sfx(duty?'pickup':'door',0.6);note(duty?'On duty':'Off duty');if(!duty){if(fare)endFare(null);if(job)endJob(null);fireJob=null;sideJob=null;}}}
+      else{duty=!duty;if(duty)missionHeatOff();sfx(duty?'pickup':'door',0.6);note(duty?'On duty':'Off duty');if(!duty){if(fare)endFare(null);if(job)endJob(null);fireJob=null;sideJob=null;}}}
     hornT=-1;hornStop();}}
 
 // ---------- fire truck: water cannon and fire calls ----------
@@ -452,11 +450,11 @@ const RACES=[
 const BEST={};
 for(const r of RACES)SIGNS.push({x:r.start.x,y:r.start.y-70,text:'RACE: '+r.name.toUpperCase(),bg:'#151515',fg:'#ffd600',h:40,on:()=>true});
 let raceCool=0;
-function updateRaces(dt){raceCool-=dt;const c=player.car;if(mission||DLG.open||!c||c.t.boat||raceCool>0||stars()>0||game.state!=='play')return;
+function updateRaces(dt){raceCool-=dt;const c=player.car;if(mission||DLG.open||!c||c.t.boat||raceCool>0||game.state!=='play')return;
   for(const r of RACES){if(dist2(r.start.x,r.start.y,c.x,c.y)>70*70||hyp(c.vx,c.vy)>80)continue;raceCool=6;
     if(!cityOpen()&&r.route.some(q=>!WOK(ixPt(q[0],q[1]).x,0))){note('This race crosses the river. It opens when the bridges do');return;}
     say([['Race',r.name+': '+r.route.length+' checkpoints. Gold time '+r.gold+' s.'+(BEST[r.name]?' Your best: '+BEST[r.name].toFixed(1)+' s.':'')]],null,[['RACE',()=>startRace(r)],['NOT NOW',()=>{},'no']]);return;}}
-function startRace(r){const steps=r.route.map((q,i)=>({k:'drive',to:()=>ixPt(q[0],q[1]),car:'any',r:110,desc:'Checkpoint '+(i+1)+' / '+r.route.length}));
+function startRace(r){missionHeatOff();const steps=r.route.map((q,i)=>({k:'drive',to:()=>ixPt(q[0],q[1]),car:'any',r:110,desc:'Checkpoint '+(i+1)+' / '+r.route.length}));
   steps[0].timer=Math.round(r.gold*1.8)+3;runMission({title:r.name,steps},{race:r,sub:'Get ready'});mission.cd=3.2;mission.rivals=[];
   const pc=player.car,ca=Math.cos(pc.a),sa=Math.sin(pc.a);
   [[-1,-70],[1,-70],[1,0]].forEach(([side,back],i)=>{const x=pc.x+ca*back-sa*side*34,y=pc.y+sa*back+ca*side*34;if(solidPx(x,y))return;

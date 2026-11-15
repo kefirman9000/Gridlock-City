@@ -1,4 +1,4 @@
 {
-  "version": "5.5.1",
-  "notes": "Fix: the police helicopter stays on you while you are wanted instead of flying off, vanishing and reappearing somewhere else."
+  "version": "5.5.2",
+  "notes": "Starting a mission or a job while wanted calls off the police chase, like GTA III and Vice City."
 }

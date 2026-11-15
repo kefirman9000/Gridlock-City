@@ -161,7 +161,7 @@ function rcTick(dt){const a=ACT;a.timer-=dt;if(heat>a.heat0)heat=a.heat0;
   else if(a.car&&(a.car.wreck||cars.indexOf(a.car)<0||player.car!==a.car)){a.car=null;a.wait=0.5;}
   if(a.timer<=0&&!(a.wait>0&&a.timer>-1.2)){rcCalm=10;rcHeat=a.heat0;const sc=a.score,best=STATS.rcBest||0,pay=sc*300+(sc>best&&best>0?1000:0);STATS.rcBest=Math.max(best,sc);actEnd();if(pay)addMoney(pay);
     showBig('RC WRECKERS',sc+' wrecked'+(pay?'  ·  +$'+pay.toLocaleString():'')+(sc>best&&best>0?'  ·  NEW BEST':''),'#ff5a4a',3.2);sfx(sc?'pass':'fail');}}
-function rcStart(){ACT={kind:'rc',timer:120,score:0,n:0,car:null,wait:0,home:{x:player.x,y:player.y},heat0:heat};rcSpawn();showBig('RC WRECKERS','Drive under a car and press FIRE to blow it up','#ff5a4a',2.6);}
+function rcStart(){missionHeatOff();ACT={kind:'rc',timer:120,score:0,n:0,car:null,wait:0,home:{x:player.x,y:player.y},heat0:heat};rcSpawn();showBig('RC WRECKERS','Drive under a car and press FIRE to blow it up','#ff5a4a',2.6);}
 // --- off-road runs: timed checkpoints across the fields and hills, in whatever you drove out there ---
 const OFFROAD=[];
 (()=>{const okPt=(x,y)=>{const t=tileAt(Math.floor(x/T),Math.floor(y/T));if(t!==GRASS)return false;for(const[dx,dy] of[[24,0],[-24,0],[0,24],[0,-24]])if(solidPx(x+dx,y+dy))return false;
@@ -174,7 +174,7 @@ const OFFROAD=[];
     if(cps.length<6)return;OFFROAD.push({id,name,x:st.x,y:st.y,cps});SIGNS.push({x:st.x,y:st.y,text:'OFF-ROAD RUN',bg:'#8a5a2a',fg:'#ffffff',h:34,on:()=>true});};
   mk(1,'Farm Scramble',WPX+170,260,WPX+HM-260,WPX-260,WPX+330,(6*P+2)*T);
   mk(2,'Hill Climb',300,-HM+260,RIVX0*T-200,-170,(4*P)*T,-420);})();
-function offStart(o){const c0=o.cps[0],d=hyp(c0.x-o.x,c0.y-o.y);ACT={kind:'off',run:o,cps:o.cps,i:0,timer:d/200+6,t:0,tg:c0};showBig('GO!',o.name,'#ffd600',1);}
+function offStart(o){missionHeatOff();const c0=o.cps[0],d=hyp(c0.x-o.x,c0.y-o.y);ACT={kind:'off',run:o,cps:o.cps,i:0,timer:d/200+6,t:0,tg:c0};showBig('GO!',o.name,'#ffd600',1);}
 function offTick(dt){const a=ACT,c=player.car;a.timer-=dt;a.t+=dt;
   if(!c||c.wreck||a.timer<=0){showBig(a.timer<=0?'OUT OF TIME':'RUN OVER',a.run.name+' failed','#ff4040',2.2);sfx('fail');actEnd();return;}
   const p=a.cps[a.i];if(hyp(c.x-p.x,c.y-p.y)<38){a.i++;sfx('pickup',0.5);
@@ -187,7 +187,7 @@ function actHUD(sc,ly){const a=ACT,tm=Math.max(0,a.timer),rc=a.kind==='rc';
   if(rc)hudText(touchMode?'FIRE to detonate':'Click, K or F to detonate',18*sc,ly+64*sc,Math.round(12*sc),'#bbb','left','system-ui,sans-serif');}
 function updateActs(dt){actCool-=dt;if(rcCalm>0){rcCalm-=dt;if(heat>rcHeat)heat=rcHeat;}
   if(ACT){if(game.state!=='play'||mission){actEnd();return;}if(ACT.kind==='rc')rcTick(dt);else offTick(dt);return;}
-  if(actCool>0||mission||DLG.open||game.state!=='play'||stars()>0||(typeof job!=='undefined'&&job)||roofRun)return;
+  if(actCool>0||mission||DLG.open||game.state!=='play'||(typeof job!=='undefined'&&job)||roofRun)return;
   if(RCPAD&&!player.car&&(player.jz||0)<4&&hyp(player.x-RCPAD.x,player.y-RCPAD.y)<34){actCool=5;
     say([['RC Wreckers','Two minutes. Drive the toy car under anything on wheels and set it off. $300 a wreck.'+(STATS.rcBest?' Your best: '+STATS.rcBest:'')]],null,[['GO',()=>rcStart()],['NOT NOW',()=>{},'no']]);return;}
   const c=player.car;if(c&&!c.t.boat&&!c.t.heli&&!c.t.rc&&hyp(c.vx,c.vy)<90)for(const o of OFFROAD)if(hyp(c.x-o.x,c.y-o.y)<50){actCool=5;const b=STATS.offBest&&STATS.offBest[o.id];
