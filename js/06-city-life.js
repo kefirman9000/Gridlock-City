@@ -626,7 +626,7 @@ function updatePolice(dt){const s=stars();
 let resprayCool=0,lastCarSwap=null;
 function updateEscapes(dt){resprayCool-=dt;const c=player.car;if(!c||stars()===0||game.state!=='play'||resprayCool>0)return;
   if(seenT>1.2&&!c.t.boat)for(const sp of sprayPads)if(dist2(sp.x,sp.y,c.x,c.y)<70*70&&hyp(c.vx,c.vy)<70){resprayCool=8;
-    if(money<250){note('A respray costs $250');return;}addMoney(-250);c.col=pick(CT.sedan.cols.concat(CT.sports.cols));c.flat=false;clearHeat();sfx('spray');
+    if(money<250){note('A respray costs $250');return;}addMoney(-250);c.col=pick(CT.sedan.cols.concat(CT.sports.cols));c.flat=false;c.dmg=null;clearHeat();sfx('spray');
     for(let i=0;i<14;i++)puff(c.x+rr(-30,30),c.y+rr(-30,30),rr(-20,20),rr(-20,20),rr(.4,.9),rr(6,12),'#e8e8e8','smoke');showBig('FRESH PAINT','The cops lost you  ·  -$250','#3ee07a',2.2);radioMsg('DISPATCH: We lost the vehicle. Suspect may have changed paint.');return;}}
 function carSwapEscape(c){if(stars()>0&&seenT>1.2&&c!==lastCarSwap){const s=stars();heat=TH[Math.max(0,s-1)]+1;radioMsg('DISPATCH: Suspect switched vehicles. We\'re looking for the wrong car.');note('You switched cars out of sight: one star less');}lastCarSwap=c;}
 // ---------- climbing ladders: push toward the wall to go up, pull back to go down, jump to let go ----------

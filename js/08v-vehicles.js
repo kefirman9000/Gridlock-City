@@ -2,6 +2,22 @@
 const BLACK=[18,18,20],TAIL=[192,40,36];
 // Follow the RENDERING RULES at the top of js/08-render.js: no depth buffer, so the order parts are drawn in is their depth.
 // dents and scrapes on the flank facing the camera (rendering rule 5: a thin slab, only on the visible side)
+// loose parts (zoneHit in 02-world.js). Rule 3: each piece is drawn only when the camera can see the face it hangs off,
+// so it never shows through the body: front pieces from ahead, rear from behind, a door from its own side.
+const HOODZ={sports:11,muscle:12,suv:16,roadster:10,limo:13};
+const NOHOOD=t=>t.truck||t.bus||t.ambulance||t.swat||t.icecream||t.army||t.fire||['van','garbage','foodtruck','firetruck','armytruck','bus','limo'].includes(t.vx);
+function drawLoose(c,t,hl,hw,ca,sa,fg,col){const d=c.dmg,fwd=(CX-c.x)*ca+(CY-c.y)*sa,lat=(CX-c.x)*-sa+(CY-c.y)*ca,TR=[36,36,40];
+  const B=(f,s,l,w,z0,z1,sc,tc,an)=>obox(c.x+ca*f-sa*s,c.y+sa*f+ca*s,an==null?c.a:an,l,w,z0,z1,sc,tc,fg);
+  const hz=HOODZ[c.type]||13,lite=mixA(col,[255,255,255],0.12);
+  // bumpers: one end still bolted on, the other dragging
+  if(d.f>=LOOSE.bump&&d.f<LOOSE.lose&&fwd>hl){B(hl+0.8,-hw*0.45,0.9,hw*0.5,3,5.2,TR,TR);B(hl+1.6,hw*0.45,0.9,hw*0.5,0.4,2.6,TR,TR);}
+  if(d.r>=LOOSE.bump&&d.r<LOOSE.lose&&fwd<-hl){B(-hl-0.8,hw*0.45,0.9,hw*0.5,3,5.2,TR,TR);B(-hl-1.6,-hw*0.45,0.9,hw*0.5,0.4,2.6,TR,TR);}
+  // the bonnet sprung open at the back edge
+  if(d.f>=LOOSE.hood&&!NOHOOD(t)&&fwd>hl*0.2){B(hl*0.8,0,hl*0.16,hw*0.86,hz,hz+1.2,col,lite);B(hl*0.52,0,hl*0.14,hw*0.86,hz+1.6,hz+3.6,col,lite);}
+  // a sprung door, swung out from its front hinge
+  for(const sd of[-1,1]){const v=sd>0?d.R:d.L;if(v<LOOSE.door||t.bus||t.truck||!(lat*sd>hw))continue;
+    const an=c.a+PI-sd*0.5,hx=c.x+ca*hl*0.22-sa*sd*hw,hy=c.y+sa*hl*0.22+ca*sd*hw,L=hl*0.21;
+    obox(hx+Math.cos(an)*L,hy+Math.sin(an)*L,an,L,0.6,4.5,Math.min(hz,13)-0.5,mixA(col,[0,0,0],0.15),lite,fg);}}
 function drawDents(c,t,hl,hw,ca,sa,fg){const lat=(CX-c.x)*-sa+(CY-c.y)*ca;if(Math.abs(lat)<=hw)return;const sd=lat>0?1:-1,k=1-c.hp/t.hp,n=k>0.55?3:k>0.4?2:1,base=rgbOf(c.col);
   NOTOP=true;for(let i=0;i<n;i++){const h=hash(c.id*7+i,sd>0?3:9),f=((h&255)/255-0.5)*hl*1.4,l=hl*(0.12+((h>>8)&7)*0.02),z0=5+((h>>11)&1),z1=z0+2+((h>>13)&3);
     obox(c.x+ca*f-sa*sd*(hw+0.15),c.y+sa*f+ca*sd*(hw+0.15),c.a,l,0.15,z0,z1,mixA(base,[20,18,16],0.55),null,fg);
@@ -83,6 +99,7 @@ function drawCarBody(c,fg,t,hl,hw,a){if(t.boat){drawBoat3(c,fg,t,hl,hw,a);return
     }
   }
   if(!c.wreck&&!t.tank&&c.hp<t.hp*0.75)drawDents(c,t,hl,hw,ca,sa,fg);
+  if(c.dmg&&!c.wreck)drawLoose(c,t,hl,hw,ca,sa,fg,col);
   // lamps (one headlight goes out once the front end is smashed)
   if(!c.wreck){const fz=8+(PIT?hl*Math.sin(PIT)*(fv?1:-1):0),rx=-sa*hw*0.7,ry=ca*hw*0.7,night=LIGHTK>0.1||c.driver==='player';
     if(fv){for(const sd of[-1,1])if(!(sd<0&&c.hp<t.hp*0.45)&&proj(c.x+ca*(hl+0.5)+rx*sd,c.y+sa*(hl+0.5)+ry*sd,fz)){const s=Math.max(1,2.2*PK);L3.fillStyle=lit([255,246,200],1,fg,true);L3.fillRect(R2(PX-s/2),R2(PY-s/2),Math.max(1,R2(s)),Math.max(1,R2(s*0.7)));if(night&&c.driver){glow(PX,PY,3*PK,'#fff2c0',0.55*Math.max(LIGHTK,0.25));if(rain>0.3&&c.driver){const ly=PY;if(proj(c.x+ca*(hl+0.5)+rx*sd,c.y+sa*(hl+0.5)+ry*sd,0))wetGlint(PX,PY,ly,'#fff2c0',0.8);}}}}

@@ -252,6 +252,14 @@ const CAR_E=0.18,CAR_MU=0.35,SPINK=0.42;
 // (a T-bone sends it round, a nudge on the rear quarter kicks the tail out). Parked cars aren't extra heavy, so you can shove them.
 const CC_E=0.34,CC_MU=0.2,CC_SPIN=0.8;
 const CARPTS=[[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1],[0.5,1],[0.5,-1],[-0.5,1],[-0.5,-1]];
+// GTA III-style loose parts: each end and side of a car keeps its own damage. A battered front or back hangs its bumper
+// (and then loses it), a smashed front pops the bonnet, a hit on a flank springs that door (drawn in drawLoose, 08v).
+const LOOSE={bump:260,lose:720,hood:430,door:300};
+function zoneHit(c,x,y,imp){const t=c.t;if(!c||imp<90||t.bike||t.tank||t.boat||t.heli||t.plane||t.rc||c.wreck)return;
+  const ca=Math.cos(c.a),sa=Math.sin(c.a),lx=(x-c.x)*ca+(y-c.y)*sa,ly=-(x-c.x)*sa+(y-c.y)*ca,hl=t.L/2;
+  const z=Math.abs(lx)>hl*0.55?(lx>0?'f':'r'):(ly>0?'R':'L');const d=c.dmg||(c.dmg={f:0,r:0,L:0,R:0});const was=d[z];d[z]+=imp;
+  if((z==='f'||z==='r')&&was<LOOSE.lose&&d[z]>=LOOSE.lose&&dist2(c.x,c.y,player.x,player.y)<900*900){const s=z==='f'?1:-1,bx=c.x+ca*hl*s,by=c.y+sa*hl*s;
+    for(let i=0;i<5;i++)puff(bx+rr(-6,6),by+rr(-6,6),ca*s*rr(40,120)+rr(-50,50),sa*s*rr(40,120)+rr(-50,50),rr(0.6,1.1),rr(2,4),i<2?c.col:'#2a2a2e','debris');}}
 function crashFx(c,x,y,nx,ny,imp,other){
   if(imp<90)return;
   const by=(c.driver==='player'||(other&&other.driver==='player'))?'player':null;
@@ -287,7 +295,7 @@ function carTiles(c){if(c.t.heli&&(c.alt||0)>30)return;
   if(hitN){
     // drivers glance off walls rather than sticking (a gentle GTA2-style turn to follow the wall)
     if(c.driver){const tang=Math.atan2(hitN[0],-hitN[1]),tA=Math.abs(angDiff(tang,c.a))<PI/2?tang:tang+PI;c.va+=clamp(angDiff(tA,c.a),-1,1)*(PI/180)*TICK*0.3;}
-    if(maxImp>110)damageCar(c,(maxImp-110)*0.07,c.driver==='player'?'player':null);bikeCrash(c,maxImp);
+    if(maxImp>110)damageCar(c,(maxImp-110)*0.07,c.driver==='player'?'player':null);zoneHit(c,hx,hy,maxImp);bikeCrash(c,maxImp);
     crashFx(c,hx,hy,hitN[0],hitN[1],maxImp+20,null);
   }
 }
@@ -318,7 +326,7 @@ function carPair(a,b){
   const tX=-ny,tY=nx,vt=(vbx-vax)*tX+(vby-vay)*tY,rta=rax*tY-ray*tX,rtb=rbx*tY-rby*tX;
   let jt=-vt/(1/ma+1/mb+(rta*rta/Ia+rtb*rtb/Ib)*CC_SPIN);const mx=CC_MU*j;jt=clamp(jt,-mx,mx);
   a.vx-=tX*jt/ma;a.vy-=tY*jt/ma;a.va-=rta*jt/Ia*CC_SPIN;b.vx+=tX*jt/mb;b.vy+=tY*jt/mb;b.va+=rtb*jt/Ib*CC_SPIN;
-  const imp=-rv;
+  const imp=-rv;zoneHit(a,cx,cy,imp);zoneHit(b,cx,cy,imp);
   // a bike that gets hit (or hits something hard) throws its rider and goes down
   if(imp>110&&(a.t.bike||b.t.bike)){if(a.t.bike&&!(b.t.bike&&imp<200))bikeThrow(a,b,imp,-nx,-ny);if(b.t.bike&&!(a.t.bike&&imp<200))bikeThrow(b,a,imp,nx,ny);}
   // you only get the blame when you drove into them (not when a cop rams you)

@@ -84,7 +84,7 @@ function debugMenu(){
       if(a==='time')clock=+v;
       else if(a==='wx'){if(v==='clear'){rain=0;rainTarget=0;fogTarget=0;FOGK=0;}else if(v==='rain'){rain=0.95;rainTarget=1;}else{rain=0;rainTarget=0;fogTarget=0.9;FOGK=0.9;}weatherT=240;}
       else if(a==='stars'){if(v==='0')clearHeat();else{const s=Math.min(6,stars()+1);heat=TH[s]+1;}}
-      else if(a==='heal'){player.hp=PMAX();player.armor=100;if(player.car){player.car.hp=player.car.t.hp;player.car.burn=-1;player.car.flat=false;}}
+      else if(a==='heal'){player.hp=PMAX();player.armor=100;if(player.car){player.car.hp=player.car.t.hp;player.car.burn=-1;player.car.dmg=null;player.car.flat=false;}}
       else if(a==='cash')addMoney(10000);
       else if(a==='ammo'){for(let i=0;i<WEAPONS.length;i++)if(player.ammo[i]!==Infinity)player.ammo[i]=Math.max(player.ammo[i]||0,WEAPONS[i].kind==='b'?300:20);}
       else if(a==='spawn'){const ty=dbgEl.querySelector('select').value,o=player.car||player,an=player.car?player.car.a:(cam.base!=null?cam.base:player.a);let x=o.x+Math.cos(an)*90,y=o.y+Math.sin(an)*90;

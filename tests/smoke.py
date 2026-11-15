@@ -64,6 +64,8 @@ CHECKS = {
         const bk=makeCar('bike',sp.x,sp.y,a0+PI/2,'#d8382a');bk.driver='ai';bk.vx=bk.vy=0;const c=makeCar('sports',sp.x-ca*24,sp.y-sa*24,a0,'#f00');c.driver='ai';c.vx=ca*380;c.vy=sa*380;
         const n0=peds.length;carPair(c,bk);const rider=peds.slice(n0).find(q=>q.thrown>0)||flyers.length;const ok=!bk.driver&&bk.down&&hyp(bk.vx,bk.vy)>120&&!!rider&&bk.burn<0;
         for(const v of[bk,c]){const i=cars.indexOf(v);if(i>=0)cars.splice(i,1);}return ok||('driver '+bk.driver+', down '+bk.down+', v '+Math.round(hyp(bk.vx,bk.vy))+', burn '+bk.burn)}""",
+    'crashes loosen parts by zone': """()=>{const c=makeCar('sedan',hospitalSpawn.x,hospitalSpawn.y,0);const ca=Math.cos(c.a),sa=Math.sin(c.a);zoneHit(c,c.x+ca*30,c.y+sa*30,500);zoneHit(c,c.x-sa*14,c.y+ca*14,350);
+        const ok=c.dmg&&c.dmg.f>=LOOSE.hood&&c.dmg.R>=LOOSE.door&&c.dmg.r===0;cars.splice(cars.indexOf(c),1);return ok||JSON.stringify(c.dmg)}""",
     'floaty car jump hangs in the air': """()=>{OPT.floaty=true;const r=RAMPS.find(r=>r.h>8);if(!r)return true;const ca=Math.cos(r.a),sa=Math.sin(r.a);
         const c=makeCar('sports',r.x-ca*(r.hl+120),r.y-sa*(r.hl+120),r.a);player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;c.vx=ca*520;c.vy=sa*520;
         for(let i=cars.length-1;i>=0;i--)if(cars[i]!==c&&hyp(cars[i].x-r.x,cars[i].y-r.y)<r.hl+260)cars.splice(i,1);peds.length=0; // nothing in the run-up
