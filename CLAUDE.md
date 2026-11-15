@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js` and `js/08e-more.js` between 08 and 09), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js` and `js/08f-gta3.js` between 08 and 09), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -28,6 +28,9 @@ so the room code (counters, robbery, vault, bar games) runs unchanged, and `ente
 `js/08e-more.js` (v5.8): cab rides (`cabStart`/`cabTick`; the traffic AI drives `player.car` while `c.cab` is set), weapon wheel, cover (`player.cover`),
 witnesses (wraps `crime`), walk-in safehouses (`SAFELIVE`), elevators/helipads (`ELEVS`, `b.elev`, `heliFloor`), the bank job (`heistDef`, a story-style mission
 with an `until` step), busier streets, phone (`TEXTS`, mechanic), completion (`complCalc`), chess/cage/bowling, city sound and the ferry (`FERRY`).
+
+`js/08f-gta3.js` (v5.9): breakable street furniture (`BRKG` grid over hydrant/bin/mail/news props and `streetLights`, `o.down`), bike wheelies (`c.wh`, `c.whP`),
+suspension pitch (`c.susp`, added in a `drawCar3` wrapper), grass slowdown, car-fire calls (wraps `updateFire`) and mission times (`STATS.mtime`).
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).

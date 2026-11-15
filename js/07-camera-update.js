@@ -200,6 +200,7 @@ function update(dt){
         const dx=p.x-cc[0],dy=p.y-cc[1],d2=dx*dx+dy*dy,rs=c.t.Wd/2+7;
         if(d2<rs*rs){const d=Math.sqrt(d2)||1,nx=dx/d,ny=dy/d;
           const sp=hyp(c.vx,c.vy),toward=c.vx*nx+c.vy*ny;
+          if(sp>70&&sp<175&&toward>28&&!c.wreck&&p!==player&&p.hp>sp*0.16+4&&!p.boss&&!p.rope){const pl=c.driver==='player';p.hp-=sp*0.16;p.thrown=0.8;p.vx=c.vx*0.75+nx*90;p.vy=c.vy*0.75+ny*90;p.jv=140+sp*0.4;p.jz=1;p.noHit=[c];if(!p.cop&&p.gang==null){p.state='flee';p.panic=6;p.fx=c.x;p.fy=c.y;}else if(p.gang!=null)p.angry=12;if(pl){sfx('splat',0.5);crime(p.cop?300:30,p.cop&&copWitness(p.x,p.y)?1:0);}c.vx*=0.98;c.vy*=0.98;break;}
           if(sp>70&&toward>28&&!c.wreck&&!(p===player)){const pl=c.driver==='player';killPed(p,pl?'player':null,c.vx*0.8+nx*110,c.vy*0.8+ny*110);addMark({k:'blood',x:p.x,y:p.y,r:rr(5,9)});if(pl){sfx('splat',1);shake=Math.max(shake,3);if(sp>220)chaos();}c.vx*=0.97;c.vy*=0.97;break;}
           p.x+=nx*(rs-d);p.y+=ny*(rs-d);
           if(sp>40&&!p.cop&&p.state!=='flee'){p.state='flee';p.panic=4;p.fx=c.x;p.fy=c.y;}

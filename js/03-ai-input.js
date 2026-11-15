@@ -77,8 +77,8 @@ function aiChase(c,dt){
   if(player.car&&!hidden&&d<340&&!c.t.tank&&game.state==='play'){
     const pc=player.car,pca=Math.cos(pc.a),psa=Math.sin(pc.a),ps=pc.vx*pca+pc.vy*psa;
     ai.bumpCD=(ai.bumpCD==null?rr(4,7):ai.bumpCD)-dt;
-    if(ai.bumpT>0){ai.bumpT-=dt;if(d<pc.t.L/2+c.t.L/2+6||ai.bumpT<=0){ai.bumpT=0;ai.bumpCD=Math.max(3.5,rr(7,11)-stars()*0.6);}}
-    else if(stars()>=2&&ai.bumpCD<=0&&d<170)ai.bumpT=1.1;
+    if(ai.bumpT>0){ai.bumpT-=dt;if(d<pc.t.L/2+c.t.L/2+6||ai.bumpT<=0){ai.bumpT=0;ai.bumpCD=Math.max(7,rr(12,18)-stars()*0.8);}}
+    else if(stars()>=3&&ai.bumpCD<=0&&d<150&&!cars.some(o=>o!==c&&o.ai&&o.ai.bumpT>0))ai.bumpT=0.8;
     if(!(ai.bumpT>0)){follow=true;const slot=c.id%3,stand=80+slot*34;
       if(Math.abs(ps)<110){ // you're slow or stopped: pull up at a distance, then the crew gets out
         const ux=(px-c.x)/(d||1),uy=(py-c.y)/(d||1);gx=px-ux*stand;gy=py-uy*stand;desired=clamp((d-stand)*1.6,0,320);
@@ -86,13 +86,13 @@ function aiChase(c,dt){
           for(let i=1;i<crewN;i++){const q=makePed(c.x-Math.sin(c.a)*(c.t.Wd/2+10)+rr(-10,10),c.y+Math.cos(c.a)*(c.t.Wd/2+10)+rr(-10,10),true);q.state='cop';q.car=c;q.heavy=p1.heavy;q.kind=c.type;q.hp=p1.heavy?80:50;c.copsOut++;}return;}}
       else{const back=90+slot*42,lat=(slot===1?-1:slot===2?1:0)*36;gx=pc.x-pca*back-psa*lat;gy=pc.y-psa*back+pca*lat;
         if(Math.abs(angDiff(Math.atan2(gy-c.y,gx-c.x),c.a))>1.5){gx=c.x+pca*120;gy=c.y+psa*120;}
-        desired=Math.max(0,ps+clamp(((gx-c.x)*pca+(gy-c.y)*psa)*1.3,-140,170));}}
+        desired=Math.max(0,ps+clamp(((gx-c.x)*pca+(gy-c.y)*psa)*1.1,-180,d<pc.t.L+c.t.L?20:90));}}
   }
   const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);
   let thr=1,steer=clamp(diff*2.6,-1,1);
   if(Math.abs(diff)>0.9&&spd>240)thr=-0.4;
   if(follow){const vf=c.vx*Math.cos(c.a)+c.vy*Math.sin(c.a);thr=vf<desired-12?1:vf>desired+18?-0.8:0.15;if(desired<15)thr=vf>8?-0.8:0;}
-  {const s=stars(),cap=[0,290,360,470][s]||0,vf=c.vx*Math.cos(c.a)+c.vy*Math.sin(c.a);if(cap&&vf>cap)thr=Math.min(thr,vf>cap+40?-0.5:0);
+  {const s=stars(),pv=player.car?hyp(player.car.vx,player.car.vy):0,base=[0,290,340,400,450,490,520][s]||0,cap=d<450?Math.min(base,Math.max(220,pv+(ai.bumpT>0?70:35))):base,vf=c.vx*Math.cos(c.a)+c.vy*Math.sin(c.a);if(cap&&vf>cap)thr=Math.min(thr,vf>cap+40?-0.5:0);
    if(s<=2){steer=clamp(diff*1.7,-1,1);if(Math.abs(diff)>0.55&&spd>150)thr=Math.min(thr,0.1);}}
   if(spd<25){ai.stuckT+=dt;if(ai.stuckT>1.1){ai.revT=0.9;ai.stuckT=0}}else ai.stuckT=0;
   if(ai.revT>0){ai.revT-=dt;thr=-1;steer=-steer;}

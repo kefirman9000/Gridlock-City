@@ -290,21 +290,28 @@ function updateFares(dt){
 }
 // ---- ambulance and vigilante jobs ----
 let job=null,jobLevel=0,jobCool=3;
-function endJob(msg){if(job&&job.ped)job.ped.injured=false;if(job&&job.car){job.car.crim=false;job.car.vip=false;}if(msg)showBig('MISSION FAILED!',msg,'#ff4040',2);job=null;jobCool=4;if(msg)jobLevel=0;}
+function endJob(msg){if(job&&job.ped)job.ped.injured=false;if(job&&job.peds)for(const p of job.peds)p.injured=false;if(job&&job.car){job.car.crim=false;job.car.vip=false;}if(msg)showBig('MISSION FAILED!',msg,'#ff4040',2);job=null;jobCool=4;if(msg)jobLevel=0;}
 function updateJobs(dt){
   const c=player.car,amb=!!(c&&c.t.ambulance),cop=!!(c&&c.t.police&&!c.t.army&&!c.t.tank);
   if(!(c&&(amb||cop)&&duty&&!c.t.boat&&!mission&&game.state==='play'&&stars()<=(cop?1:0))){if(job)endJob(job.kind==='amb'&&job.stage==='ride'?'The patient needed you':job.kind==='vig'?'You left the chase':null);return;}
   if(job&&(job.kind==='amb')!==amb){endJob(null);return;}
   if(!job){jobCool-=dt;if(jobCool>0)return;jobCool=1;
     if(amb){let spot=null;for(let i=0;i<200&&!spot;i++){const [tx,ty]=pick(walkTiles),x=(tx+.5)*T,y=(ty+.5)*T,d=hyp(x-c.x,y-c.y);if(d>500&&d<1500&&WOK(x,y))spot={x,y,d};}
-      if(!spot)return;const p=makePed(spot.x,spot.y,false);p.injured=true;job={kind:'amb',stage:'pickup',ped:p,timer:Math.round(spot.d/120+25)};note('Ambulance: someone is hurt. Pick them up');}
+      if(!spot)return;const n=Math.min(6,jobLevel+1),ps=[];for(let i=0;i<n;i++){let q=i?null:spot;for(let j=0;j<120&&!q;j++){const [tx,ty]=pick(walkTiles),x=(tx+.5)*T,y=(ty+.5)*T,d=hyp(x-spot.x,y-spot.y);if(d>250&&d<1100&&WOK(x,y))q={x,y};}if(!q)q=walkNear(spot.x,spot.y,200);const p=makePed(q.x,q.y,false);p.injured=true;ps.push(p);}
+      job={kind:'amb',stage:'pickup',peds:ps,ped:ps[0],aboard:0,saved:0,timer:Math.round(spot.d/120+22+n*6)};note(n>1?'Ambulance: '+n+' people hurt. Room for 3 at a time':'Ambulance: someone is hurt. Pick them up');}
     else{const k=spawnTraffic(pick(['sports','sedan','compact']),false);if(!k)return;if(!WOK(k.x,k.y)){cars.splice(cars.indexOf(k),1);return;}k.crim=true;k.vip=true;if(k.ai)k.ai.cruise=300+jobLevel*25;job={kind:'vig',car:k,timer:100};note('Vigilante: wreck the suspect\'s car');}
     return;}
   job.timer-=dt;const sp=hyp(c.vx,c.vy);
   if(job.kind==='amb'){
-    if(job.stage==='pickup'){const p=job.ped;if(p.gone&&!p.inAmb){endJob('The patient died');return;}
-      if(dist2(p.x,p.y,c.x,c.y)<58*58&&sp<55){p.inAmb=true;p.gone=true;sfx('door');job.stage='ride';{const hs=nearestOf(HOSPITALS);job.x=hs.x;job.y=hs.y};job.timer+=Math.round(hyp(job.x-c.x,job.y-c.y)/140+12);note('Rush them to the hospital');}}
-    else if(dist2(job.x,job.y,c.x,c.y)<100*100&&sp<70){jobLevel++;const pay=150+jobLevel*100;addMoney(pay);sfx('pass');showBig('PATIENT SAVED','+$'+pay+'  ·  level '+jobLevel,'#7dff8a',2.2);player.hp=Math.min(PMAX(),player.hp+20);job=null;jobCool=2;return;}
+    const ps=job.peds||[job.ped],waiting=ps.filter(p=>!p.inAmb);
+    for(const p of waiting)if(p.gone){endJob('A patient died');return;}
+    if(job.stage==='pickup'){let b=null,bd=1e18;for(const p of waiting){const d=dist2(p.x,p.y,c.x,c.y);if(d<bd){bd=d;b=p;}}job.ped=b;
+      if(b&&bd<58*58&&sp<55){b.inAmb=true;b.gone=true;job.aboard=(job.aboard||0)+1;sfx('door');job.timer+=10;const left=waiting.length-1;
+        if(job.aboard>=3||left===0){job.stage='ride';{const hs=nearestOf(HOSPITALS);job.x=hs.x;job.y=hs.y};job.timer+=Math.round(hyp(job.x-c.x,job.y-c.y)/150+6);note(left?'The back is full. Get them to the hospital':'Rush them to the hospital');}
+        else note('Patient aboard (+10 s). '+left+' still out there');}}
+    else if(dist2(job.x,job.y,c.x,c.y)<100*100&&sp<70){job.saved+=job.aboard;job.aboard=0;
+      if(waiting.length){job.stage='pickup';job.timer+=8;sfx('pickup');note(job.saved+' saved. '+waiting.length+' more to go');}
+      else{jobLevel++;const pay=(150+jobLevel*100)*ps.length;addMoney(pay);sfx('pass');showBig(ps.length>1?ps.length+' PATIENTS SAVED':'PATIENT SAVED','+$'+pay+'  ·  level '+jobLevel,'#7dff8a',2.2);player.hp=Math.min(PMAX(),player.hp+20);job=null;jobCool=2;if(jobLevel===12&&!STATS.medic){STATS.medic=1;note('Paramedic level 12: you heal faster now');}return;}}
   }else{const k=job.car;
     if(k.wreck||k.burn>=0){jobLevel++;const pay=250+jobLevel*150;addMoney(pay);sfx('pass');showBig('SUSPECT TAKEN DOWN','+$'+pay+'  ·  level '+jobLevel,'#4da3ff',2.2);job=null;jobCool=3;return;}
     if(!cars.includes(k)){endJob('The suspect got away');return;}

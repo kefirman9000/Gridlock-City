@@ -2,6 +2,17 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.9.0
+- Calmer police: squad cars top out a little faster than a sedan, hold a gap behind you instead of shoving you along, ram only from 3 stars (one car at a time, every 12-18 s), and weigh less.
+- Paramedic: level n has n patients (up to 6) spread around; three fit in the back, each pickup adds 10 s, unload at the hospital and go back for the rest. Level 12 makes you heal over time.
+- Fire truck: every other level is a car-fire call. Put out the burning wrecks before they blow.
+- Slow hits knock people flying and they get back up; only a real hit kills.
+- Breakable street furniture: hydrants burst and spray, lamp posts fold over (and hurt the car), bins, mailboxes and newspaper boxes go flying. They're put back once you've left.
+- Bike wheelies: floor it from a crawl to bring the front up; hold it over 2 s for cash, with your best kept.
+- Suspension: cars dip under braking and squat under power.
+- Grass and dirt slow you down, kick up dust and shake the camera at speed.
+- Story missions show how long they took and your best time.
+
 ## v5.8.1
 - Fewer instant stars: blowing up a car (other than a cop car) or pulling someone out of one only brings the cops if a cop sees it; otherwise it adds a little heat or a civilian has to report it. A car alarm only counts if a nearby cop can see you.
 - Driving: the camera follows the direction the car is travelling instead of its nose, so turns no longer swing the whole view round, and keyboard steering eases in over a moment instead of snapping to full lock.

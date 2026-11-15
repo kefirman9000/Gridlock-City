@@ -31,6 +31,12 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.9
+- **Calmer police:** no more being pushed down the street by faster, heavier cop cars; rams are rarer.
+- **Paramedic levels with several patients**, **car-fire calls**, and people **knocked over** by slow hits.
+- **Breakable hydrants, lamp posts, bins and boxes**, **bike wheelies**, **suspension dip and squat**, **grass that slows you**.
+- **Mission times** with your best for each story mission.
+
 ## What's new in v5.8
 - **Cab rides:** press F at a taxi to ride to your waypoint, SPACE skips the trip; or call one from the phone.
 - **Weapon wheel (hold X)** and **cover (Z)**, plus **witnesses** who have to reach a phone before small crimes count.
@@ -38,12 +44,6 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - **The bank job** from Rosa, **busier streets**, **phone messages and a mechanic**, **car styling** (neon, tint, chrome, spoiler).
 - **Completion list**, **chess, a batting cage and bowling**, **city sounds**, and a **river ferry**.
 - **Smarter traffic** (no more cars stuck at dead ends and T-junctions) and **a more detailed character** with proper walk and run animation.
-
-## What's new in v5.7
-- **Walk into everything:** the diner, gym, pawn shop, arcade, bar, 24/7s, bank and the Neon Lotus are real interiors in their buildings, no loading. Rob the 24/7, crack the vault and shoot pool right there on the street.
-- **A more natural city:** crooked side streets cut across blocks at odd angles like the old parts of Manhattan, and some streets are now pedestrian plazas with seating and trees.
-- **Map and waypoints:** MAP in the pause menu; click to set a waypoint and a beacon marks it in the city.
-- **More radio voices:** every DJ and host sounds different, and each caller and ad is a new voice.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.
