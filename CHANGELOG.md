@@ -2,6 +2,19 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.15.1
+- Night street races: after dark, racers gather on the beltway's shoulder. Pull up next to them and honk (H) to race round the beltway through five checkpoints. 1st pays $2,500, 2nd $1,000. If a cop sees the race, you get a star.
+- More jobs. Bus: get in and tap the horn to go on duty, then pull up at each stop on the route for passengers. Van: deliver parcels to doors around town; a bashed-in parcel pays half. Tow truck: impound calls come in on their own; hook the car and haul it to the police lot.
+- The city happens without you, every minute or two:
+  - a purse snatcher runs off (stop them for $250)
+  - a police chase tears through traffic (wreck the getaway car for $400)
+  - a crash blocks a street and an ambulance arrives with its lights on
+  - two gangs start a street fight
+- Skills: driving (more grip), shooting (steadier aim) and running (faster sprint) improve as you use them, up to level 10.
+- A street tram runs up and down one avenue on rails, stopping every few blocks. Press F at a stop to ride; F at the next stop to get off.
+- Beltway cars joining a road slow right down until they're on it (they could circle at a spur's street end).
+- Gang turf wars and safehouse garages were already in the game.
+
 ## v5.15.0
 - Buildings cast shadows on the streets that follow the sun: long in the morning and evening, short at noon, faint under cloud and gone at night.
 - Wet roads at night: a soft, faint smear of light from lamps, headlights, tail lights and neon. The old hard stripes under every light are gone.

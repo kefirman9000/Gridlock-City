@@ -213,6 +213,8 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<0.35){ringJoin(c,k,S.length-1,-1);return;}}}}
   const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=P.lo||14,gx=q.x-uy*lo,gy=q.y+ux*lo;
   const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=P.farm?Math.min(ai.cruise,130):ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);
+  // joining a road (or knocked off it): crawl until back on its line, so the turn is tight enough to make it (cars used to circle)
+  {const e=P[i],off=hyp(e.x-c.x,e.y-c.y);if(off>34){target=Math.min(target,off>70?38:60);steer=clamp(diff*3,-1,1);}}
   // ease off on the bends
   {const a=P[clamp(i+dir*6,0,last)],b=P[clamp(i+dir*14,0,last)];const bend=Math.abs(angDiff(Math.atan2(b.uy,b.ux),Math.atan2(a.uy,a.ux)));if(bend>0.25)target=Math.min(target,200-bend*160);}
   const fx=Math.cos(c.a),fy=Math.sin(c.a),D=c.t.L/2+22+spd*0.45,hw=c.t.Wd/2;let blocked=false;

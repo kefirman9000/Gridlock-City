@@ -34,6 +34,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 ## What's new in v5.15
 - **Building shadows** that follow the sun, **soft wet-road reflections**, **windows** that light up and go dark through the night.
 - **Surf**, **lightning bolts**, **boat wakes**, **umbrellas, phones and smokers**, **neon shop signs**, **cracked glass and crumpled cars**.
+- **Night street races** on the beltway, **bus, delivery and impound jobs**, **random events** (thieves, police chases, crashes, gang fights), **skills**, and a **street tram**.
 
 ## What's new in v5.14 (patches)
 - **Traffic on the beltway, spurs and farm roads**, always on the road; smooth road edges and clean junctions; graded roads.

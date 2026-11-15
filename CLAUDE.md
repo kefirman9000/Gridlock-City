@@ -36,7 +36,8 @@ parachutes (`player.chute`, bail out via the `exitCar` wrapper), cop flashlights
 
 `js/08g-world.js` (v5.15): `lookPrep()` sets up the sun (`SUNSH`; shadows are cached in `SHC` and cleared when the sun moves), wet-road reflections (`REFL`, `WETK`)
 and window lights (`WINLIT`) for the renderer each frame; also lightning bolts (`BOLT`), boat wakes, umbrellas/phones/smokers (a `drawPed3` wrapper), neon shop signs
-(a `walls` wrapper; building fields `nsg`/`nsC`/`nsF`, because `b.neon` was already taken) and damage sag. Later v5.15 batches add gameplay and city pieces here too.
+(a `walls` wrapper; building fields `nsg`/`nsC`/`nsF`, because `b.neon` was already taken) and damage sag. v5.15.1 adds street races (`MEET`, `BRACE`), bus/delivery/impound side jobs (wrapping `startSideJob`/`updateSideJob`/`sideJobHUD`;
+`dutyKind` knows bus and van), random events (`EVT`; gang fighters use `p.fight` through a `brawlTick` wrapper), skills (`STATS.sk`, `skLvl`) and the tram (`TRAM`, rails via `TRAMR` in the ground raster).
 
 ## The island (v5.11)
 The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

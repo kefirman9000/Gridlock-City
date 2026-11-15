@@ -337,7 +337,7 @@ const BMAP=new Int32Array(W*W).fill(-1);
 buildings.forEach((b,i)=>{for(let ty=Math.floor(b.y/T);ty<Math.ceil((b.y+b.h)/T);ty++)for(let tx=Math.floor(b.x/T);tx<Math.ceil((b.x+b.w)/T);tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)BMAP[ty*W+tx]=i;});
 // v5.15 look: sun shadows on the ground, night reflections on wet roads, windows that light and go dark with the hour,
 // a lightning bolt in the sky (all set up each frame by lookPrep() in 08g-world.js)
-let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null;
+let SUNSH={on:false,shade:1,tan:1,dx:-0.6,dy:0.8},REFL=[],WETK=0,WINLIT=96,BOLT=null,TRAMR=null;
 const SHD=[10,22,38,60,90,130,180,240,310,400];
 // cached on an 8-unit grid (0 = not worked out yet, 1 = in sun, 2 = in shade); lookPrep() clears it when the sun has moved
 const SHCW=W*4,SHC=new Uint8Array(SHCW*SHCW);
@@ -538,8 +538,9 @@ function renderGround(heads){
       if(lk>0){let li=LMAP[(yi>>3)*LMW+(xi>>3)];
         for(let i=0;i<nh;i++){const hd=heads[i],ex=wx-hd[0],ey=wy-hd[1],fd=ex*hd[2]+ey*hd[3];if(fd<=0||fd>hd[4])continue;const ld=Math.abs(-ex*hd[3]+ey*hd[2]),wd=fd*0.42+8;if(ld<wd)li+=(1-fd/hd[4])*(1-ld/wd)*1.3;}
         if(li>0){if(li>1.4)li=1.4;li*=lk*(1+pw*1.2);lr+=li;lg+=li*0.8;lb+=li*0.52;}}
+      if(TRAMR&&t===0&&wy>TRAMR.y0-60&&wy<TRAMR.y1+60&&wx>TRAMR.x1-20&&wx<TRAMR.x2+20){const d1=Math.abs(Math.abs(wx-TRAMR.x1)-7),d2=Math.abs(Math.abs(wx-TRAMR.x2)-7);if(d1<1.1||d2<1.1){r=r*0.55+66;g=g*0.55+66;b=b*0.55+70;}}
       r*=lr;g*=lg;b*=lb;
-      // wet road at night: lamps, headlights and tail lights stretch into streaks toward the camera
+      // wet road at night: lamps, headlights and tail lights reflect on the road
       // soft and short: a faint smear that grows toward the light and fades at its edges, like light on a wet street
       if(WETK>0.15&&lk>0.1&&(t===0||dp)&&REFL.length){for(let i=0;i<REFL.length;i++){const q=REFL[i],ex=wx-CX,ey=wy-CY,al=ex*q.ux+ey*q.uy,u=(al/q.L-0.6)/0.38;if(u<=0||u>1.04)continue;
           const lat=Math.abs(-ex*q.uy+ey*q.ux),w=2.5+al*0.022;if(lat>=w)continue;const e=1-lat/w,k=e*e*Math.min(1,u)*Math.min(1,u)*q.k*WETK*lk*0.32;r+=q.r*k;g+=q.g*k;b+=q.b*k;}}

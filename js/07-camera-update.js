@@ -80,7 +80,7 @@ function update(dt){
       if(mouse.turn){player.body+=mouse.turn*0.006*(OPT.msens||1);mouse.turn=0;}
       player.body+=clamp(turn,-1.5,1.5)*2.8*dt;}
       // sprint: hold SHIFT (or click the left stick, or push the touch stick all the way)
-      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.35:1),sp=(player.swim?0.45:1)*(fwd<0?115:run?245:168),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
+      const run=fwd>0.5&&(kd.ShiftLeft||kd.ShiftRight||(joy.active&&hyp(joy.x,joy.y)>0.97)||(pad.on&&pad.run)),m=Math.abs(fwd)*(run?1.35:1),sp=(player.swim?0.45:1)*(fwd<0?115:run?245*(1+(typeof SKR!=='undefined'?SKR:0)):168),mx=Math.cos(player.body)*fwd,my=Math.sin(player.body)*fwd;
       player.vx=lerp(player.vx,mx*sp,Math.min(1,dt*14));player.vy=lerp(player.vy,my*sp,Math.min(1,dt*14));
       const ox0=player.x,oy0=player.y;player.x+=player.vx*dt;player.y+=player.vy*dt;
       {let[fl,onCar]=footFloor(player.x,player.y,player.jz);
@@ -121,7 +121,7 @@ function update(dt){
       if(tbtn.gas.on)thr=1;if(tbtn.rev.on)thr=-1;
       if(pad.on&&(pad.gas>0.04||pad.brake>0.04||pad.lx)){thr=pad.gas-pad.brake;if(Math.abs(thr)<0.04)thr=0;st=clamp(pad.lx*1.1,-1,1);}
       const hb=!!(kd.Space||tbtn.brake.on);
-      if(c.cab)cabTick(c,dt);else driveCar(c,thr,st,hb,dt);
+      if(c.cab)cabTick(c,dt);else if(c.tramRide){}else driveCar(c,thr,st,hb,dt);
       if(!c.cab&&(mouse.down||kd.KeyK||kd.ControlLeft||kd.ControlRight||tbtn.fire.on||(aimJoy.active&&hyp(aimJoy.x,aimJoy.y)>0.6))){if(c.t.fire)waterCannon(dt);else playerFire();}
     }
   }else{
