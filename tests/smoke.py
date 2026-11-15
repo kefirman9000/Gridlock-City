@@ -55,7 +55,8 @@ CHECKS = {
         OPT.ps2=true;rain=1;for(let i=0;i<60;i++)update(1/60);game.paused=false;render();rain=0;rainTarget=0;return (!!r&&Math.abs(d-0.25)<0.01)||('rank '+r+', slept '+d)}""",
     'swimming in the river': """()=>{player.car=null;player.riding=null;const y=(5*P+8)*T;let x=null;for(let tx=RIVX0+2;tx<RIVX1-2;tx++)if(map[Math.floor(y/T)*W+tx]===WATER&&RIV[Math.floor(y/T)*W+tx]){x=(tx+.5)*T;break;}
         if(x==null)return true;player.x=x;player.y=y;player.jz=0;player.jv=-10;for(let i=0;i<20;i++){player.hp=1000;update(1/60);}const ok=!!player.swim;player.swim=false;return ok||'not swimming in the river'}""",
-    'garage roof deck carries a car': """()=>{if(!GARAGE)return true;const c=makeCar('sedan',GARAGE.cx,GARAGE.cy,0);c.az=200;c.air=1;c.vz=0;c.airT=1;for(let i=0;i<60;i++)update(1/60);
+    'garage roof deck carries a car': """()=>{if(!GARAGE)return true;for(let i=cars.length-1;i>=0;i--)if(hyp(cars[i].x-GARAGE.cx,cars[i].y-GARAGE.cy)<200)cars.splice(i,1); // dropping onto a parked car would shove it off the deck
+        const c=makeCar('sedan',GARAGE.cx,GARAGE.cy,0);c.az=200;c.air=1;c.vz=0;c.airT=1;for(let i=0;i<60;i++)update(1/60);
         const ok=(c.az||0)>40;cars.splice(cars.indexOf(c),1);return ok||'car fell through the decks (az '+Math.round(c.az||0)+')'}""",
     'walk-in gun shops exist': """()=>SHOPS.length>0||'no Ammu-Nation stores'""",
     'the cathedral is placed': """()=>(!!CATH)||'no cathedral'""",
