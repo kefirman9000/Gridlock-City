@@ -31,14 +31,13 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.13
+- **The island is modelled on Oahu**, with the city where Honolulu sits: a harbour inlet to the west, a **Diamond Head crater** to the south-east, green ridges and a long North Shore.
+- **A tidy beltway** close round the city, and the city's outer blocks are back to normal (only the northern corners round off).
+
 ## What's new in v5.12
 - **A ring road** winds round the city through the hills and farmland, with spurs into town.
 - **A natural city edge:** rounded corners, and woods and parkland biting into the outer blocks.
-
-## What's new in v5.11
-- **Gridlock City is an island:** the countryside runs down to a natural coastline and open sea all round, with no invisible wall at the end of the hills.
-- **A bigger world**, with the whole island on the **map and radar**.
-- **Cars sink** when you drive into deep water; swim for the shore.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

@@ -2,6 +2,14 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.13.0
+- The island's outline is modelled on Oahu, with Gridlock City where Honolulu sits: on the south shore with South Beach (Waikiki) in front, green mountain ridges behind to the north and west, farmland inland to the east. A Pearl Harbor-style inlet opens to the south west of the city, a Diamond Head-style crater stands on the headland past the city's south-east corner, there are points at the north-west and north-east tips (Ka'ena and Kahuku), a long North Shore, and Kane'ohe Bay with a Mokapu-style peninsula on the windward east side.
+- No more snowfields: the high ground is forested ridges with rock on the tops (the snow was also solid ground). Trees cover the new hills.
+- The farmland rises into the hills along an uneven line instead of a straight seam from the city's north-east corner.
+- The ring road is a tidy beltway close round the city (think the H-1), with gentle rounded corners, instead of wandering through the hills.
+- The random woods biting into the city's outer blocks are gone; only the north-west and north-east corners round off into parkland where the beltway curves past.
+- The world is a little bigger again so there's open sea all round the new coast.
+
 ## v5.12.1
 - The ring road follows the land: it only cuts or builds up the ground a little, with wide gentle banks, instead of running through deep trenches with dark walls either side.
 - On the east side it runs just outside town, in front of the dirt jumps on the three farm roads, so their run-ups and landings are open fields. The east coast sits further out so the far jumps land on grass, not in the sea, and nothing stands in a long corridor past any countryside jump (hay bales, bushes, rocks, trees, farmhouses).

@@ -35,11 +35,11 @@ Since v5.10 also brake/reverse lights (`c.brk`/`c.rev`, drawn in 08v), tire smok
 parachutes (`player.chute`, bail out via the `exitCar` wrapper), cop flashlights (in a `drawPed3` wrapper; ZOFF already includes the ped's jz there) and screen glare/streaks (wraps `render`).
 
 ## The island (v5.11)
-The terrain grid reaches `HM`=2200 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
-`COAST` in 08-render shapes the coastline after the land types are set (no `R()`); the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`
+The terrain grid reaches `HM`=2600 beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
+`COAST` in 08-render shapes the coastline after the land types are set (no `R()`): since v5.13 a hand-placed Oahu-style outline (`COAST.pts`, a Catmull-Rom spline) filled into `COAST.LAND` with a distance transform `COAST.D`; heights above 150 are eased and high ground is forest; the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`
 (08f, one pixel per tile, offset `ISLEO` tiles) under `mmc`; `bigMapGeom()` returns the island box (`gx`,`gy`,`gs`) and the city box (`ox`,`oy`,`s`).
 Note `ISLE` is already taken (the river island). Cars that drive into deep water sink (`sinkTick` in 08f).
-v5.12: `cityEdge` (01, after the street lights; hash noise, no `R()`) marks `WILD` tiles on the outer blocks (rounded NW/NE corners, uneven bites),
+v5.12: `cityEdge` (01, after the street lights; hash noise, no `R()`) marks `WILD` tiles on the outer blocks (rounded NW/NE corners; the random bites were removed in v5.13),
 closes street segments it touches (in `CUT`) and anything cut off from the middle, then grasses them over. `RINGJ` lists the edge nodes it must keep:
 the ring road (`RING.paths`, `ringRoad` in 08-render, after `COAST`) joins the city there. Ring road cells are `TTYPE` 10; `RDI`/`RDP` give each cell its
 centre-line point so the terrain raster draws lanes per pixel. Note `reachAll()` starts at node 0,0, which the rounded corner removes.

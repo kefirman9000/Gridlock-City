@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='5.12.1',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.13.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -631,8 +631,8 @@ const DRIVEWAYS=[];
 const streetLights=[];
 for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){const cx=ix*P*T,cy=iy*P*T;
   for(const o of [[-0.5,-0.5],[4.5,4.5],[4.5,-0.5],[-0.5,4.5]]){const x=cx+o[0]*T,y=cy+o[1]*T;if(tileAt(Math.floor(x/T),Math.floor(y/T))===WALK&&R()<0.7)streetLights.push({x,y});}}
-// ---- v5.12: the city's edge isn't a ruler line. The corners round off and the countryside eats into the outer blocks in an
-// uneven line; the perimeter road breaks where it does. Hash noise only (no R()), so the city's random stream is untouched. ----
+// ---- v5.12/5.13: the city's north-west and north-east corners round off into parkland where the beltway curves past them;
+// the perimeter road breaks where they do. Hash noise only (no R()), so the city's random stream is untouched. ----
 const WILD=new Uint8Array(W*W);
 // where the ring road (08-render) meets the city's streets: [ix,iy] grid nodes on the edge
 const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB,NB-1]];
@@ -646,13 +646,10 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
     if(mx>=4&&my>=4&&bx<NB&&by<NB){const k=BLOCKK[by*NB+bx];if(!okKind(k)||sp.has(bx+','+by))return true;}
     // the dirt roads out to the farms leave along three streets on the east side
     if(tx>=W-20&&[3,9,15].some(iy=>ty>=iy*P-1&&ty<=iy*P+4))return true;return false;};
-  const RC=44,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
+  const RC=24,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
   for(let ty=0;ty<W;ty++)for(let tx=0;tx<W;tx++){if(protect(tx,ty))continue;let w=false;
     const dN=ty,dW=tx,dE=W-1-tx;
-    if(dN<14&&dN<Math.max(0,46*(prof(tx,1)-0.56)))w=true;
-    if(dW<14&&dW<Math.max(0,46*(prof(ty,2)-0.56))&&ty<LIM-P)w=true;
-    if(dE<14&&dE<Math.max(0,46*(prof(ty,3)-0.56))&&ty<LIM-P)w=true;
-    const rc=RC+14*(prof(tx+ty,4)-0.5);
+    const rc=RC+4*(prof(tx+ty,4)-0.5);
     if(tx<rc&&ty<rc&&Math.hypot(rc-tx,rc-ty)>rc)w=true;
     if(dE<rc&&ty<rc&&Math.hypot(rc-dE,rc-ty)>rc)w=true;
     if(w)WILD[ty*W+tx]=1;}
