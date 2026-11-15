@@ -79,3 +79,69 @@ const FIRECARS=[];
 
 function g3Tick(dt){if(game.state!=='play'&&game.state!=='wasted'&&game.state!=='busted')return;if(STATS.medic&&game.state==='play'&&player.hp>0&&player.hp<PMAX())player.hp=Math.min(PMAX(),player.hp+dt*0.8);brkTick(dt);bikeTick(dt);suspTick(dt);}
 {const f=lifeTick;lifeTick=function(dt){f(dt);g3Tick(dt);}}
+
+// ================= v5.10: lights, smoke, grime, parachutes, flashlights, glare =================
+// ---- brake and reverse lights, tire smoke, backfires, road grime (set here, drawn in 08v and the drawCar3 wrapper) ----
+const BACKFIRE={sports:1,fbi:1,police:0.4,taxi:0.2,sedan:0.15};
+function carFx(dt){for(const c of cars){if(c.t.heli||c.t.boat||c.t.plane||c.wreck||!c.driver){c.brk=c.rev=false;continue;}
+    if(dist2(c.x,c.y,player.x,player.y)>700*700)continue;
+    const ca=Math.cos(c.a),sa=Math.sin(c.a),vf=c.vx*ca+c.vy*sa,acc=c.pacc||0,sp=hyp(c.vx,c.vy),rx=c.x-ca*c.t.L*0.4,ry=c.y-sa*c.t.L*0.4;
+    const pl=c===player.car,keyBrake=pl&&!!(kd.KeyS||kd.ArrowDown||(tbtn.rev&&tbtn.rev.on)||(pad.on&&pad.brake>0.3)),keyGas=pl&&!!(kd.KeyW||kd.ArrowUp||(tbtn.gas&&tbtn.gas.on)||(pad.on&&pad.gas>0.3));
+    c.brk=(vf>15&&(acc<-170||keyBrake))||(pl&&!!kd.Space&&sp>20);c.rev=vf<-12&&(!pl||keyBrake);
+    // tire smoke: sliding, locked up under hard braking, or a burnout from a standstill
+    const burn=pl&&keyGas&&c.g&&c.g.pedal>=2.5&&sp<110&&!c.t.bike,lock=vf>180&&acc<-420;
+    if(burn||lock){if(R()<dt*(burn?30:20))for(const s of[-1,1])puff(rx-sa*c.t.Wd*0.42*s+rr(-3,3),ry+ca*c.t.Wd*0.42*s+rr(-3,3),-c.vx*0.15+rr(-15,15),-c.vy*0.15+rr(-15,15),rr(0.6,1.1),rr(5,9),'#e4e4e0','smoke');
+      if(burn&&R()<dt*8)addSkid(rx-sa*6,ry+ca*6,rx-sa*6+ca*3,ry+ca*6+sa*3);}
+    // backfire: lift off the gas at speed and the exhaust pops
+    const bf=BACKFIRE[c.type]||0;if(pl&&bf&&c.prevGasB&&!keyGas&&sp>280&&R()<0.55*bf){const ex=c.x-ca*(c.t.L/2+2),ey=c.y-sa*(c.t.L/2+2);
+      for(let i=0;i<4;i++)puff(ex,ey,-ca*80+rr(-30,30),-sa*80+rr(-30,30),0.12,rr(2,4),i?'#ffb040':'#fff2a8','flash');sfx('shot',0.12);}
+    if(pl)c.prevGasB=keyGas;
+    // grime: builds up as you drive, faster off-road; rain and the spray shop wash it off
+    if(c.dirt==null)c.dirt=c.traffic?R()*0.35:0;const t=tileAt(Math.floor(c.x/T),Math.floor(c.y/T));
+    c.dirt=clamp(c.dirt+dt*(sp>40?(t===GRASS||t===TREE?0.03:0.0012):0)-dt*rain*0.012,0,1);
+    if(pl&&sp<70)for(const s of sprayPads)if(dist2(s.x,s.y,c.x,c.y)<70*70)c.dirt=0;}}
+{const f=suspTick;suspTick=function(dt){for(const c of cars){const vf=c.vx*Math.cos(c.a)+c.vy*Math.sin(c.a);c.pacc=c.pvf2==null?0:lerp(c.pacc||0,(vf-c.pvf2)/Math.max(dt,1e-3),0.5);c.pvf2=vf;}f(dt);carFx(dt);}}
+const DIRTC=[92,76,54];
+function hex2(r,g,b){return'#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');}
+{const f=drawCar3;drawCar3=function(c,fg){if(!(c.dirt>0.06)||!c.col||c.col[0]!=='#'||c.wreck)return f(c,fg);const c0=c.col,k=c.dirt*0.5,v=rgbOf(c0);
+  c.col=hex2(v[0]+(DIRTC[0]-v[0])*k,v[1]+(DIRTC[1]-v[1])*k,v[2]+(DIRTC[2]-v[2])*k);try{f(c,fg);}finally{c.col=c0;}}}
+
+// ---- glass: a hard hit throws shards ----
+{const f=damageCar;damageCar=function(c,amt,by){const r=f(c,amt,by);if(amt>=20&&c&&!c.t.boat&&nearPlayer(c.x,c.y,650))for(let i=0;i<Math.min(10,amt/5);i++)puff(c.x+rr(-c.t.L*0.3,c.t.L*0.3),c.y+rr(-c.t.Wd*0.4,c.t.Wd*0.4),rr(-90,90),rr(-90,90),rr(0.3,0.6),rr(1,2),R()<0.5?'#d8f0ff':'#a8c8e0','spark');return r;}}
+
+// ---- parachutes: bail out of a helicopter up high, or jump off a tower, then SPACE to open ----
+{const f=exitCar;exitCar=function(force){const c=player.car;
+  if(!force&&c&&c.t.heli&&!c.t.plane&&(c.alt||0)>110&&!c.t.rc){const alt=c.alt,x=c.x,y=c.y;f(true);{const ca=Math.cos(c.a),sa=Math.sin(c.a);let px=x-sa*75,py=y+ca*75;if(solidPx(px,py)){px=x+sa*75;py=y-ca*75;}player.x=px;player.y=py;}player.jz=alt;player.peak=alt;player.jv=0;player.vx=c.vx*0.5;player.vy=c.vy*0.5;
+    note('Bailed out! SPACE to open your parachute');return;}
+  return f(force);}}
+function chuteTick(dt){if(player.car||game.state!=='play'){player.chute=false;return;}
+  const fl=footFloor(player.x,player.y,player.jz||0)[0],h=(player.jz||0)-fl;
+  if(!player.chute){if(h>70&&(player.jv||0)<-140&&kd.Space&&!player.jumpHeld2){player.chute=true;player.jv=-60;sfx('door',0.6);note('Steer with the movement keys');}player.jumpHeld2=!!kd.Space;return;}
+  if(h<=1||(player.jv||0)===0){player.chute=false;player.peak=player.jz;return;}
+  player.jv=Math.max(player.jv,-58);player.peak=player.jz;
+  const nx=player.x+Math.cos(player.body||player.a)*70*dt,ny=player.y+Math.sin(player.body||player.a)*70*dt;if(!solidPx(nx,ny)){player.x=nx;player.y=ny;}}
+{const f=drawPed3;drawPed3=function(p,isPl,fg){f(p,isPl,fg);
+  if(isPl&&player.chute){const z=40,a=player.body||player.a,ca=Math.cos(a),sa=Math.sin(a),z0=ZOFF;
+    for(let i=-2;i<=2;i++){const off=i*5.5;obox(p.x-sa*off,p.y+ca*off,a,8,3,z-Math.abs(i)*2.2,z+4-Math.abs(i)*2.2,i%2?[230,70,40]:[245,235,220],i%2?[240,90,50]:[250,245,230],fg);}
+    for(const s of[-1,1])if(proj(p.x-sa*13*s,p.y+ca*13*s,z-4)){const x1=PX,y1=PY;if(proj(p.x,p.y,20)){L3.strokeStyle='rgba(40,40,40,.7)';L3.lineWidth=1;L3.beginPath();L3.moveTo(x1,y1);L3.lineTo(PX,PY);L3.stroke();}}
+    ZOFF=z0;}
+  // cops on foot carry flashlights at night
+  if(!isPl&&p.cop&&!p.gone&&LIGHTK>0.25&&!MIRROR){const a=p.a,hx=p.x+Math.cos(a)*34,hy=p.y+Math.sin(a)*34,z0=ZOFF;
+    if(proj(hx,hy,0))glow(PX,PY,16*PK,'#fff2c8',0.35*LIGHTK);if(proj(p.x+Math.cos(a)*5,p.y+Math.sin(a)*5,13))glow(PX,PY,2.5*PK,'#ffffff',0.8*LIGHTK);ZOFF=z0;}}}
+
+// ---- screen: low sun glare at dawn and dusk, speed streaks when you're flying ----
+const STREAKS=[];
+{const f=render;render=function(){f();if(MENUVIEW||game.state==='menu'||FREECAM.on||SCOPE.on)return;
+  const VWc=cv.width,VHc=cv.height,hr=clock*24,gold=Math.max(0,1-Math.abs(hr-6.9)/1.1)+Math.max(0,1-Math.abs(hr-18.6)/1.1);
+  if(gold>0.02&&rain<0.4){const sunA=hr<12?Math.atan2(0.8,0.6):Math.atan2(0.8,-0.6),d=angDiff(sunA,cam.yaw);
+    if(Math.abs(d)<0.9){const k=gold*(1-Math.abs(d)/0.9)*(1-rain)*(1-FOGK),sx=VWc/2+Math.tan(d)*FOC*SCL,sy=OY+(HOR-14)*SCL;
+      ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(sx,sy,0,sx,sy,VWc*0.45);g.addColorStop(0,`rgba(255,214,150,${0.5*k})`);g.addColorStop(0.25,`rgba(255,170,90,${0.18*k})`);g.addColorStop(1,'rgba(255,140,60,0)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,VWc,VHc);
+      for(const [t,r,al] of[[0.45,26,0.10],[0.8,12,0.14],[1.25,40,0.06],[1.6,18,0.09]]){const fx=sx+(VWc/2-sx)*t*2,fy=sy+(VHc/2-sy)*t*2;ctx.fillStyle=`rgba(255,200,140,${al*k})`;ctx.beginPath();ctx.arc(fx,fy,r*SCL*0.5,0,TAU);ctx.fill();}
+      ctx.restore();}}
+  const c=player.car,sp=c?hyp(c.vx,c.vy):0;
+  if(c&&sp>470&&!c.t.heli&&!c.t.plane&&game.state==='play'){const k=clamp((sp-470)/300,0,1);if(STREAKS.length<26&&R()<0.6)STREAKS.push({a:R()*TAU,r:rr(0.35,0.6),l:rr(0.08,0.18),t:0});
+    ctx.save();ctx.strokeStyle=`rgba(255,255,255,${0.22*k})`;ctx.lineWidth=Math.max(1,SCL*0.6);ctx.beginPath();const R0=Math.hypot(VWc,VHc)/2;
+    for(const s of STREAKS){s.t+=0.06;s.r+=0.06;const r1=s.r*R0,r2=(s.r+s.l)*R0,ca=Math.cos(s.a),sa=Math.sin(s.a);ctx.moveTo(VWc/2+ca*r1,VHc/2+sa*r1*0.7);ctx.lineTo(VWc/2+ca*r2,VHc/2+sa*r2*0.7);}
+    ctx.stroke();ctx.restore();for(let i=STREAKS.length-1;i>=0;i--)if(STREAKS[i].r>1.1)STREAKS.splice(i,1);}else STREAKS.length=0;}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);chuteTick(dt);}}

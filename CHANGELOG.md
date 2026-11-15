@@ -2,6 +2,17 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.10.0
+- Brake lights glow when a car slows hard or you hold the brake; white reverse lights when backing up.
+- Tire smoke and rubber on burnouts from a standstill and when you lock up the brakes at speed.
+- Exhaust backfires: lift off the gas at speed in a sports car (or a cop car, now and then) and it pops and flashes.
+- Cars get dirty as you drive, much faster on grass and dirt; rain slowly washes them and the spray shop cleans them.
+- Hard hits throw glass shards.
+- Parachutes: get out of a helicopter more than about 110 up and you bail out; press SPACE while falling (from the chopper or off a tower) to open the chute and steer it down. No fall damage under a chute.
+- Cops on foot carry flashlights at night.
+- Low sun at dawn and dusk: glare and lens flare when you look toward it.
+- Speed streaks at the screen edges when you're really moving.
+
 ## v5.9.0
 - Calmer police: squad cars top out a little faster than a sedan, hold a gap behind you instead of shoving you along, ram only from 3 stars (one car at a time, every 12-18 s), and weigh less.
 - Paramedic: level n has n patients (up to 6) spread around; three fit in the back, each pickup adds 10 s, unload at the hospital and go back for the rest. Level 12 makes you heal over time.

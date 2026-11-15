@@ -31,6 +31,8 @@ with an `until` step), busier streets, phone (`TEXTS`, mechanic), completion (`c
 
 `js/08f-gta3.js` (v5.9): breakable street furniture (`BRKG` grid over hydrant/bin/mail/news props and `streetLights`, `o.down`), bike wheelies (`c.wh`, `c.whP`),
 suspension pitch (`c.susp`, added in a `drawCar3` wrapper), grass slowdown, car-fire calls (wraps `updateFire`) and mission times (`STATS.mtime`).
+Since v5.10 also brake/reverse lights (`c.brk`/`c.rev`, drawn in 08v), tire smoke, backfires, grime (`c.dirt`), glass shards (wraps `damageCar`),
+parachutes (`player.chute`, bail out via the `exitCar` wrapper), cop flashlights (in a `drawPed3` wrapper; ZOFF already includes the ped's jz there) and screen glare/streaks (wraps `render`).
 
 ## Before touching anything that gets drawn
 Read the **RENDERING RULES** block at the top of `js/08-render.js` (the `RENDER: PSEUDO-3D CHASE CAMERA` section).
