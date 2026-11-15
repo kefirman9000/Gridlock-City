@@ -2,6 +2,12 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.5.0
+- **Cars fall apart like in GTA III.** Each end and side of a car keeps its own damage: a battered front or back leaves the bumper hanging and then knocks it off, a smashed front pops the bonnet, and a hit on the side springs that door open. A spray shop fixes it all.
+- **Street life.** Rear-end someone and they may get out and come for you (and drag you out if you sit there). A crash draws a crowd of gawkers. People stop to chat in pairs. Park with music on and people nearby dance along or tell you to turn it down.
+- **Money-makers.** Safehouse garages hold three cars. Every so often the docks page you for one particular car: bring it in clean before the deadline for well over its export price.
+- Shops, safehouses, helipads and mission markers each get their own spot instead of piling up, and shop doors are visible on the street.
+
 ## v5.4.6
 - Landmarks no longer pile up in one square: shops, safehouses, helipads and boss markers each get their own spot, and shop entrances are visible doorways on the street. (Every place used to take 'the nearest parking lot', and cities only have 12 to 19 lots, so up to six things could share one.)
 

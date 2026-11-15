@@ -15,6 +15,7 @@ CHECKS = {
     'walk (camera-relative)': """()=>{const x0=player.x,y0=player.y;keys.KeyW=true;for(let i=0;i<60;i++)update(1/60);keys.KeyW=false;
         return hyp(player.x-x0,player.y-y0)>40||'player did not move'}""",
     'enter, drive and leave a car': """()=>{let s=null;for(let i=0;i<80&&!s;i++)s=laneSpotNear(player.x+rr(-600,600),player.y+rr(-600,600));if(!s)return 'no lane spot';
+        for(let i=cars.length-1;i>=0;i--)if(hyp(cars[i].x-s.x,cars[i].y-s.y)<320)cars.splice(i,1); // a clear road ahead
         const c=makeCar('sedan',s.x,s.y,s.dir*PI/2);player.car=c;c.driver='player';c.ai=null;c.traffic=false;player.x=c.x;player.y=c.y;
         const x0=c.x,y0=c.y;keys.KeyW=true;for(let i=0;i<90;i++)update(1/60);keys.KeyW=false;const moved=hyp(c.x-x0,c.y-y0);
         c.vx=c.vy=0;exitCar(true);return (moved>60&&!player.car)||('moved '+Math.round(moved)+', in car '+!!player.car)}""",
@@ -66,6 +67,11 @@ CHECKS = {
         for(const v of[bk,c]){const i=cars.indexOf(v);if(i>=0)cars.splice(i,1);}return ok||('driver '+bk.driver+', down '+bk.down+', v '+Math.round(hyp(bk.vx,bk.vy))+', burn '+bk.burn)}""",
     'crashes loosen parts by zone': """()=>{const c=makeCar('sedan',hospitalSpawn.x,hospitalSpawn.y,0);const ca=Math.cos(c.a),sa=Math.sin(c.a);zoneHit(c,c.x+ca*30,c.y+sa*30,500);zoneHit(c,c.x-sa*14,c.y+ca*14,350);
         const ok=c.dmg&&c.dmg.f>=LOOSE.hood&&c.dmg.R>=LOOSE.door&&c.dmg.r===0;cars.splice(cars.indexOf(c),1);return ok||JSON.stringify(c.dmg)}""",
+    'garages hold three cars, orders pay at the docks': """()=>{const sh=SAFEHOUSES[0];if(!sh)return true;sh.owned=true;clearHeat();DLG.open=false;game.state='play';let n=0;
+        for(let k=0;k<3;k++){const c=makeCar('sedan',sh.gx,sh.gy+5,PI/2);c.driver='player';c.ai=null;player.car=c;player.x=c.x;player.y=c.y;c.vx=c.vy=0;shCool=0;for(let i=0;i<3;i++)update(1/60);if(player.car){exitCar(true);}}
+        n=sh.garage.filter(Boolean).length;for(let i=0;i<3;i++){const g=sh.gcar[i];if(g){const j=cars.indexOf(g);if(j>=0)cars.splice(j,1);}sh.gcar[i]=null;}sh.garage=[];sh.owned=false;
+        ORDER=null;orderT=0;const ms=mission;mission=null;orderTick(0.1);mission=ms;if(!ORDER)return 'no order';const c=makeCar(ORDER.type,EXPORT.x,EXPORT.y,0);c.driver='player';player.car=c;player.x=c.x;player.y=c.y;c.vx=c.vy=0;expCool=0;
+        const m0=money;updateExport(0.1);if(player.car)exitCar(true);return (n===3&&money>m0)||('stored '+n+', paid '+(money-m0))}""",
     'floaty car jump hangs in the air': """()=>{OPT.floaty=true;const r=RAMPS.find(r=>r.h>8);if(!r)return true;const ca=Math.cos(r.a),sa=Math.sin(r.a);
         const c=makeCar('sports',r.x-ca*(r.hl+120),r.y-sa*(r.hl+120),r.a);player.car=c;c.driver='player';c.ai=null;player.x=c.x;player.y=c.y;c.vx=ca*520;c.vy=sa*520;
         for(let i=cars.length-1;i>=0;i--)if(cars[i]!==c&&hyp(cars[i].x-r.x,cars[i].y-r.y)<r.hl+260)cars.splice(i,1);peds.length=0; // nothing in the run-up

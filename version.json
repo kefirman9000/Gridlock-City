@@ -1,4 +1,4 @@
 {
-  "version": "5.4.6",
-  "notes": "Landmarks no longer pile up in one square: shops, safehouses, helipads and boss markers each get their own spot, and shop entrances are visible doorways on the street."
+  "version": "5.5.0",
+  "notes": "Loose parts (hanging bumpers, popped bonnets, sprung doors), road rage, crowds at crashes, people chatting and reacting to your radio, three-car safehouse garages, and steal-to-order jobs for the docks."
 }

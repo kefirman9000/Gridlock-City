@@ -335,24 +335,28 @@ function updateBosses(){for(const b of BOSSES){if(dist2(b.pt.x,b.pt.y,player.x,p
 const SAFEHOUSES=[];
 {const want=[[2,7,2000,'Westside Island'],[12,8,4000,'Uptown'],[10,15,6000,'South Beach']];
  for(const[bx,by,price,name]of want){const l=nearestLot((bx*P+9)*T,(by*P+9)*T);if(!l)continue;if(SAFEHOUSES.some(s=>s.lot===l))continue;
-   const sh={name,price,owned:false,lot:l,x:l.x-60,y:l.y,gx:l.x+60,gy:l.y,garage:null,gcar:null};SAFEHOUSES.push(sh);
+   const sh={name,price,owned:false,lot:l,x:l.x-60,y:l.y,gx:l.x+60,gy:l.y,garage:[],gcar:[null,null,null]};SAFEHOUSES.push(sh);
    SIGNS.push({x:sh.x,y:sh.y,text:'',bg:'#11704a',fg:'#f5f1e2',h:40,on:()=>true,sh});}}
 let shCool=0;
 function updateSafehouses(dt){shCool-=dt;if(DLG.open||game.state!=='play')return;
   for(const sh of SAFEHOUSES){const d2=dist2(sh.x,sh.y,player.x,player.y);
-    // a stored car waits parked in the garage
-    if(sh.owned&&sh.garage&&!sh.gcar&&d2<1200*1200){const g=sh.garage,c=makeCar(g.type,sh.gx,sh.gy,PI/2,g.col);c.up=g.up||null;sh.gcar=c;}
-    if(sh.gcar&&(sh.gcar.wreck||cars.indexOf(sh.gcar)<0)){if(sh.gcar.wreck)sh.garage=null;sh.gcar=null;}
-    if(sh.gcar&&player.car===sh.gcar&&hyp(sh.gcar.x-sh.gx,sh.gcar.y-sh.gy)>90){sh.garage=null;sh.gcar=null;}
+    // GTA III garages: up to three stored cars wait parked side by side (slot i at GSLOT(sh,i))
+    for(let i=0;i<3;i++){const g=sh.garage[i],q=GSLOT(sh,i);
+      if(sh.owned&&g&&!sh.gcar[i]&&d2<1200*1200){const c=makeCar(g.type,q.x,q.y,PI/2,g.col);c.up=g.up||null;c.traffic=false;sh.gcar[i]=c;}
+      const c=sh.gcar[i];if(!c)continue;
+      if(c.wreck||cars.indexOf(c)<0){if(c.wreck)sh.garage[i]=null;sh.gcar[i]=null;}
+      else if(player.car===c&&hyp(c.x-q.x,c.y-q.y)>90){sh.garage[i]=null;sh.gcar[i]=null;}}
     if(shCool>0)continue;
     if(!player.car&&d2<34*34){shCool=3;
-      if(!sh.owned){if(money>=sh.price)say([['Realtor','A '+sh.name+' safehouse for $'+sh.price.toLocaleString()+'. Save point, a garage for one car, and you wake up here after a bad day.']],null,[['BUY ($'+sh.price.toLocaleString()+')',()=>{addMoney(-sh.price);sh.owned=true;sfx('pass');showBig('SAFEHOUSE BOUGHT',sh.name,'#3ee07a',2.5);if(OPT.autosave)writeSave('auto');}],['NO THANKS',()=>{},'no']]);
+      if(!sh.owned){if(money>=sh.price)say([['Realtor','A '+sh.name+' safehouse for $'+sh.price.toLocaleString()+'. Save point, a garage for three cars, and you wake up here after a bad day.']],null,[['BUY ($'+sh.price.toLocaleString()+')',()=>{addMoney(-sh.price);sh.owned=true;sfx('pass');showBig('SAFEHOUSE BOUGHT',sh.name,'#3ee07a',2.5);if(OPT.autosave)writeSave('auto');}],['NO THANKS',()=>{},'no']]);
         else note('Safehouse for sale: $'+sh.price.toLocaleString());}
       else if(stars()>0)note('Lose the cops before going inside');
 }
-    else if(sh.owned&&player.car&&!player.car.t.boat&&player.car!==sh.gcar&&dist2(sh.gx,sh.gy,player.x,player.y)<50*50&&hyp(player.car.vx,player.car.vy)<60){shCool=3;
-      if(sh.garage){note('The garage already has a car in it');continue;}
-      const c=player.car;sh.garage={type:c.type,col:c.col,up:c.up||null};exitCar(true);c.x=sh.gx;c.y=sh.gy;c.vx=c.vy=0;c.a=PI/2;sh.gcar=c;c.traffic=false;sfx('door');note('Car stored in the garage');}}}
+    else if(sh.owned&&player.car&&!player.car.t.boat&&!sh.gcar.includes(player.car)&&dist2(sh.gx,sh.gy,player.x,player.y)<50*50&&hyp(player.car.vx,player.car.vy)<60){shCool=3;
+      if(sh.gcar.includes(player.car))continue;const i=[0,1,2].find(k=>!sh.garage[k]);if(i==null){note('The garage is full (3 cars). Drive one out to make room');continue;}
+      const c=player.car,q=GSLOT(sh,i);sh.garage[i]={type:c.type,col:c.col,up:c.up||null};exitCar(true);c.x=q.x;c.y=q.y;c.vx=c.vy=0;c.va=0;c.a=PI/2;sh.gcar[i]=c;c.traffic=false;sfx('door');
+      note('Car stored in the garage ('+sh.garage.filter(Boolean).length+'/3)');}}}
+function GSLOT(sh,i){return{x:sh.gx+[-34,34,0][i],y:sh.gy};} // the middle one fills last, so the way in stays clear
 // a hospital and a police station in each part of town (existing buildings take the job; no change to the layout)
 const HOSPITALS=[],STATIONS=[];
 (function areaServices(){const sideWalk=(b)=>{const cx=b.x+b.w/2;for(let d=0;d<6;d++)for(const yy of[b.y+b.h+16+d*T,b.y-16-d*T]){const tx=Math.floor(cx/T),ty=Math.floor(yy/T);if(walkable(tileAt(tx,ty)))return{x:cx,y:yy};}return null;};
@@ -518,7 +522,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&game.star
 // ---------- per-frame hook ----------
 function extTick(dt){extTick5(dt);transitTick(dt);extTick2(dt);extTick3(dt);extTick4(dt);updateBosses();updateSafehouses(dt);updateBoats(dt);updateShop();updateNitro(dt);updateHorn(dt);updateFire(dt);updateRaces(dt);updateLife(dt);mobileTick(dt);}
 function extSave(){return{gym:GYM,gold:GOLDGOT,tags:{seed:SAVE_SEED,d:TAGS.map(t=>t.done?1:0)},runs:RUNBEST,secret:secretFound,crewup:CREWUP,roof:{seed:SAVE_SEED,got:STASH.map(k=>k.got?1:0)},trash:trashLevel,taco:tacoLevel,story:STORY,sh:SAFEHOUSES.map(s=>({n:s.name,o:s.owned,g:s.garage})),best:BEST,fire:fireLevel,stats:STATS,golds:GOLDS,exp:EXPORTED,pizza:pizzaLevel,armor:player.armor,turf:TURF,stunt:stuntLevel};}
-function extLoad(e){if(!e)return;GYM=e.gym||0;for(const k in GOLDGOT)delete GOLDGOT[k];Object.assign(GOLDGOT,e.gold||{});applyGold();for(const t of TAGS)t.done=false;if(e.tags&&e.tags.seed===SAVE_SEED)(e.tags.d||[]).forEach((d,i)=>{if(TAGS[i])TAGS[i].done=!!d;});for(const k in RUNBEST)delete RUNBEST[k];Object.assign(RUNBEST,e.runs||{});secretFound=!!e.secret;Object.assign(CREWUP,{guns:0,armor:0,slot:0,guard:0},e.crewup||{});for(const k of STASH)k.got=false;if(e.roof&&e.roof.seed===SAVE_SEED)(e.roof.got||[]).forEach((g,i)=>{if(STASH[i])STASH[i].got=!!g;});trashLevel=e.trash||0;tacoLevel=e.taco||0;if(e.story){STORY.prog=e.story.prog||[0,0,0];STORY.fin=e.story.fin||0;}(e.sh||[]).forEach((q,i)=>{const s=(q.n&&SAFEHOUSES.find(h=>h.name===q.n))||SAFEHOUSES[i];if(s){s.owned=!!q.o;s.garage=q.g||null;if(s.gcar){const k=cars.indexOf(s.gcar);if(k>=0&&s.gcar!==player.car)cars.splice(k,1);s.gcar=null;}}});
+function extLoad(e){if(!e)return;GYM=e.gym||0;for(const k in GOLDGOT)delete GOLDGOT[k];Object.assign(GOLDGOT,e.gold||{});applyGold();for(const t of TAGS)t.done=false;if(e.tags&&e.tags.seed===SAVE_SEED)(e.tags.d||[]).forEach((d,i)=>{if(TAGS[i])TAGS[i].done=!!d;});for(const k in RUNBEST)delete RUNBEST[k];Object.assign(RUNBEST,e.runs||{});secretFound=!!e.secret;Object.assign(CREWUP,{guns:0,armor:0,slot:0,guard:0},e.crewup||{});for(const k of STASH)k.got=false;if(e.roof&&e.roof.seed===SAVE_SEED)(e.roof.got||[]).forEach((g,i)=>{if(STASH[i])STASH[i].got=!!g;});trashLevel=e.trash||0;tacoLevel=e.taco||0;if(e.story){STORY.prog=e.story.prog||[0,0,0];STORY.fin=e.story.fin||0;}(e.sh||[]).forEach((q,i)=>{const s=(q.n&&SAFEHOUSES.find(h=>h.name===q.n))||SAFEHOUSES[i];if(s){s.owned=!!q.o;s.garage=Array.isArray(q.g)?q.g.slice(0,3):q.g?[q.g]:[];for(let k2=0;k2<3;k2++){const gc=s.gcar[k2];if(gc){const k=cars.indexOf(gc);if(k>=0&&gc!==player.car)cars.splice(k,1);}s.gcar[k2]=null;}}});
   for(const k in BEST)delete BEST[k];Object.assign(BEST,e.best||{});fireLevel=e.fire||0;for(const k of['usj','rcBest','offBest','offWins','flightBest','rank'])delete STATS[k];Object.assign(STATS,e.stats||{});for(const k in GOLDS)delete GOLDS[k];Object.assign(GOLDS,e.golds||{});for(const k in EXPORTED)delete EXPORTED[k];Object.assign(EXPORTED,e.exp||{});pizzaLevel=e.pizza||0;player.armor=e.armor||0;for(const k in TURF)delete TURF[k];Object.assign(TURF,e.turf||{});stuntLevel=e.stunt||0;}
 
 // ---------- traffic on the diagonal avenues ----------
@@ -587,7 +591,19 @@ const EXPORTS=[['compact',600],['sedan',700],['taxi',900],['sports',2000],['truc
 const EXPORTED={};
 const EXPORT=(()=>{const l=nearestLot((9*P+9)*T,(16*P+9)*T)||lotBlocks[0];const s={x:l.x,y:l.y};SIGNS.push({x:s.x,y:s.y-60,text:'EXPORT DOCKS',bg:'#1d4a6a',fg:'#ffffff',h:44,on:()=>true});props.push({x:s.x+60,y:s.y-30,k:'crane',a:0.6});return s;})();
 let expCool=0;
-function updateExport(dt){expCool-=dt;const c=player.car;if(expCool>0||!c||c.t.boat||game.state!=='play'||dist2(EXPORT.x,EXPORT.y,c.x,c.y)>80*80||hyp(c.vx,c.vy)>50)return;expCool=4;
+// steal to order (GTA III's car lists): every so often the docks page you for one particular car, worth well over its
+// export price if it arrives in decent shape before the deadline; any number of these, one at a time
+const ORDERTYPES=[['sports',3200],['muscle',3400],['roadster',3600],['suv',2600],['limo',4200],['pickup',2000],['taxi',1800],['wagon',1600],['van',2000],['icecream',2800],['ambulance',3200],['compact',1400],['sedan',1500],['police',4500]];
+let ORDER=null,orderT=90;
+function orderTick(dt){if(game.state!=='play')return;
+  if(ORDER){ORDER.t-=dt;if(ORDER.t<=0){pager('Docks: forget the '+CT[ORDER.type].name+'. Buyer walked.');ORDER=null;orderT=rr(90,150);}return;}
+  orderT-=dt;if(orderT>0||mission||stars()>0)return;const o=pick(ORDERTYPES.filter(q=>CT[q[0]]));if(!o)return;ORDER={type:o[0],pay:o[1],t:300};
+  pager('Docks: buyer wants a '+CT[o[0]].name+', clean, within 5 minutes. $'+o[1].toLocaleString()+' at the Export Docks.');}
+function updateExport(dt){orderTick(dt);expCool-=dt;const c=player.car;if(expCool>0||!c||c.t.boat||game.state!=='play'||dist2(EXPORT.x,EXPORT.y,c.x,c.y)>80*80||hyp(c.vx,c.vy)>50)return;expCool=4;
+  if(ORDER&&c.type===ORDER.type){if(stars()>0){note('Lose the cops before the docks will take it');return;}
+    if(c.hp<c.t.hp*0.6){note('The buyer wants it clean. Fix it at a spray shop first');return;}
+    const pay=ORDER.pay+Math.round(ORDER.t*4);exitCar(true);cars.splice(cars.indexOf(c),1);addMoney(pay);sfx('pass');STATS.orders=(STATS.orders||0)+1;
+    showBig('ORDER FILLED',CT[ORDER.type].name+'  +$'+pay.toLocaleString(),'#6ab8ff',2.6);ORDER=null;orderT=rr(60,120);return;}
   const e=EXPORTS.find(q=>q[0]===c.type);const left=EXPORTS.filter(q=>!EXPORTED[q[0]]).map(q=>CT[q[0]].name).join(', ');
   if(!e||EXPORTED[c.type]){note(EXPORTED[c.type]?'Already shipped one of those. Still wanted: '+(left||'nothing!'):'Not on the list. Wanted: '+left);return;}
   if(stars()>0){note('Lose the cops before the docks will take it');return;}
