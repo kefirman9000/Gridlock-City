@@ -112,6 +112,13 @@ const CHAPTERS=[
     {k:'kill',gang:2,n:6,around:()=>({x:RIVX0*T-60,y:(11*P+9)*T}),spread:260,timer:180,desc:'Take out the 6 Jade Lotus on the riverside'},
     {k:'boat'},
     {k:'drive',to:()=>LM.dockS,car:'boat',r:110,timer:120,desc:'Take the boat to the south dock'}]},
+  {title:'Top Floor',pay:6500,steps:[
+    {k:'talk',lines:[[VINCE,'The Saints think the new parking garage is neutral ground. Nothing in this town is neutral.'],[VINCE,'Drive to the roof, then use that ramp up there to make an exit they\'ll talk about for years.']]},
+    {k:'drive',to:()=>GARAGE?{x:GARAGE.cx,y:GARAGE.cy}:BOSSES[0].pt,car:'any',r:120,minZ:60,desc:'Drive up the ramps to the garage roof'},
+    {k:'heat',stars:2},
+    {k:'jump',air:0.9,desc:'Jump off the rooftop ramp (at least 0.9 s of air)'},
+    {k:'lose',desc:'Lose the cops'},
+    {k:'talk',lines:[[VINCE,'(on the phone) A car came off the top of the garage and landed on a Saints limo. You wouldn\'t know anything about that.'],[YOU,'Never heard of it.']]}]},
  ],
  [ // Chrome Saints
   {title:'Times Square Handoff',pay:2500,steps:[
@@ -143,6 +150,17 @@ const CHAPTERS=[
     {k:'talk',lines:[[DEX,'A courier with my ledger just got on the El. He thinks trains are safe.'],[DEX,'Follow the train. When he gets off, he\'s yours.']]},
     {k:'eltrain',timer:150,desc:'Follow the El train. The courier gets off at the next stop'},
     {k:'kill',gang:-1,n:0,timer:90,desc:'Take out the courier before he gets away'}]},
+  {title:'Pier Pressure',pay:6500,steps:[
+    {k:'talk',lines:[[DEX,'A buyer is waiting at the end of the South Beach pier with my money. Go and get it.'],[DEX,'The Jade Lotus will be watching the beach. Don\'t let them follow you back.']]},
+    {k:'drive',to:()=>PIER?{x:PIER.x,y:PIER.yj}:LM.beach,r:44,desc:'Meet the buyer out on the pier'},
+    {k:'talk',lines:[['Buyer','You\'re Dex\'s runner? Here. Count it later. And look behind you.']]},
+    {k:'kill',around:()=>PIER?{x:PIER.x,y:PIER.ys-40}:LM.beach,n:4,spread:220,gang:2,desc:'The Lotus came to collect. Deal with them'},
+    {k:'heat',stars:2},
+    {k:'lose',desc:'Lose the cops'}]},
+  {title:'Container Job',pay:7000,steps:[
+    {k:'talk',lines:[[DEX,'A truck full of Saints merchandise is parked under the cranes at the docks. Except it isn\'t ours, it\'s Vince\'s.'],[DEX,'Take it, bring it to the export crane, and nobody needs to know where it came from.']]},
+    {k:'steal',type:'truck',col:'#2a2c31',where:()=>CRANES.length?walkNear(CRANES[1%CRANES.length].x+70,CRANES[1%CRANES.length].y,40):lotNear(player.x,player.y,800,1800),desc:'Steal the truck at the docks'},
+    {k:'drive',to:()=>EXPORT,car:'stolen',minHp:0.4,desc:'Take the truck to the export crane'}]},
  ],
  [ // Jade Lotus
   {title:'Beach Pickup',pay:2500,steps:[
@@ -173,6 +191,13 @@ const CHAPTERS=[
     {k:'wreck',at:()=>({x:4*P*T,y:4*P*T}),far:500,type:'sedan',col:'#4f1418',hp:160,cruise:230,timer:120,desc:'Wreck the first Red Sabres car'},
     {k:'wreck',at:()=>({x:player.x,y:player.y}),far:900,type:'sports',col:'#4f1418',hp:160,cruise:260,timer:120,desc:'Wreck the second Red Sabres car'},
     {k:'wreck',at:()=>({x:player.x,y:player.y}),far:900,type:'sedan',col:'#4f1418',hp:200,cruise:240,timer:120,desc:'Wreck the last Red Sabres car'}]},
+  {title:'Sanctuary',pay:6000,steps:[
+    {k:'talk',lines:[[LIN,'The cathedral keeps its doors open to everyone. Even to men who owe me money.'],[LIN,'Three of Vince\'s collectors left envelopes in the cathedral square. Gather them before the priest does.']]},
+    {k:'drive',to:()=>CATH?CATH.door:BOSSES[2].pt,r:60,desc:'Go to the Old Town cathedral'},
+    {k:'collect',n:3,around:()=>CATH?{x:CATH.door.x+80,y:CATH.door.y}:BOSSES[2].pt,spread:260,timer:120,desc:'Find the 3 envelopes around the cathedral'},
+    {k:'heat',stars:2},
+    {k:'lose',desc:'Lose the cops'},
+    {k:'talk',lines:[[LIN,'(on the phone) The priest called me. He says you stole from the Lord.'],[LIN,'I told him the Lord can send an invoice.']]}]},
  ],
 ];
 const FINALE={title:'Gridlock',pay:25000,steps:[
@@ -243,7 +268,8 @@ function storyTick(dt){const m=mission;if(DLG.open)return;const s=m.steps[m.si];
       if(s.car==='stolen'&&st.c){if(st.c.wreck||cars.indexOf(st.c)<0){storyFail('The car was wrecked');return;}if(s.minHp&&st.c.hp<st.c.t.hp*s.minHp){storyFail('The cargo got damaged');return;}if(pc!==st.c){m.desc='Get back in the '+st.c.t.name;m.tgt=st.c;m.ring=false;return;}m.desc=s.desc;m.tgt={x:st.x,y:st.y};m.ring=true;}
       if(s.car==='any'&&!pc){m.desc='Get a car';}else if(s.car==='boat'&&!(pc&&pc.t.boat)){m.desc='Get back in the boat';}else m.desc=s.desc;
       const o=pc||player,r=s.r||80,sp=pc?hyp(pc.vx,pc.vy):0;
-      if(dist2(o.x,o.y,st.x,st.y)<r*r&&(!s.car||pc)&&(s.car!=='boat'||(pc&&pc.t.boat))&&(m.opts.race||sp<160)){if(m.opts.race)sfx('pickup');stepNext();}
+      if(s.minZ&&pc&&(pc.az||0)<s.minZ&&dist2(o.x,o.y,st.x,st.y)<r*r){m.desc='Up on the roof, not underneath it';break;}
+      if(dist2(o.x,o.y,st.x,st.y)<r*r&&(!s.car||pc)&&(!s.minZ||(pc&&(pc.az||0)>=s.minZ))&&(s.car!=='boat'||(pc&&pc.t.boat))&&(m.opts.race||sp<160)){if(m.opts.race)sfx('pickup');stepNext();}
       break;}
     case 'wreck':{const c=st.c;if(c.wreck||c.burn>=0||c.hp<=0){c.vip=false;stepNext();return;}
       if(c.driver==='player'){note('Wreck it, don\'t steal it!');}

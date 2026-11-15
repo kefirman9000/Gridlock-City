@@ -60,7 +60,7 @@ function gatherSave(){return{v:1,ts:Date.now(),seed:SAVE_SEED,money,ammo:player.
 function writeSave(slot){try{localStorage.setItem('gc_save_'+slot,JSON.stringify(gatherSave()));return true}catch(_){return false}}
 function readSave(slot){try{const s=JSON.parse(localStorage.getItem('gc_save_'+slot)||'null');return s&&s.v===1?s:null}catch(_){return null}}
 function latestSave(){let best=null;for(const sl of SLOTS){const s=readSave(sl);if(s&&(!best||s.ts>best.s.ts))best={slot:sl,s};}return best;}
-function applySave(s){money=s.money||0;saveMoney();player.ammo=(s.ammo||[]).map(a=>a<0?Infinity:a);if(!player.ammo.length)player.ammo=[Infinity,0,0,0,0,0,0];player.w=s.w||0;player.hp=s.hp||100;
+function applySave(s){if(s&&s.seed!=null&&s.seed!==SAVE_SEED)setTimeout(()=>{pager('Old save: the city has been rebuilt since, so hidden packages, roof stashes and gang tags start over. Everything else carries over.');note('This save is from an older city layout: collectibles start over');},1500);money=s.money||0;saveMoney();player.ammo=(s.ammo||[]).map(a=>a<0?Infinity:a);if(!player.ammo.length)player.ammo=[Infinity,0,0,0,0,0,0];player.w=s.w||0;player.hp=s.hp||100;
   for(let i=0;i<3;i++)respect[i]=(s.respect||[])[i]||0;if(s.seed===SAVE_SEED)(s.pkg||[]).forEach((g,i)=>{if(PACKAGES[i])PACKAGES[i].got=!!g;});pkgGot=PACKAGES.filter(k=>k.got).length;
   clock=s.clock!=null?s.clock:clock;game.playT=s.play||0;jobLevel=s.jobLevel||0;extLoad(s.ext);}
 const fmtPlay=t=>{t=Math.floor(t/60);return Math.floor(t/60)+'h '+String(t%60).padStart(2,'0')+'m'};
