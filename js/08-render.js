@@ -268,7 +268,7 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
   let t=((wx-a.x)*dx+(wy-a.y)*dy)/L2;t=t<0?0:t>1?1:t;const px=a.x+dx*t,py=a.y+dy*t,L=Math.sqrt(L2),lat=((wx-a.x)*dy-(wy-a.y)*dx)/L,d=Math.hypot(wx-px,wy-py);
   if(d<best){best=d;RLA=(lat<0?-d:d);RLS=a.s+(b.s-a.s)*t;}}return best;}
 (function ringRoad(){const n1=(s,k)=>{const i=Math.floor(s),f=s-i,u=f*f*(3-2*f),h=q=>(hash(q*131+k*7,k*977+11)&65535)/65535;return h(i)+(h(i+1)-h(i))*u;};
-  const node=(ix,iy)=>[(ix*P+2)*T,(iy*P+2)*T],D0=190,yEnd=node(0,NB-1)[1],xA=-D0,xB=WPX+D0,y0=-D0,Rr=560;
+  const node=(ix,iy)=>[(ix*P+2)*T,(iy*P+2)*T],D0=190,yEnd=node(0,NB-1)[1],xA=-D0,xB=WPX+D0,y0=-D0,Rr=1640; // v5.33: wide corners, following the city's rounded north-west and north-east
   // the base loop: a rounded rectangle, then pushed in and out along its normal by noise, then smoothed
   let pts=[];const add=(x,y)=>pts.push([x,y]);
   add(node(0,NB-1)[0],yEnd);for(let x=node(0,NB-1)[0]-40;x>xA+260;x-=40)add(x,yEnd);
@@ -282,9 +282,9 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
   // wander: offset along the outward normal, fading out toward both ends so it meets the city square-on
   {let s=0;const L=[0];for(let i=1;i<pts.length;i++){s+=hyp(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);L.push(s);}const tot=s;
    pts=pts.map((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],tx=b[0]-a[0],ty=b[1]-a[1],tl=hyp(tx,ty)||1,nx=ty/tl,ny=-tx/tl;
-     const fade=smooth01(Math.min(L[i],tot-L[i])/900),o=(45*(n1(L[i]/1800,1)-0.5)*2+12*(n1(L[i]/700,2)-0.5)*2)*fade;
+     const fade=smooth01(Math.min(L[i],tot-L[i])/900),o=(430*Math.pow(n1(L[i]/2100,1),1.3)+320*n1(L[i]/1300,7)-70+70*(n1(L[i]/600,2)-0.5)*2)*fade*(p[0]>WPX&&p[1]>500?0.15:1); // v5.33: a much wider wander (-120..+700), so the beltway is no longer a rounded square
      // outward: the loop runs clockwise round the city, so the left-hand normal points outward
-     return[p[0]-nx*o,p[1]-ny*o];});}
+     return[p[0]+nx*o,p[1]+ny*o];});}
   {const ys=[3,9,15].map(iy=>(iy*P+2)*T);pts=pts.map(p=>{if(p[0]<=WPX)return p;const dy=Math.min(...ys.map(q=>Math.abs(p[1]-q))),w=smooth01(1-(dy-120)/520),xm=WPX+215+(1-w)*700;return[Math.min(p[0],xm),p[1]];});}
   for(let k=0;k<3;k++)pts=chaikin(pts);
   // resample evenly
@@ -324,6 +324,27 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
    for(let pass=0;pass<6;pass++){for(let i=1;i<I.length;i++)if(!fix(I[i])){const m=0.11*(I[i].s-I[i-1].s);I[i].h=clamp(I[i].h,I[i-1].h-m,I[i-1].h+m);}
      for(let i=I.length-2;i>=0;i--)if(!fix(I[i])){const m=0.11*(I[i+1].s-I[i].s);I[i].h=clamp(I[i].h,I[i+1].h-m,I[i+1].h+m);}}
    I.isl=true;I.ringI=bi;I.lo=14;RING.paths.push(I);RING.isl=I;RING.br2={x0:xc0,x1:xc1,y:YB,h:DK};}
+  // v5.33 the hill roads: real roads that leave the beltway on its north and west sides and wind up into the hills (houses stand along
+  // them, see 08h). Each is walked outward from a beltway point, keeping to the gentlest ground, away from every other road, then graded.
+  {const GC2=150,occ=new Set(),ck=(x,y)=>Math.floor(x/GC2)+','+Math.floor(y/GC2),mark=P2=>{for(const q of P2)occ.add(ck(q.x,q.y));};for(const P2 of RING.paths)mark(P2);
+   const near=(x,y)=>{const i=Math.floor(x/GC2),j=Math.floor(y/GC2);for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(occ.has((i+a)+','+(j+b)))return true;return false;};
+   const okC=(x,y)=>{const k=(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);return COAST.LAND[k]&&!ISL2M[k]&&COAST.D[k]>9&&!(x>-260&&x<WPX+260&&y>-260)&&!(x<-150&&y>6200)&&x<WPX+150;};
+   const ccx=WPX/2,ccy=WPX/2,hills=[];
+   const walk=(x,y,a,len,free,seed)=>{const pts=[[x,y]];for(let st=0;st<len;st++){let best=null,bs=1e9;
+       for(const da of[-0.8,-0.5,-0.25,0,0.25,0.5,0.8]){const b=a+da,nx=x+Math.cos(b)*44,ny=y+Math.sin(b)*44;if(!okC(nx,ny)||(st>=free&&near(nx,ny)))continue;
+         const rad=Math.atan2(y-ccy,x-ccx)+(fbm(x/700,y/700,seed)-0.5)*2.6,sc=Math.abs(GH(nx,ny)-GH(x,y))*0.5+Math.abs(da)*4+Math.abs(angDiff(b,rad))*(seed>80?1.2:3.2);if(sc<bs){bs=sc;best=[nx,ny,b];}}
+       if(!best)break;[x,y,a]=best;pts.push([x,y]);}
+     return pts;};
+   const build=(pts,h0,ringI)=>{let p=pts;for(let k=0;k<2;k++)p=chaikin(p);const H=mk(p);H[0].h=h0;
+     for(let pass=0;pass<5;pass++){for(let i=1;i<H.length;i++){const m=0.12*(H[i].s-H[i-1].s);H[i].h=clamp(H[i].h,H[i-1].h-m,H[i-1].h+m);}for(let i=H.length-2;i>0;i--){const m=0.12*(H[i+1].s-H[i].s);H[i].h=clamp(H[i].h,H[i+1].h-m,H[i+1].h+m);}}
+     H.hill=true;H.lo=12;if(ringI!=null)H.ringI=ringI;RING.paths.push(H);hills.push(H);mark(H);return H;};
+   for(let i=60,n=0;i<ring.length-60&&n<14;i+=10){const q=ring[i];if(q.x>WPX+60&&q.y>-60)continue;if(RING.paths.some(S=>S.ringI!=null&&Math.abs(S.ringI-i)<26))continue;
+     let nx=q.uy,ny=-q.ux;if((q.x-ccx)*nx+(q.y-ccy)*ny<0){nx=-nx;ny=-ny;}const pts=walk(q.x,q.y,Math.atan2(ny,nx),30+(hash(i,5)&15),7,60+n);if(pts.length<12)continue;
+     const H=build(pts,q.h,i);n++;
+     // side roads off it (no through traffic)
+     for(const fr of[0.4,0.75]){const j=Math.floor(pts.length*fr),m=pts[j],p0=pts[j-1],b=Math.atan2(m[1]-p0[1],m[0]-p0[0])+(((hash(i,j)&1)?1:-1)*1.35),sp=walk(m[0],m[1],b,16+(hash(j,i)&7),5,90+n);
+       if(sp.length>=8){let bi=0,bd=1e18;H.forEach((u,k)=>{const d=dist2(u.x,u.y,m[0],m[1]);if(d<bd){bd=d;bi=k;}});build(sp,H[bi].h,null);}}}
+   RING.hills=hills;}
   // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
   const hw=RING.hw,bank=180;
   for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);
@@ -1429,5 +1450,6 @@ R=Math.random;
 const mmc=document.createElement('canvas');mmc.width=W;mmc.height=W;
 (function(){const m=mmc.getContext('2d');const img=m.createImageData(W,W);
   const C={[ROAD]:[105,105,112],[WALK]:[140,137,130],[BLD]:[38,38,44],[GRASS]:[60,105,45],[TREE]:[40,85,35],[LOT]:[82,84,90],[SPRAY]:[200,60,40],[CRUSH]:[150,150,40],[WATER]:[48,96,140]};
-  for(let i=0;i<W*W;i++){const c=C[map[i]];img.data[i*4]=c[0];img.data[i*4+1]=c[1];img.data[i*4+2]=c[2];img.data[i*4+3]=255;}
+  for(let i=0;i<W*W;i++){let c=C[map[i]];if(WILD[i]&&(map[i]===GRASS||map[i]===TREE)){const n=hash(i%W,(i/W)|0)&15;c=[46+n,84+n,40+(n>>1)];} // parkland at the city's edge reads as the island's woods, not as a lawn
+    img.data[i*4]=c[0];img.data[i*4+1]=c[1];img.data[i*4+2]=c[2];img.data[i*4+3]=255;}
   m.putImageData(img,0,0);})();

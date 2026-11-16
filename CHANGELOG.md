@@ -2,6 +2,14 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.33.0
+- 01 cityEdge: corner radius 24 -> 46 tiles, south corners rounded (26) above the beach row; per-side wild depth (up to 15 tiles, capped at kept blocks, 13 beside beltway junctions); dead-end stubs removed up to three blocks in; outer blocks with no open street go wild.
+- 08-render ringRoad: corner radius 560 -> 1640, wander -120..+700 outward (east side damped); hill roads (`RING.hills`, `hill:true`) walked from the beltway and graded to 12%.
+- 08-render map: WILD grass is drawn in forest colours on `mmc`.
+- 08h: island life (`IWV` villages, `IWD.park/hotel/summit`, `islandFolk`), hill houses on levelled pads, district names, subway tunnel ribs, traffic on closed streets removed when unseen.
+- 06r/04/09: Song Lab (`SONGN` pool, `songSeg`, `songMark`, `SONGPICK` in localStorage `gc_songs`, `SONG_BAKED` for baked-in picks, `SONGLAB` while auditioning).
+- 08c: swim ripple drawn as rings; swimming ends after a teleport. 08g: room menus close when you leave (`DLGP`).
+
 ## v5.32.0
 - 08h: planeDrive/heliDrive wrapped: an absolute height c.pz is kept while airborne and c.alt (height above ground, as everything reads it) is recomputed from it each step; a plane meeting the ground at >150 takes damage (hillside crash).
 - Ceilings (Dodo 250, heli 240 above ground) now only stop a climb (cap = max(limit, current alt)), so falling ground never pulls you down.

@@ -19,6 +19,7 @@ function initAudio(){
 }
 const RADIO=[{name:'KRUD 88.6',tag:'gutter punk',bpm:172,kind:'punk'},{name:'NEON 101',tag:'night-drive synth',bpm:114,kind:'synth'},{name:'BASSLINE 104.5',tag:'street beats',bpm:88,kind:'hiphop'},{name:'CHATTER 96.1',tag:'talk radio',bpm:100,kind:'talk'},{name:'RADIO OFF',tag:'',kind:'off',bpm:100}];
 const radio={st:0,step:0,next:0,bar:0};
+let SONGLAB=null; // v5.33: set while the Song Lab (06r) auditions a song: {st,seed,off}
 function setStation(i){radio.st=((i%RADIO.length)+RADIO.length)%RADIO.length;if(player.car)player.car.radio=radio.st;radio.lastSt=-1;const st=RADIO[radio.st];radioBanner={text:st.name,sub:st.tag,t:2.6};}
 function rv(t,dur,freq,type,vol,slide,lp){const o=AC.createOscillator();o.type=type;o.frequency.setValueAtTime(freq,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);const g=AC.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.005);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);let n=o;if(lp){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=lp;o.connect(f);n=f;}n.connect(g);g.connect(radioG);o.start(t);o.stop(t+dur+0.02);}
 function rn(t,dur,freq,type,vol){const sN=AC.createBufferSource();sN.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=AC.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);sN.connect(f);f.connect(g);g.connect(radioG);sN.start(t,R());sN.stop(t+dur+0.02);}
@@ -34,10 +35,10 @@ function radioTick(){
   try{
   const S=RADIO[radio.st];if(S.kind==='talk'||S.kind==='off')return;
   // the station's own clock decides where in which song we are (see RCLK in 06r-radio.js)
-  const sd=60/S.bpm/4,off=RCLK[radio.st]+performance.now()/1000-AC.currentTime;
+  const sd=60/S.bpm/4,off=(SONGLAB?SONGLAB.off:RCLK[radio.st])+performance.now()/1000-AC.currentTime;
   if(radio.next<AC.currentTime||radio.lastSt!==radio.st){radio.lastSt=radio.st;radio.next=Math.ceil((off+AC.currentTime+0.05)/sd)*sd-off;}
   while(radio.next<AC.currentTime+0.15){
-    const t=radio.next,T=off+t,seg=Math.floor(T/RCYC),ph=T-seg*RCYC;radio.next+=sd;
+    const t=radio.next,T=off+t,seg0=Math.floor(T/RCYC),ph=T-seg0*RCYC,seg=songSeg(radio.st,seg0);radio.next+=sd; // seg is the song (see songSeg in 06r), seg0 the slot on the station's clock
     const step=Math.floor(ph/sd+1e-6),s=step%16,bar=Math.floor(step/16),v=hash(seg,radio.st*7+1),alt=(v>>>4)&1;
     // song sections, in bars: intro 0-3, verse, chorus (bars 8-15 of every 16), a breakdown now and then; a fill on the last beat before each
     const sec=bar<4?0:(bar%16)<8?1:2,brk=((v>>>9)&3)===0&&(bar%32)>=28,fill=(bar%8)===7&&s>=12,intro=sec===0;
@@ -127,7 +128,7 @@ function updateAudio(){
    siren.o.frequency.setTargetAtTime((720+260*Math.sin(game.t*4.2))*dop,t,0.02);}
   squeal.g.gain.setTargetAtTime(player.car&&player.car.skid&&!player.car.t.boat&&!muted&&game.state==='play'?0.045:0,t,0.05);
   const ron=(!!player.car||(ROOM&&ROOM.id==='club'))&&game.state==='play'&&RADIO[radio.st].kind!=='off'&&!muted&&!game.paused;
-  radioG.gain.setTargetAtTime(ron?(typeof RTALK!=='undefined'&&RTALK?0.15:0.3)*radv()/Math.max(0.2,fxv()):0,t,0.2);if(ron)radioTick();
+  if(!SONGLAB){radioG.gain.setTargetAtTime(ron?(typeof RTALK!=='undefined'&&RTALK?0.15:0.3)*radv()/Math.max(0.2,fxv()):0,t,0.2);if(ron)radioTick();}
 }
 
 // ================= GAME ACTIONS =================

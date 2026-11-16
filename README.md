@@ -31,12 +31,16 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.33
+- **A less square city.** The north-west and north-east corners are wide curves, the south corners round off above the beach, and parkland reaches into the grid by a depth that wanders along each side. The beltway follows the corners and swings up to 700 px out into the hills instead of tracing a box.
+- **Hill roads.** Real graded roads leave the beltway on the north and west and wind up into the hills, with side roads and about 120 houses on levelled plots (North Hills, West Hills).
+- **Ironwood Island is lived in.** Gull Cove in the north, the Eastside farms, Sunset Point with a hotel and a beach, woods and palms, a summit lookout with a trail, parked cars and people while you are there.
+- **Song Lab** (pause menu). Play any of a station's 48 songs and approve or deny it; denied songs stop playing. COPY MY PICKS gives a line to send back so the picks become the default for everyone.
+- Subway tunnels have concrete ribs; the swimming ripple is a ring, not a pale box; a shop menu closes when you walk away.
+
 ## What's new in v5.32
 - **Aircraft fly properly over hills**: the Dodo and the helicopter hold their height above sea level instead of rising and falling with the land under them, so valleys drop away beneath you and a hill you're too low for comes up to meet you. Flying into a hillside is a crash.
 - **Slower aircraft**: the Dodo's top speed is about a third lower (it cruises slower, takes off and stalls at lower speeds), and the helicopter's about 30% lower.
-
-## What's new in v5.31
-- **On foot is much slower now**: you jog at about half your old pace and sprint well under city traffic speed (a full push of the touch stick is a sprint). Cops on foot and fleeing people were slowed to match, so a sprint still just gets away from a cop. Legs now stride in step with your speed instead of at a fixed rate.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

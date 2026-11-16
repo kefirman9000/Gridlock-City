@@ -114,7 +114,7 @@
 //      police; hitting bystanders or cops still does. One incident raises the wanted level by one star at most.
 //  G4. New enemies or chases say why they're happening (a note, a WANTED reason, a radio line).
 // =====================================================================================================================
-const VERSION='5.32.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.33.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -763,12 +763,22 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
     if(mx>=4&&my>=4&&bx<NB&&by<NB){const k=BLOCKK[by*NB+bx];if(!okKind(k)||sp.has(bx+','+by))return true;}
     // the dirt roads out to the farms leave along three streets on the east side
     if(tx>=W-20&&[3,9,15].some(iy=>ty>=iy*P-1&&ty<=iy*P+4))return true;return false;};
-  const RC=24,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
+  const RC=46,RC2=26,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
+  // v5.33: the north, west and east edges are ragged too: parkland reaches into the grid by a depth that wanders along each side
+  // (up to two blocks), stopping short of blocks that must stay and narrowing where a street leads out to the beltway
+  const blkKeep=(bx,by)=>{const k=BLOCKK[by*NB+bx];return !okKind(k)||sp.has(bx+','+by);},DMAX=15;
+  const capN=[],capW=[],capE=[];for(let b=0;b<NB;b++){let c=DMAX;for(let d=0;d<3;d++)if(blkKeep(b,d)){c=d*P;break;}capN[b]=c;c=DMAX;for(let d=0;d<3;d++)if(blkKeep(d,b)){c=d*P;break;}capW[b]=c;c=DMAX;for(let d=0;d<3;d++)if(blkKeep(NB-1-d,b)){c=d*P;break;}capE[b]=c;}
+  const capAt=(arr,t)=>{const b=Math.min(NB-1,Math.floor(t/P));let c=arr[b];if(t%P<4&&b>0)c=Math.min(c,arr[b-1]);return c;};
+  const jl=(side,t)=>{for(const[jx,jy]of RINGJ){const on=side===0?jy===0:side===1?jx===0:jx===NB;if(!on)continue;const jt=(side===0?jx:jy)*P+1.5;if(Math.abs(t-jt)<10)return P-3;}return DMAX;};
+  const lobe=(t,k)=>{const v=n1(t/30,k)*0.7+n1(t/10,k+50)*0.3;return 1+(DMAX-1)*Math.pow(clamp((v-0.22)/0.6,0,1),1.4);};
+  const depN=[],depW=[],depE=[];for(let t=0;t<W;t++){depN[t]=Math.min(capAt(capN,t),jl(0,t),lobe(t,21));depW[t]=Math.min(capAt(capW,t),jl(1,t),lobe(t,22));depE[t]=Math.min(capAt(capE,t),jl(2,t),lobe(t,23));}
   for(let ty=0;ty<W;ty++)for(let tx=0;tx<W;tx++){if(protect(tx,ty))continue;let w=false;
     const dN=ty,dW=tx,dE=W-1-tx;
+    if(dN<depN[tx]||dW<depW[ty]||dE<depE[ty])w=true;
     const rc=RC+4*(prof(tx+ty,4)-0.5);
     if(tx<rc&&ty<rc&&Math.hypot(rc-tx,rc-ty)>rc)w=true;
     if(dE<rc&&ty<rc&&Math.hypot(rc-dE,rc-ty)>rc)w=true;
+    {const dS=LIM-ty,r2=RC2+3*(prof(tx+ty,9)-0.5);if(dS>=0&&dS<r2&&((tx<r2&&Math.hypot(r2-tx,r2-dS)>r2)||(dE<r2&&Math.hypot(r2-dE,r2-dS)>r2)))w=true;} // v5.33: the south-west and south-east corners round off above the beach row
     if(w)WILD[ty*W+tx]=1;}
   // a street segment touched by the wild is closed and grassed over along its whole length; nodes left with no road go too
   const segTiles=(h,a,b)=>h?{x0:a*P+4,x1:a*P+13,y0:b*P,y1:b*P+3}:{x0:a*P,x1:a*P+3,y0:b*P+4,y1:b*P+13};
@@ -781,9 +791,13 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
   {const c=[Math.floor(NB/2)+1,Math.floor(NB/2)],seen=new Set([c+'']),q=[c];while(q.length){const[x,y]=q.pop();for(let d=0;d<4;d++)if(lk(x,y,d)){const k=[x+DX[d],y+DY[d]];if(!seen.has(k+'')){seen.add(k+'');q.push(k);}}}
    for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(seen.has(ix+','+iy))continue;for(let d=0;d<4;d++)if(linkBase(ix,iy,d)&&!CUT.has(segKey(ix,iy,d))){CUT.add(segKey(ix,iy,d));const h=d===0||d===2,a=h?(d===0?ix:ix-1):ix,b=h?iy:(d===1?iy:iy-1);fill(segTiles(h,a,b));}}}
   // dead-end stubs left by the rounded corners go too (traffic would have to U-turn there); the stubs that lead out to the beltway stay
-  for(let pass=0;pass<4;pass++)for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(RINGJ.some(j=>j[0]===ix&&j[1]===iy))continue;let deg=0,dd=-1;for(let d=0;d<4;d++)if(lk(ix,iy,d)){deg++;dd=d;}
-    if(deg===1&&(ix===0||iy===0||ix===NB)){CUT.add(segKey(ix,iy,dd));const h=dd===0||dd===2,a=h?(dd===0?ix:ix-1):ix,b=h?iy:(dd===1?iy:iy-1);fill(segTiles(h,a,b));}}
+  for(let pass=0;pass<8;pass++)for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(RINGJ.some(j=>j[0]===ix&&j[1]===iy))continue;let deg=0,dd=-1;for(let d=0;d<4;d++)if(lk(ix,iy,d)){deg++;dd=d;}
+    if(deg===1&&(ix<=3||iy<=3||ix>=NB-3)){ // v5.33: the ragged edge reaches further in, so stubs up to three blocks in go too
+CUT.add(segKey(ix,iy,dd));const h=dd===0||dd===2,a=h?(dd===0?ix:ix-1):ix,b=h?iy:(dd===1?iy:iy-1);fill(segTiles(h,a,b));}}
   for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){let deg=0;for(let d=0;d<4;d++)if(lk(ix,iy,d))deg++;if(!deg)fill({x0:ix*P,x1:ix*P+3,y0:iy*P,y1:iy*P+3});}
+  // an outer block left with no open street on any side goes back to parkland as well (no buildings stranded in the woods)
+  for(let pass=0;pass<2;pass++)for(let by=0;by<NB-1;by++)for(let bx=0;bx<NB;bx++){if(bx>2&&by>2&&bx<NB-3)continue;if(blkKeep(bx,by))continue;
+    if(lk(bx,by,0)||lk(bx,by+1,0)||lk(bx,by,1)||lk(bx+1,by,1))continue;const r={x0:bx*P,x1:bx*P+P+3,y0:by*P,y1:by*P+P+3};if(hit(r))fill({x0:bx*P+4,x1:bx*P+P-1,y0:by*P+4,y1:by*P+P-1});}
   // clear what stood there, then grass, woods and a few rocks
   const wildAt=(x,y)=>{const tx=Math.floor(x/T),ty=Math.floor(y/T);return tx>=0&&ty>=0&&tx<W&&ty<W&&WILD[ty*W+tx];};
   for(let i=buildings.length-1;i>=0;i--){const b=buildings[i];if(wildAt(b.x+b.w/2,b.y+b.h/2)||wildAt(b.x+2,b.y+2)||wildAt(b.x+b.w-2,b.y+b.h-2)||wildAt(b.x+b.w-2,b.y+2)||wildAt(b.x+2,b.y+b.h-2))buildings.splice(i,1);}

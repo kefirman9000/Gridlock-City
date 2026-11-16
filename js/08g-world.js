@@ -243,7 +243,7 @@ const HWYL=[];
       if((bend>0.12||fill>8)&&!near(x,y,90))props.push({x,y,k:'rail',a,rad:22,ht:12});}
     if(i%22===0){const s=(i/22)%2?1:-1,x=q.x-q.uy*(hw+12)*s,y=q.y+q.ux*(hw+12)*s;if(!near(x,y,60)){props.push({x,y,k:'hwylamp',a:a+(s>0?-PI/2:PI/2),rad:10,ht:44});HWYL.push({x:x+q.uy*s*14,y:y-q.ux*s*14});}}}
   // an exit sign over the beltway before each spur, both ways
-  for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm||S.ringI==null)continue;const nm=S.isl?'IRONWOOD ISLAND':(districtAt((S.node[0]*P+2)*T,(S.node[1]*P+2)*T)||'CITY').toUpperCase();
+  for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(S.farm||S.ringI==null)continue;const nm=S.isl?'IRONWOOD ISLAND':S.hill?(S[S.length-1].y<S[0].y-200?'NORTH HILLS':'WEST HILLS'):(districtAt((S.node[0]*P+2)*T,(S.node[1]*P+2)*T)||'CITY').toUpperCase();
     for(const d of[-1,1]){const i=clamp(S.ringI-d*9,0,R0.length-1),q=R0[i];props.push({x:q.x,y:q.y,k:'gantry',a:Math.atan2(q.uy,q.ux),txt:'EXIT  '+nm,rad:hw+12,ht:46});}}})();
 
 // ---- landmarks after Oahu's ----
@@ -650,3 +650,9 @@ function gangCalm(dt){if(game.state!=='play')return;const fight=underFire()||sta
   if(sp>190&&gh<ball-1.4&&c._vg>-260){c.air=1;c.airT=0;c.vz=c._vg;c._za=ball;c.az=ball-gh;c.pitch=clamp(Math.atan2(c._vg,sp),-0.4,0.4);c._zg=null;
     if(c===player.car&&c._vg>60&&OPT.slowmo)slowT=Math.max(slowT,0.3);return;}
   c._vg=lerp(c._vg,clamp(vg,-600,600),0.6);c._zg=gh;}}
+
+// v5.26: a shop or room menu left open closes when you walk off, drive off, get wasted/busted or are moved away.
+let DLGP=null;
+{const f=say;say=function(lines,done,choice){f(lines,done,choice);DLGP=choice&&ROOM&&!mission?{x:player.x,y:player.y,room:ROOM}:null;};}
+{const f=cityTick;cityTick=function(dt){f(dt);
+  if(DLG.open&&DLGP&&(game.state!=='play'||player.car||ROOM!==DLGP.room||hyp(player.x-DLGP.x,player.y-DLGP.y)>110)){dlgClose();DLGP=null;}};}

@@ -178,7 +178,7 @@ updateSubway=function(dt){mCool-=dt;if(mCool>0||player.car||player.riding||DLG.o
 function mBoard(tr,j,f){if(!mFare){if(money<5){note('The fare is $5');return false;}money-=5;mFare=true;}
   SUBRIDE={tr,j,f:clamp(f,-30,30)};mLastSt=-1;sfx('door',0.4);note(touchMode?'Riding the Loop line. Tap CAR at a stop to get off':'Riding the Loop line. F to get off at a stop · V: driver\'s view');return true;}
 function mAlight(){const R2=SUBRIDE;if(!R2)return;const p=mCar(R2.tr,R2.j),st=METRO.st[R2.tr.next];SUBRIDE=null;mFare=false;
-  player.x=p.x+st.nx*54;player.y=p.y+st.ny*54;player.jz=0;player.vx=player.vy=0;player.a=player.body=st.a;cam.gz=null;sfx('door',0.4);showBig(st.n.toUpperCase(),'Stairs up to the street at the end of the platform','#7dff8a',2);}
+  player.x=p.x+st.nx*54;player.y=p.y+st.ny*54;player.jz=0;player.vx=player.vy=0;player.a=player.body=st.a;cam.gz=null;cam.yaw=cam.base=st.a;sfx('door',0.4);showBig(st.n.toUpperCase(),'Stairs up to the street at the end of the platform','#7dff8a',2);}
 {const u=update;update=function(dt){
   const down=metroAt(player.x,player.y)&&!player.car;
   if(SUBRIDE&&pressed.enter){pressed.enter=false;if(SUBRIDE.tr.doors)mAlight();else note('Wait for the next stop');}
@@ -303,3 +303,107 @@ function etunTick(dt){etCool-=dt;const E=ETUN,o=player.car||player,inCar=!!playe
     if(flying){const g=GH(c.x,c.y),a=c.pz-g;if(a<=0.5&&c.t.plane&&hyp(c.vx,c.vy)>150){const pl=c===player.car;damageCar(c,70+hyp(c.vx,c.vy)*0.25,pl?'player':null);c.vx*=0.25;c.vy*=0.25;if(pl){shake=Math.max(shake,10);sfx('crash',0.8);note('Flew into the hillside!');}}c.alt=c.t.plane?Math.max(0,a):Math.max(heliFloor(c),a);}
     f(c,thr,steer,hb,dt);c.pz=c.alt>0.5?GH(c.x,c.y)+c.alt:null;};
   planeDrive=wrap(planeDrive);heliDrive=wrap(heliDrive);}
+
+// ================= v5.33: ISLAND LIFE on Ironwood Island =================
+// Three more settlements along the island road (Gull Cove in the north, the Eastside farms, Sunset Point at the road's end), woods,
+// palms on the beaches, a beach resort, a summit lookout with a trail, parked cars and people while you are out there. Hash only.
+const IWV=[];
+(function islandLife(){const I=RING.isl;if(!I)return;const s0=I.findIndex(q=>q.x>RING.br2.x1+300),N=I.length;
+  const nearRoad=(x,y,m)=>{for(const[dx,dy]of[[0,0],[m,0],[-m,0],[0,m],[0,-m]])if(TTYPE[tcell(x+dx,y+dy)]===10)return true;return false;};
+  const hitB=(x,y,w,h,m)=>OUTB.some(b=>x<b.x+b.w+m&&x+w+m>b.x&&y<b.y+b.h+m&&y+h+m>b.y);
+  // trees first: pines on the high ground, a few broadleaf trees on the grass, palms just behind the beaches
+  const TC={pine:TREEC.pine,round:TREEC.round};
+  for(let j=0;j<HN;j+=2)for(let i=0;i<HN;i+=2){const k=j*HN+i;if(!ISL2M[k])continue;const t=TTYPE[k],h=hash(i*7+3,j*13+5)>>>0,r=(h&4095)/4095,x=-HM+i*HS+((h>>>12)&15)-8,y=-HM+j*HS+((h>>>16)&15)-8;
+    let sp=null;if(t===4&&r<0.2)sp='pine';else if(t===3&&r<0.035)sp=((h>>>20)&3)?'round':'pine';else if(t===2&&COAST.D[k]>2.5&&COAST.D[k]<7&&r<0.07)sp='palm';if(!sp||nearRoad(x,y,44)||hitB(x-6,y-6,12,12,14))continue;
+    const sc=0.85+((h>>>22)&7)/14;trees.push(sp==='palm'?{x,y,sp,r:13+((h>>>25)&3),h:1+((h>>>27)&7)/20,c:['#3f8a2c','#4a9a34','#357a26'][h%3],o1:0,o2:0}:{x,y,sp,r:(12+((h>>>25)&7))*sc,h:(0.85+((h>>>28)&3)*0.15)*sc,c:TC[sp][(h>>>8)%TC[sp].length],o1:0,o2:0});}
+  const okAt=(x,y,w,h)=>{for(let yy=y-8;yy<=y+h+8;yy+=16)for(let xx=x-8;xx<=x+w+8;xx+=16){const k=tcell(xx,yy);if(!ISL2M[k]||TTYPE[k]===10||TTYPE[k]===1||HMAP[k]<4)return false;}
+    const hs=[GH(x,y),GH(x+w,y),GH(x,y+h),GH(x+w,y+h)];return Math.max(...hs)-Math.min(...hs)<17&&!hitB(x,y,w,h,12)&&!nearRoad(x+w/2,y+h/2,Math.max(w,h)/2+14);};
+  const put=(x,y,w,h,o)=>{if(!okAt(x,y,w,h))return null;for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(t.x>x-18&&t.x<x+w+18&&t.y>y-18&&t.y<y+h+18)trees.splice(i,1);}return outsideBuilding(Object.assign({x,y,w,h,kind:'ironwood'},o));};
+  const roofs=['#5a3a2e','#3e4652','#6b4a3a','#2e5a6a'],awn=['#b3261e','#2e7d4a','#d8a020','#1f5f9a'];
+  const house=(x,y,w,h,hh,col)=>put(x,y,w,h,{hg:0.95,col,st:'house',roof:roofs[hh&3],rx:w>=h,chim:(hh&16)>0,door:0});
+  const park=[];
+  const village=(name,i0,i1,kind)=>{let n=0,sx=0,sy=0;
+    for(let i=Math.max(s0+4,i0);i<Math.min(N-2,i1);i+=3){const q=I[i];for(const sd of[-1,1])for(let row=0;row<(kind==='farm'?1:2);row++){
+      const hh=hash(i*11+(sd>0?1:0)+row*5,733)>>>0;if(kind==='farm'&&(hh&1)!==0)continue;if(row===1&&(hh&1))continue;
+      let w=46+hh%24,h=40+(hh>>>5)%18,o;const kd=(hh>>>9)%10;
+      if(kind==='farm'){if(kd<5){w=66;h=44;o={hg:1.5,col:'#8a2e24',st:'ware'};}else o=null;}
+      else if(kind==='resort'&&row===0&&kd<3){w=70;h=54;o={hg:1.6+((hh>>>13)&1)*0.6,col:['#f0e2c4','#f4d0b8','#cfe4e8'][kd],st:'plaster',ws:15,wf:.45,wh:.5,shop:true,awn:awn[(hh>>>14)&3]};}
+      else if(kd<2&&row===0)o={hg:1.5+((hh>>>11)%2)*0.5,col:['#d6c08a','#c88a6a'][kd],st:kd?'brick':'plaster',ws:15,wf:.45,wh:.5,shop:true,awn:awn[(hh>>>14)&3]};
+      else o=null;
+      let b=null,cx=0,cy=0;for(const ex of kind==='farm'?[70,20,130]:[0]){const off=60+h/2+row*78+ex;cx=q.x-q.uy*off*sd;cy=q.y+q.ux*off*sd;const x=cx-w/2,y=cy-h/2;
+        b=o?put(x,y,w,h,o):house(x,y,w,h,hh,['#c9b79c','#a8b5a2','#9fb3c8','#e8d8c0','#d8b8a0','#b8c8b0'][(hh>>>17)%6]);if(b)break;}
+      if(!b)continue;n++;sx+=cx;sy+=cy;
+      if(row===0&&(hh>>>20)%2===0)park.push({x:q.x-q.uy*(34+0)*sd,y:q.y+q.ux*34*sd,a:Math.atan2(q.uy,q.ux)+(sd>0?0:PI)});
+      if(kind==='farm'&&o){for(let m=0;m<3;m++)props.push({x:cx+q.ux*(60+m*16),y:cy+q.uy*(60+m*16),k:'hay',a:Math.atan2(q.uy,q.ux)+m,rad:8,ht:9});}}}
+    if(n)IWV.push({name,x:sx/n,y:sy/n,n});return n;};
+  village('GULL COVE',240,330,'town');village('EASTSIDE FARMS',385,500,'farm');village('SUNSET POINT',560,N,'resort');
+  // scattered homes on the rest of the road
+  for(let i=s0+60;i<N-4;i+=9){const q=I[i],hh=hash(i,919)>>>0;if(hh%3)continue;const sd=(hh&8)?1:-1,w=46+hh%20,h=40+(hh>>>5)%14,off=64+h/2,cx=q.x-q.uy*off*sd,cy=q.y+q.ux*off*sd;
+    if(house(cx-w/2,cy-h/2,w,h,hh,['#c9b79c','#a8b5a2','#e8d8c0'][(hh>>>9)%3])&&(hh&64))park.push({x:q.x-q.uy*34*sd,y:q.y+q.ux*34*sd,a:Math.atan2(q.uy,q.ux)+(sd>0?0:PI)});}
+  IWD.park=park;
+  // a windmill by the farms, the resort hotel and the beach below Sunset Point
+  const fv=IWV.find(v=>v.name==='EASTSIDE FARMS');if(fv)for(const[dx,dy]of[[120,-160],[-90,220]]){const x=fv.x+dx,y=fv.y+dy;if(okAt(x-8,y-8,16,16))props.push({x,y,k:'windmill',rad:8,ht:92});}
+  const E=I[N-1];
+  for(let r=90;r<520&&!IWD.hotel;r+=40)for(let a=0;a<TAU;a+=0.4){const w=110,h=66,x=E.x+Math.cos(a)*r-w/2,y=E.y+Math.sin(a)*r-h/2;if(put(x,y,w,h,{hg:4.4,col:'#f2e6cc',st:'plaster',ws:16,wf:.5,wh:.55})){IWD.hotel={x:x+w/2,y:y+h/2};break;}}
+  {const cols=['#e04a3a','#2a8ad8','#f0c030','#38b070','#e070b0'];let nb=0,lg=false;
+    for(let r=140;r<760&&nb<26;r+=22)for(let a=0;a<TAU&&nb<26;a+=0.21){const x=E.x+Math.cos(a)*r,y=E.y+Math.sin(a)*r,k=tcell(x,y);if(!ISL2M[k]||TTYPE[k]!==2||COAST.D[k]<2||COAST.D[k]>5)continue;const hh=hash(x|0,y|0)>>>0;if(hh%4)continue;
+      props.push({x,y,k:'umbrella',c:cols[hh%5],rad:5,ht:21},{x:x+9,y:y+7,k:'towel',c:cols[(hh>>>3)%5],a:(hh>>>6)%6,rad:0,ht:1});nb++;
+      if(nb===4)props.push({x:x+26,y:y-10,k:'surfboard',c:cols[(hh>>>9)%5],rad:2,ht:16});if(nb===8&&!lg){props.push({x:x-24,y:y+18,k:'lifeguard',rad:9,ht:24});lg=true;}}
+    IWD.beach=nb>0;}
+  // the summit: a lookout on the island's highest ground, with a dirt trail up from the nearest point of the road
+  {let bk=-1,bh=-1;for(let k=0;k<HN*HN;k++)if(ISL2M[k]&&HMAP[k]>bh){bh=HMAP[k];bk=k;}
+    if(bk>=0){const sx=-HM+(bk%HN)*HS,sy=-HM+((bk/HN)|0)*HS;let bi=s0,bd=1e18;for(let i=s0;i<N;i+=3){const d=dist2(I[i].x,I[i].y,sx,sy);if(d<bd){bd=d;bi=i;}}
+      const q=I[bi],L=Math.sqrt(bd),nseg=Math.max(4,Math.round(L/160));let px=q.x,py=q.y;
+      for(let m=1;m<=nseg;m++){const t=m/nseg,zz=Math.sin(t*PI*3)*70*(1-t),x=q.x+(sx-q.x)*t-(sy-q.y)/L*zz,y=q.y+(sy-q.y)*t+(sx-q.x)/L*zz;dirtLine(px,py,x,y,7);px=x;py=y;}
+      for(let i=trees.length-1;i>=0;i--)if(dist2(trees[i].x,trees[i].y,sx,sy)<46*46)trees.splice(i,1);
+      props.push({x:sx,y:sy,k:'lookout',a:Math.atan2(q.y-sy,q.x-sx),rad:26,ht:26,txt:'IRONWOOD SUMMIT'});LOOKS.push({x:sx,y:sy,id:'iws',name:'Ironwood Summit'});
+      props.push({x:q.x-(sy-q.y)/L*0+ (sx-q.x)/L*40,y:q.y+(sy-q.y)/L*40,k:'trailsign',a:0,txt:'SUMMIT TRAIL',rad:8,ht:30});IWD.summit={x:sx,y:sy};}}
+  if(IWD.light)LOOKS.push({x:IWD.light.x,y:IWD.light.y+50,id:'iwl',name:'Ironwood Light'});
+  SGRID=null;})();
+{const f=districtAt;districtAt=function(x,y){if(x>WPX+2000)for(const v of IWV)if(hyp(x-v.x,y-v.y)<560&&ISL2M[tcell(x,y)])return v.name;return f(x,y);};}
+// parked cars and people on the island while you're out there
+function islandFolk(dt){islandFolk.t=(islandFolk.t||0)-dt;if(islandFolk.t>0)return;islandFolk.t=0.9;if(player.x<WPX+2400||!ISL2M[tcell(player.x,player.y)])return;
+  for(const s of IWD.park||[]){if(s.c&&cars.includes(s.c))continue;const d=dist2(s.x,s.y,player.x,player.y);if(d>1100*1100||d<300*300||camSees(s.x,s.y)||carNear(s.x,s.y,70))continue;
+    const c=makeCar(pick(['sedan','pickup','wagon','compact','suv','van'].filter(t=>CT[t])),s.x,s.y,s.a);if(c){s.c=c;}break;}
+  let n=0;for(const p of peds)if(p.isl&&!p.gone)n++;if(n>=9)return;
+  for(let tries=0;tries<6;tries++){const b=OUTB[Math.floor(R()*OUTB.length)];if(!b||b.kind!=='ironwood')continue;const sd=R()<0.5?-1:1,x=b.x+b.w/2+sd*(b.w/2+rr(10,24)),y=b.y+b.h/2+rr(-b.h/2,b.h/2),d=dist2(x,y,player.x,player.y);
+    if(d>900*900||d<260*260||camSees(x,y)||TTYPE[tcell(x,y)]===10||bldAt(x,y))continue;const p=makePed(x,y);p.isl=true;break;}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);islandFolk(dt);};}
+
+// ================= v5.33: THE HILLS: houses along the hill roads =================
+// The hill roads themselves are real roads built with the beltway (RING.hills in 08-render's ringRoad: graded, carved, lane paint).
+// Here: houses on levelled pads along both sides, the map, the district names and a little traffic. Hash only.
+const HILLS={n:0};
+(function hills(){const HR=RING.hills||[];if(!HR.length)return;const hw=RING.hw;
+  const busy=(x,y)=>(typeof STRIP!=='undefined'&&STRIP&&x>STRIP.x0-260&&x<STRIP.x1+260&&Math.abs(y-STRIP.y)<360)||LOOKS.some(l=>dist2(l.x,l.y,x,y)<260*260)||(typeof MARINA!=='undefined'&&MARINA&&dist2(MARINA.x,MARINA.y,x,y)<420*420);
+  const hitB=(x,y,w,h,m)=>OUTB.some(b=>x<b.x+b.w+m&&x+w+m>b.x&&y<b.y+b.h+m&&y+h+m>b.y);
+  const roofs=['#5a3a2e','#3e4652','#6b4a3a','#2e5a6a','#7a3a2a'],cols=['#d9cdb8','#b8c8d0','#e0b8a0','#c8d8b0','#f0e8d8','#c9b79c','#a8b5a2'];
+  for(const H of HR)for(let i=8;i<H.length-2;i+=3){const q=H[i];
+    for(const sd of[-1,1]){const hh=hash((q.x|0)+sd,q.y|0)>>>0;if(hh%5<1)continue;const big=(hh>>>20)%9===0,w=big?70:44+hh%22,h=big?56:38+(hh>>>5)%16,off=hw+40+Math.max(w,h)/2,cx2=q.x-q.uy*off*sd,cy2=q.y+q.ux*off*sd,x=cx2-w/2,y=cy2-h/2;
+      let ok=!hitB(x,y,w,h,12)&&!busy(cx2,cy2);for(let yy=y-6;ok&&yy<=y+h+6;yy+=10)for(let xx=x-6;xx<=x+w+6;xx+=10){const k=tcell(xx,yy);if(!COAST.LAND[k]||TTYPE[k]===10||TTYPE[k]===1||HMAP[k]<4){ok=false;break;}}
+      if(!ok)continue;const hs=[GH(x,y),GH(x+w,y),GH(x,y+h),GH(x+w,y+h)];if(Math.max(...hs)-Math.min(...hs)>26)continue;
+      // a levelled pad under the house (terraced into the hillside), a touch above the road
+      {const z=Math.max((hs[0]+hs[1]+hs[2]+hs[3])/4,q.h);for(let yy=y-HS;yy<=y+h+HS;yy+=HS)for(let xx=x-HS;xx<=x+w+HS;xx+=HS){const k=tcell(xx,yy);if(TTYPE[k]!==10)HMAP[k]=z;}}
+      for(let t=trees.length-1;t>=0;t--){const tr=trees[t];if(tr.x>x-18&&tr.x<x+w+18&&tr.y>y-18&&tr.y<y+h+18)trees.splice(t,1);}
+      outsideBuilding(big?{x,y,w,h,hg:1.6,col:['#efe4cc','#e6d2c0','#d4dde0'][hh%3],st:'plaster',ws:15,wf:.45,wh:.5,kind:'hills'}:{x,y,w,h,hg:0.95,col:cols[(hh>>>9)%cols.length],st:'house',roof:roofs[(hh>>>13)%roofs.length],rx:w>=h,chim:(hh&16)>0,door:0,kind:'hills'});HILLS.n++;}}
+  // the map: every house outside the grid (the island's too) shows on the island map
+  if(typeof ISLEMAP!=='undefined'){const m=ISLEMAP.getContext('2d');m.fillStyle='rgb(206,186,160)';for(const b of OUTB)m.fillRect(Math.floor((b.x+b.w/2)/T)+ISLEO,Math.floor((b.y+b.h/2)/T)+ISLEO,Math.max(1,Math.round(b.w/T)),Math.max(1,Math.round(b.h/T)));}
+  SGRID=null;})();
+{const f=districtAt;districtAt=function(x,y){if(x<-60||y<-60)for(const H of RING.hills||[])for(let i=0;i<H.length;i+=5)if(dist2(x,y,H[i].x,H[i].y)<170*170)return y<-60&&x>-200?'NORTH HILLS':'WEST HILLS';return f(x,y);};}
+// a little traffic on the hill roads near you
+function hillTraffic(dt){hillTraffic.t=(hillTraffic.t||0)-dt;if(hillTraffic.t>0)return;hillTraffic.t=2.2;if(player.x>-100&&player.y>-100)return;
+  const HR=(RING.hills||[]).filter(H=>H.ringI!=null);let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&RING.paths[c.ai.pth]&&RING.paths[c.ai.pth].hill)n++;if(n>=4)return;
+  for(let tries=0;tries<6;tries++){const H=HR[Math.floor(R()*HR.length)];if(!H)return;const i=Math.floor(rr(4,H.length-4)),q=H[i],dir=R()<0.5?1:-1,x=q.x-q.uy*dir*12,y=q.y+q.ux*dir*12,d=dist2(x,y,player.x,player.y);
+    if(d>1300*1300||d<350*350||camSees(x,y)||carNear(x,y,120))continue;const c=makeCar(pick(['sedan','pickup','wagon','compact','suv'].filter(t=>CT[t])),x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;
+    c.traffic=true;c.driver='ai';ringJoin(c,RING.paths.indexOf(H),i,dir);c.ai.cruise=rr(110,150);break;}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);hillTraffic(dt);};}
+
+// v5.33: the subway tunnels get concrete ribs (two posts and a beam over the track every 96 px between stations), so the line reads as a
+// tunnel from the platform, from the tracks and from the driver's view.
+(function metroRibs(){const M=METRO;if(!M.room)return;for(let i=6;i<M.TR.length;i+=12){const q=M.TR[i];if(M.st.some(s=>hyp(q.x-s.px,q.y-s.py)<250))continue;M.room.props.push({x:q.x,y:q.y,k:'mrib',a:q.a,rad:46,ht:66});}SGRID=null;})();
+{const f=placesProp;placesProp=function(o,fg){if(o.k==='mrib'){const a=o.a,nx=-Math.sin(a),ny=Math.cos(a);for(const s of[-1,1])obox(o.x+nx*42*s,o.y+ny*42*s,a,3.5,3.5,0,58,[84,82,78],null,fg);
+    obox(o.x,o.y,a,3.5,46,58,65,[92,90,86],[70,68,64],fg);if(proj(o.x,o.y,56.5))glow(PX,PY,3*PK,'#ffd9a0',0.55);return;}return f(o,fg);};}
+// v5.33: street traffic that ends up on a street the parkland has closed (spawned or released there) is taken away when nobody is looking
+{let wt=0;const f=g3Tick;g3Tick=function(dt){f(dt);wt-=dt;if(wt>0)return;wt=0.5;
+  for(let i=cars.length-1;i>=0;i--){const c=cars[i];if(c===player.car||!c.traffic||c.driver!=='ai'||!c.ai||c.ai.mode!=='lane'||c.vip||c.cab||c.x<0||c.y<0||c.x>=WPX||c.y>=WPX)continue;
+    if(WILD[Math.floor(c.y/T)*W+Math.floor(c.x/T)]&&!camSees(c.x,c.y))cars.splice(i,1);}};}

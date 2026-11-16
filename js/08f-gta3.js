@@ -202,7 +202,7 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   // the end of a road: back into town, or onto the beltway
   if((dir>0&&i>=last-1)||(dir<0&&i<=1)){
     if(P.tun){const k=cars.indexOf(c);if(k>=0&&c!==player.car)cars.splice(k,1);return;} // the East River Tunnel: cars leave the world at the ends
-    if(P.isl){if(dir>0){ai.dir=-1;c.vx*=0.2;c.vy*=0.2;return;}ringJoin(c,0,P.ringI,R()<0.5?1:-1);return;} // Ironwood Island: turn round at the far end, back onto the beltway at the bridge
+    if(P.isl||P.hill){if(dir>0||P.ringI==null){ai.dir=-dir;c.vx*=0.2;c.vy*=0.2;return;}ringJoin(c,0,P.ringI,R()<0.5?1:-1);return;} // Ironwood Island: turn round at the far end, back onto the beltway at the bridge
     if(P.farm){if(P.ns){const r=FARMR[dir>0?2:0];ringJoin(c,r.id,r.jI,R()<0.5?1:-1);return;}
       if(dir>0){ai.dir=-1;c.vx*=0.2;c.vy*=0.2;return;} // the end of the dirt road: turn round
       c.ai.mode='lane';laneFromHere(c);return;}
@@ -212,7 +212,7 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   if(P.farm&&!P.ns&&Math.abs(i-P.jI)<=1&&ai.lastX!==P.id){ai.lastX=P.id;if(R()<0.3){const N2=FARMR.ns;ringJoin(c,N2.id,P.row===0?0:P.row===2?N2.length-1:N2.midI,P.row===0?1:P.row===2?-1:(R()<0.5?1:-1));c.ai.lastX=N2.id;return;}}
   if(P.ns&&Math.abs(i-P.midI)<=1&&ai.lastX!==-2){ai.lastX=-2;if(R()<0.3){const r=FARMR[1];ringJoin(c,r.id,r.jI,R()<0.5?1:-1);c.ai.lastX=r.id;return;}}
   // on the beltway: now and then take a spur into town
-  if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<(S.isl?0.2:0.35)){if(S.isl)ringJoin(c,k,0,1);else ringJoin(c,k,S.length-1,-1);return;}}}}
+  if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<(S.isl?0.2:S.hill?0.12:0.35)){if(S.isl||S.hill)ringJoin(c,k,0,1);else ringJoin(c,k,S.length-1,-1);return;}}}}
   const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=P.lo||14,gx=q.x-uy*lo,gy=q.y+ux*lo;
   const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=P.farm?Math.min(ai.cruise,130):ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);
   // joining a road (or knocked off it): crawl until back on its line, so the turn is tight enough to make it (cars used to circle)

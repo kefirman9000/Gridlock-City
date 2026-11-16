@@ -72,6 +72,10 @@ v5.27 (also 08h): the East River Tunnel (`ETUN`: portal pads at street row 12 on
 RING path; `etunTick` moves you between them). Cars tilt with the ground (`c.tp`/`c.tr` from `slopeTick`; `ROL` is the roll in `oboxP`). Graphics presets
 `OPT.gfx` (`gfxMode`, `gfxApply`, `gfxInit` called at the end of 09): touch devices default to FAST and get a warm-up screen in a `beginPlay` wrapper.
 
+v5.33: `cityEdge` rounds all four corners and takes a wandering depth of parkland along each side (`depN/depW/depE`, capped by `blkKeep` blocks and beside `RINGJ`); the beltway has wide corners and a large outward wander.
+Hill roads are `RING.hills` (real carved paths with `hill:true`, built in `ringRoad`); 08h puts houses on levelled pads along them (`kind:'hills'`) and populates Ironwood Island (`IWV`, `IWD`, `islandFolk`).
+The Song Lab (end of 06r): a station's songs are seeds 0..`SONGN`-1; `songSeg(st,slot)` maps the clock's slot to a song that is not denied (`songMark`: local `SONGPICK`, then `SONG_BAKED` keyed by station name). Bake picks sent by the user into `SONG_BAKED`.
+
 ## The island (v5.11)
 The terrain grid reaches `HM` (6400 since v5.26; was 2600) beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
 `COAST` in 08-render shapes the coastline after the land types are set (no `R()`): since v5.13 a hand-placed Oahu-style outline (`COAST.pts`, a Catmull-Rom spline) filled into `COAST.LAND` with a distance transform `COAST.D`; heights above 150 are eased and high ground is forest; the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`

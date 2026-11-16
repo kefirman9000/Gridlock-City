@@ -438,6 +438,7 @@ const waterAt=(x,y)=>tileAt(Math.floor(x/T),Math.floor(y/T))===WATER;
 let SWlx=0,SWly=0,swimTold=false;
 function swimPost(dt){
   if(player.car||player.riding||player.climb||player.mantle){player.swim=false;SWlx=player.x;SWly=player.y;return;}
+  if(player.swim&&hyp(player.x-SWlx,player.y-SWly)>90){player.swim=false;player.jz=0;player.jv=0;} // moved by a teleport (respawn, cab, taxi back): not in the water any more
   const g=GH(player.x,player.y),inW=waterAt(player.x,player.y);
   if(player.swim){
     if(!inW){const sz=player.swimZ;if(g<=sz+4){player.swim=false;player.jz=0;player.jv=0;player.peak=0;} // a low bank or a beach: just walk out
@@ -453,7 +454,9 @@ function swimPost(dt){
 function swimDraw(fg){const g=GH(player.x,player.y),surf=(player.swimZ!=null?player.swimZ:waterZ(player.x,player.y))-g;ZOFF=g;
   if(!proj(player.x,player.y,surf))return;const yl=PY;
   L3.save();L3.beginPath();L3.rect(0,0,LW,yl);L3.clip();ZOFF=g;drawPed3(player,true,fg);L3.restore();
-  ZOFF=g;const r=6+Math.sin(game.t*3)*1;flat(player.x,player.y,0,r,r*0.85,surf+0.2,`rgba(225,238,255,${0.4*(1-fg)})`);}
+  // ripple rings: thin projected circles on the surface (a filled slab here read as a pale box around the swimmer)
+  ZOFF=g;L3.lineWidth=1.3;for(const ph of[0,0.5]){const u=(game.t*0.9+ph)%1,r=5+u*9;L3.strokeStyle=`rgba(230,242,255,${(0.55*(1-u))*(1-fg)})`;L3.beginPath();let ok=0;
+    for(let k=0;k<=14;k++){const a=k/14*Math.PI*2;if(!proj(player.x+Math.cos(a)*r,player.y+Math.sin(a)*r,surf+0.2)){ok=0;continue;}if(ok)L3.lineTo(PX,PY);else L3.moveTo(PX,PY);ok=1;}L3.stroke();}}
 // Pulling up: jump (or swim) into something whose top is just out of step reach (a low roof, a deck, a wall top, a car
 // roof, the pier, a high river bank) and you grab the edge and climb onto it. Hooked into climbPre / climbPost.
 function mantlePre(fwd){if(player.mantle)return true;

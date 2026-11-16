@@ -75,7 +75,7 @@ const stClock=i=>RCLK[i]+performance.now()/1000;
 const TALKSEQ=(()=>{const out=[];TALKSEGS.forEach((sg,i)=>{out.push(...sg);if(i%2===1)out.push(ADS[(i*5)%ADS.length],ADS[(i*5+3)%ADS.length]);});return out;})();
 // each line gets as long as it takes to say (about 0.4 s a word), so long jokes aren't cut off
 const TALKT=(()=>{const o=[0];TALKSEQ.forEach(l=>o.push(o[o.length-1]+Math.max(4.5,l.split(' ').length*0.4+1.4)));return o;})();
-function songTitle(st,seg){const W=SONGW[st]||SONGW[0],h=hash(seg,st*31+9);return '"'+W[0][h%W[0].length]+' '+W[1][(h>>>5)%W[1].length]+'" by '+W[2][(h>>>10)%W[2].length];}
+function songTitle(st,seg0,raw){const seg=raw?seg0:songSeg(st,seg0),W=SONGW[st]||SONGW[0],h=hash(seg,st*31+9);return '"'+W[0][h%W[0].length]+' '+W[1][(h>>>5)%W[1].length]+'" by '+W[2][(h>>>10)%W[2].length];}
 function radioNow(st){const S=RADIO[st];if(!S||S.kind==='off')return null;const T=stClock(st);
   if(S.kind==='talk'){const L=TALKT[TALKT.length-1],t=T%L;let lo=0,hi=TALKT.length-1;while(lo<hi){const m=(lo+hi)>>1;if(TALKT[m+1]<=t)lo=m+1;else hi=m;}
     const k=Math.floor(T/L)*TALKSEQ.length+lo;return{key:'t'+k,line:TALKSEQ[lo],speak:true};}
@@ -216,3 +216,52 @@ function updateRadioText(dt){const S=RADIO[radio.st],on=!!((player.car||(ROOM&&R
   while(r.q.length){const[key,line]=r.q[0];if(r.said.has(key)||(key[0]==='i'&&ph>14)){r.q.shift();continue;}
     r.q.shift();r.said.add(key);if(r.said.size>400)r.said=new Set([...r.said].slice(-200));radioBanner={text:S.name,sub:line,t:7};talkSay2(line,key);return;}}
 RADIOREACT.dnb=['This tune is mental!','Junglist!','Too fast for me.'];RADIOREACT.reggae=['Irie!','Love this one.','So chill.'];RADIOREACT.house=['Tune!','Let\'s dance!','Is that the club?'];
+
+
+// ================= v5.33: THE SONG LAB =================
+// Every music station has a pool of SONGN numbered songs (a song is a seed: it fixes the key, the progression, the drum variation and the
+// hook). The station's clock picks a slot; songSeg() turns the slot into a song from the pool, leaving out the ones turned down.
+// The Song Lab (pause menu) plays any song in the pool and marks it APPROVED or DENIED; picks are kept in localStorage (gc_songs) and
+// COPY MY PICKS gives a line of text to send back, so the picks can be baked in here (SONG_BAKED) for everyone.
+const SONGN=48,SONG_BAKED={}; // SONG_BAKED: {'KRUD 88.6':{deny:[3,17],ok:[1,2]}, ...}
+let SONGPICK=(()=>{try{return JSON.parse(localStorage.getItem('gc_songs')||'{}')||{};}catch(e){return {};}})();const SONGPOOL={};
+function songMark(st,seed){const nm=RADIO[st].name,m=SONGPICK[nm]&&SONGPICK[nm][seed];if(m)return m;const B=SONG_BAKED[nm];return B?(B.deny&&B.deny.includes(seed)?-1:B.ok&&B.ok.includes(seed)?1:0):0;}
+function songSeg(st,seg0){if(SONGLAB&&SONGLAB.st===st)return SONGLAB.seed;let P2=SONGPOOL[st];if(!P2){P2=[];for(let i=0;i<SONGN;i++)if(songMark(st,i)>=0)P2.push(i);if(!P2.length)for(let i=0;i<SONGN;i++)P2.push(i);SONGPOOL[st]=P2;}
+  // a shuffled walk through the pool, so a song does not come round again until the others have played
+  const n=P2.length,lap=Math.floor(seg0/n),k=((seg0%n)+n)%n;return P2[(k*(n>1&&n%7?7:1)+(hash(lap,st+3)%n))%n];}
+function songSet(st,seed,m){const nm=RADIO[st].name;(SONGPICK[nm]||(SONGPICK[nm]={}))[seed]=m;if(!m)delete SONGPICK[nm][seed];delete SONGPOOL[st];try{localStorage.setItem('gc_songs',JSON.stringify(SONGPICK));}catch(e){}}
+let songLabT=null;
+function songPlay(st,seed){if(!AC)initAudio();if(!AC)return;if(AC.state==='suspended')AC.resume();const S=RADIO[st];
+  // start two bars before the first chorus, so the verse, the fill and the hook are all heard within a few seconds
+  SONGLAB={st,seed,off:6*240/S.bpm-performance.now()/1000};radio.st=st;radio.lastSt=-1;radio.next=0;try{speechSynthesis.cancel();}catch(e){}
+  if(!songLabT)songLabT=setInterval(()=>{if(!SONGLAB){clearInterval(songLabT);songLabT=null;return;}radioG.gain.setTargetAtTime(0.3*radv()/Math.max(0.2,fxv()),AC.currentTime,0.1);radioTick();},40);}
+function songStop(){if(SONGLAB&&AC){radioG.gain.setTargetAtTime(0,AC.currentTime,0.08);}SONGLAB=null;radio.lastSt=-1;}
+function songLab(){let el=document.getElementById('songlab');if(!el){el=document.createElement('div');el.id='songlab';document.body.appendChild(el);}
+  const st0=radio.st,music=RADIO.map((S,i)=>i).filter(i=>RADIO[i].kind!=='talk'&&RADIO[i].kind!=='off');let cur=music.includes(st0)?st0:music[0],page=0,playing=-1;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:60;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eee';
+  const b='padding:7px 11px;margin:3px 4px 3px 0;cursor:pointer;border-radius:6px;border:1px solid #555;background:#26272d;color:#eee;font:600 13px system-ui,sans-serif';
+  const close=()=>{songStop();radio.st=st0;radio.lastSt=-1;el.style.display='none';el.innerHTML='';};
+  const draw=()=>{const S=RADIO[cur];let ok=0,no=0;for(let i=0;i<SONGN;i++){const m=songMark(cur,i);if(m>0)ok++;else if(m<0)no++;}
+    let h='<div style="background:#16171b;border:2px solid #ffd24a;border-radius:10px;padding:14px 16px;width:min(720px,95vw);max-height:94vh;overflow:auto"><h2 style="margin:0 0 4px;color:#ffd24a;font-family:\'Pixelify Sans\',monospace">SONG LAB</h2>'+
+      '<p style="margin:0 0 8px;color:#aaa;font-size:13px">Play a song, then keep it or turn it down. A station plays every song in its pool except the ones you deny. COPY MY PICKS makes a line you can send back so your picks become the default.</p><div>';
+    for(const i of music)h+='<button data-st="'+i+'" style="'+b+(i===cur?';background:#ffd24a;color:#111;border-color:#ffd24a':'')+'">'+RADIO[i].name+'</button>';
+    h+='</div><div style="margin:6px 0;color:#9fc4ff;font-size:13px">'+S.name+' · '+S.tag+' · '+ok+' approved, '+no+' denied, '+(SONGN-ok-no)+' not rated</div>';
+    for(let i=page*12;i<Math.min(SONGN,page*12+12);i++){const m=songMark(cur,i),t=songTitle(cur,i,true);
+      h+='<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:6px;margin:2px 0;background:'+(m>0?'#17361f':m<0?'#3a1a1a':'#1e1f25')+'"><span style="color:#777;width:26px;font:12px monospace">'+(i+1)+'</span><span style="flex:1;font-size:13px;'+(m<0?'text-decoration:line-through;color:#a88':'')+'">'+t+'</span>'+
+        '<button data-play="'+i+'" style="'+b+';min-width:68px'+(playing===i?';background:#2a6fd0;border-color:#2a6fd0':'')+'">'+(playing===i?'■ STOP':'▶ PLAY')+'</button><button data-ok="'+i+'" style="'+b+(m>0?';background:#2e9a4a;border-color:#2e9a4a':'')+'">✔ APPROVE</button><button data-no="'+i+'" style="'+b+(m<0?';background:#b33a2e;border-color:#b33a2e':'')+'">✖ DENY</button></div>';}
+    h+='<div style="margin-top:8px"><button data-pg="-1" style="'+b+'">◀ PREV</button><span style="color:#aaa;font-size:13px;margin-right:8px">songs '+(page*12+1)+'-'+Math.min(SONGN,page*12+12)+' of '+SONGN+'</span><button data-pg="1" style="'+b+'">NEXT ▶</button>'+
+      '<button data-copy="1" style="'+b+'">COPY MY PICKS</button><button data-reset="1" style="'+b+'">RESET THIS STATION</button><button data-x="1" style="'+b+'">CLOSE</button><span id="slMsg" style="color:#7dff8a;font-size:13px"></span></div>'+
+      '<textarea id="slTxt" readonly style="display:none;width:100%;height:70px;margin-top:6px;background:#0c0d10;color:#cfd;border:1px solid #333;font:12px monospace"></textarea></div>';
+    el.innerHTML=h;};
+  el.onclick=e=>{const d=e.target.dataset;if(!d)return;
+    if(d.st!=null){songStop();playing=-1;cur=+d.st;page=0;draw();}
+    else if(d.play!=null){const i=+d.play;if(playing===i){songStop();playing=-1;}else{songPlay(cur,i);playing=i;}draw();}
+    else if(d.ok!=null){const i=+d.ok;songSet(cur,i,songMark(cur,i)>0?0:1);draw();}
+    else if(d.no!=null){const i=+d.no;songSet(cur,i,songMark(cur,i)<0?0:-1);if(playing===i){songStop();playing=-1;}draw();}
+    else if(d.pg!=null){page=clamp(page+(+d.pg),0,Math.ceil(SONGN/12)-1);draw();}
+    else if(d.reset){delete SONGPICK[RADIO[cur].name];delete SONGPOOL[cur];try{localStorage.setItem('gc_songs',JSON.stringify(SONGPICK));}catch(e2){}draw();}
+    else if(d.copy){const out={};for(const i of music){const ok=[],deny=[];for(let k=0;k<SONGN;k++){const m=songMark(i,k);if(m>0)ok.push(k);else if(m<0)deny.push(k);}if(ok.length||deny.length)out[RADIO[i].name]={ok,deny};}
+      const txt='GC-SONGS v1 '+JSON.stringify(out);draw();const ta=el.querySelector('#slTxt'),msg=el.querySelector('#slMsg');ta.style.display='block';ta.value=txt;const done=()=>msg.textContent=' Copied. Paste it in a message.';
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,()=>{ta.select();document.execCommand('copy');done();});else{ta.select();document.execCommand('copy');done();}}
+    else if(d.x)close();};
+  draw();}
