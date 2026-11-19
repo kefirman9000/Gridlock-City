@@ -1,4 +1,4 @@
 {
-  "version": "5.34.1",
-  "notes": "Fix: the radio songs and menu themes were silent (a name clash with the Song Lab stopped every note)."
+  "version": "5.34.2",
+  "notes": "Cars keep their speed on grass much better (a light drag at speed instead of a heavy one)."
 }

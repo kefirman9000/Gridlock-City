@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.34.2
+- Cars keep their speed on grass much better (a light drag at speed instead of a heavy one). 08f suspTick: drag 0.85/s (cars), 0.35/s (trucks) -> 0.2/s, 0.08/s (trucks, pickups, SUVs), 0.12/s (bikes), only above 130 px/s.
+
 ## v5.34.1
 - Fix: the radio songs and menu themes were silent (a name clash with the Song Lab stopped every note). The song player's `songPlay` was overwritten by the Song Lab's own `songPlay` in 06r, and its menu `menuTick` by the autosave `menuTick` in 09; renamed to `midiPlay` and `menuThemeTick`.
 
