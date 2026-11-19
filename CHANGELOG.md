@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.34.1
+- Fix: the radio songs and menu themes were silent (a name clash with the Song Lab stopped every note). The song player's `songPlay` was overwritten by the Song Lab's own `songPlay` in 06r, and its menu `menuTick` by the autosave `menuTick` in 09; renamed to `midiPlay` and `menuThemeTick`.
+
 ## v5.34.0
 - **Real songs on the radio.** Five music stations now play twenty tracks from the Studio Lab city radio MIDI pack, four each, note by note in the browser and still on each station's own clock (tune in mid-song and it's mid-song):
   - **NEON 101**: eighties synth and italo

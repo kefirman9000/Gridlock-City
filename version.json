@@ -1,4 +1,4 @@
 {
-  "version": "5.34.0",
-  "notes": "Real songs on the radio: NEON 101, BASSLINE 104.5, JUNGLE 99.9, IRIE 92.7 and PULSE 105.9 each play four tracks from the Studio Lab MIDI pack; the menus play three themes."
+  "version": "5.34.1",
+  "notes": "Fix: the radio songs and menu themes were silent (a name clash with the Song Lab stopped every note)."
 }

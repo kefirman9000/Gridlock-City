@@ -61,7 +61,7 @@ function gmDrum(t,note,vel){const v=vel/127;
   else if(note===54||note===69||note===70||note===82)rn(t,0.05,6000,'highpass',0.12*v);else if(note===56)rv(t,0.08,800,'square',0.06*v);else if(note>=60&&note<=68)rv(t,0.12,180+(note-60)*40,'sine',0.25*v,120);
   else rn(t,0.06,3000,'bandpass',0.15*v);}
 // schedule the notes of song e from song time ph0 onward, a quarter-second ahead
-function songPlay(key,e,ph0){const now=AC.currentTime;
+function midiPlay(key,e,ph0){const now=AC.currentTime;
   if(radio.mkey!==key){radio.mkey=key;radio.ptr=e.parts.map(p=>{let lo=0,hi=p.t.length;while(lo<hi){const m=(lo+hi)>>1;if(p.t[m]<ph0+0.02)lo=m+1;else hi=m;}return lo;});}
   const end=ph0+0.25;let n=0;
   e.parts.forEach((p,k)=>{let i=radio.ptr[k];while(i<p.t.length&&p.t[i]<end&&n<400){const at=now+(p.t[i]-ph0);if(at>=now-0.02){if(p.dr)gmDrum(Math.max(now,at),p.nt[i],p.v[i]);else gmVoice(Math.max(now,at),p.d[i],p.nt[i],p.v[i],p.p);n++;}i++;}radio.ptr[k]=i;});
@@ -69,14 +69,14 @@ function songPlay(key,e,ph0){const now=AC.currentTime;
 // a music station with real songs (SONGS in 06r-radio.js): play the one its clock is on. false = not loaded yet, let the generator fill in
 function midiTick(st){const q=slotAt(st,stClock(st));if(!q.midi)return false;const L=SONGS[st];
   if(q.midi.len-q.ph<30)songGet(L[(q.i+1)%L.length].url); // fetch the next one ahead of time
-  const e=songGet(q.midi.url);if(e.st!=='ok'||q.ph>=e.len)return e.st==='ok';songPlay(st+':'+q.seg,e,q.ph);return true;}
+  const e=songGet(q.midi.url);if(e.st!=='ok'||q.ph>=e.len)return e.st==='ok';midiPlay(st+':'+q.seg,e,q.ph);return true;}
 // the title and pause menus play the three themes in turn (not while the Song Lab is auditioning)
 const MENUMUSIC=()=>{try{const m=document.getElementById('menu');return !!m&&m.style.display!=='none'&&getComputedStyle(m).display!=='none';}catch(_){return false;}};
-function menuTick(){const now=AC.currentTime;if(radio.menuT0==null)radio.menuT0=now;let T=now-radio.menuT0,i=0;
+function menuThemeTick(){const now=AC.currentTime;if(radio.menuT0==null)radio.menuT0=now;let T=now-radio.menuT0,i=0;
   for(let k=0;k<12;k++){const e=songGet(MENUSONGS[i%MENUSONGS.length]);if(e.st!=='ok'||T<e.len+3)break;T-=e.len+3;i++;}
-  const e=songGet(MENUSONGS[i%MENUSONGS.length]);if(e.st==='ok'&&T<e.len)songPlay('menu'+i,e,T);}
+  const e=songGet(MENUSONGS[i%MENUSONGS.length]);if(e.st==='ok'&&T<e.len)midiPlay('menu'+i,e,T);}
 function menuAudio(){if(!AC||!eng||SONGLAB)return;const t=AC.currentTime;eng.g.gain.setTargetAtTime(0,t,0.1);siren.g.gain.setTargetAtTime(0,t,0.1);squeal.g.gain.setTargetAtTime(0,t,0.05);
-  const on=MENUMUSIC()&&!muted;radioG.gain.setTargetAtTime(on?0.3*radv()/Math.max(0.2,fxv()):0,t,0.2);if(on){try{menuTick();}catch(_){}}else radio.menuT0=null;}
+  const on=MENUMUSIC()&&!muted;radioG.gain.setTargetAtTime(on?0.3*radv()/Math.max(0.2,fxv()):0,t,0.2);if(on){try{menuThemeTick();}catch(_){}}else radio.menuT0=null;}
 function radioTick(){
   try{
   const S=RADIO[radio.st];if(S.kind==='talk'||S.kind==='off')return;

@@ -40,6 +40,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
   - **PULSE 105.9**: house and trance
 - The DJs and ads come in over the end of each song. KRUD 88.6 keeps its generated punk, and the Song Lab now covers KRUD only.
 - The title and pause menus play three themes.
+- *v5.34.1:* fixed the songs being silent in v5.34.0.
 
 ## What's new in v5.33
 - **A less square city.** The north-west and north-east corners are wide curves, the south corners round off above the beach, and parkland reaches into the grid by a depth that wanders along each side. The beltway follows the corners and swings up to 700 px out into the hills instead of tracing a box.
