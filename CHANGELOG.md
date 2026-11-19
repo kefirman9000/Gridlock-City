@@ -2,6 +2,9 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.34.3
+- Crooked side streets no longer creep out of a junction alongside the main road; they strike off at a clear angle (34-56 degrees) between busy junctions. naturalStreets: slopes 2x3 / 3x4 blocks instead of 1x2 / 2x1 (27 degrees off the street, which left a sliver of grass between the two roads across the crossing); both ends need a junction with at least three open streets.
+
 ## v5.34.2
 - Cars keep their speed on grass much better (a light drag at speed instead of a heavy one). 08f suspTick: drag 0.85/s (cars), 0.35/s (trucks) -> 0.2/s, 0.08/s (trucks, pickups, SUVs), 0.12/s (bikes), only above 130 px/s.
 

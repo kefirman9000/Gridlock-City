@@ -1,4 +1,4 @@
 {
-  "version": "5.34.2",
-  "notes": "Cars keep their speed on grass much better (a light drag at speed instead of a heavy one)."
+  "version": "5.34.3",
+  "notes": "Crooked side streets no longer creep out of a junction alongside the main road; they strike off at a clear angle (34-56 degrees) between busy junctions."
 }

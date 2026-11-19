@@ -114,7 +114,7 @@
 //      police; hitting bystanders or cops still does. One incident raises the wanted level by one star at most.
 //  G4. New enemies or chases say why they're happening (a note, a WANTED reason, a radio line).
 // =====================================================================================================================
-const VERSION='5.34.2',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.34.3',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -696,8 +696,11 @@ const DRIVEWAYS=[];
   for(let tries=0;tries<220&&made<want;tries++){
     const ix=1+Math.floor(cr()*(NB-2)),iy=1+Math.floor(cr()*(NB-2)),[ax,ay]=node(ix,iy);
     const dn=districtAt(ax,ay);if(!(dn==='OLD TOWN'||dn==='DOWNTOWN'||dn==='LOTUS QUARTER'||dn==='CHINATOWN'||dn==='THE VILLAGE'||made<3||tries>120))continue;
-    const dx=(cr()<0.5?-1:1)*(1+Math.floor(cr()*2)),dy=(cr()<0.5?-1:1)*(cr()<0.6?1:2);if(Math.abs(dx)===Math.abs(dy))continue; // never 45 degrees: odd angles
-    if(!okNode(ix+dx,iy+dy))continue;const[bx2,by2]=node(ix+dx,iy+dy);
+    // v5.34.3: odd angles, but never shallow. A 1x2-block slope left the junction only 27 degrees off the street, so it crept out
+    // alongside it across the crossing and the corner with a sliver of grass between the two (DESIGN RULES B). 2x3 and 3x4 slopes
+    // are 34-56 degrees off both streets, so the crooked street always strikes off cleanly.
+    const pr=[[2,3],[3,2],[3,4],[4,3]][Math.floor(cr()*4)],dx=(cr()<0.5?-1:1)*pr[0],dy=(cr()<0.5?-1:1)*pr[1];
+    if(!okNode(ix+dx,iy+dy)||nodeDeg(ix,iy)<3||nodeDeg(ix+dx,iy+dy)<3)continue;const[bx2,by2]=node(ix+dx,iy+dy);
     const sx=ax+(bx2-ax)*0.04,sy=ay+(by2-ay)*0.04,ex=bx2-(bx2-ax)*0.04,ey=by2-(by2-ay)*0.04,L=hyp(ex-sx,ey-sy),ux=(ex-sx)/L,uy=(ey-sy)/L;
     const d={ax:sx,ay:sy,bx:ex,by:ey,L,ux,uy,nx:-uy,ny:ux,hw:30,sw:46,side:true};
     // keep clear of the river, bridges, special blocks, Central Park and the other diagonals

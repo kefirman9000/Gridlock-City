@@ -42,6 +42,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - The title and pause menus play three themes.
 - *v5.34.1:* fixed the songs being silent in v5.34.0.
 - *v5.34.2:* cars keep their speed on grass much better.
+- *v5.34.3:* crooked side streets strike off from junctions at a clear angle instead of running alongside the main road.
 
 ## What's new in v5.33
 - **A less square city.** The north-west and north-east corners are wide curves, the south corners round off above the beach, and parkland reaches into the grid by a depth that wanders along each side. The beltway follows the corners and swings up to 700 px out into the hills instead of tracing a box.
