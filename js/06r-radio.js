@@ -1,5 +1,5 @@
 // v5.14: three more music stations (slotted in before RADIO OFF)
-RADIO.splice(RADIO.length-1,0,{name:'JUNGLE 99.9',tag:'drum & bass',bpm:174,kind:'dnb'},{name:'IRIE 92.7',tag:'reggae & dub',bpm:76,kind:'reggae'},{name:'PULSE 105.9',tag:'house & disco',bpm:124,kind:'house'});
+RADIO.splice(RADIO.length-1,0,{name:'JUNGLE 99.9',tag:'drum & bass',bpm:174,kind:'dnb'},{name:'IRIE 92.7',tag:'reggae & dub',bpm:76,kind:'reggae'},{name:'PULSE 105.9',tag:'house & trance',bpm:124,kind:'house'});
 // ================= RADIO: the stations' content and their live clock (music itself is synthesized in 04-audio-actions.js) =================
 // ---- radio content: the talk show, the DJs, the ads and the song names (all made up for Gridlock City; satire, not advice) ----
 const TALKSEGS=[
@@ -70,18 +70,33 @@ const SONGW=[[['Burnt','Broken','Stolen','Rusty','Loud','Wrecked','Angry','Sidew
 // talks, or ads run); the talk station runs its show, with ad breaks between calls. Lines are spoken with the browser's
 // own text-to-speech and shown under the station name.
 const RCYC=100,RSONG=75;
+// v5.34: real songs. Five stations play the Studio Lab city radio MIDI pack (music/<folder>/NN.json, made by tools/midi2json.py;
+// artists are made up), four songs each in order; each slot is the song's own length and the DJ or ads come in over its last 22 s.
+// KRUD 88.6 and any station not listed here keep their generated songs (RCYC slots, the Song Lab).
+const SONGS={};
+[['NEON 101','neon',[['Neon Highway','Lux Machine',203.0],['Cassette Love','Vapor Coast',213.68],['Night Club Fever','Laser Hearts',176.52],['Shoreline Heart','Marisol Vega',199.67]]],
+ ['BASSLINE 104.5','bassline',[['Corner Store Tape','Kid Static',173.85],['Old Soul Block','Mama Bass',196.12],['Smoke in the Lounge','The Tunnel Crew',174.48],['Late Ride Home','Big Ferro',272.37]]],
+ ['JUNGLE 99.9','breakneck',[['Dockyard Breaks','Rude Signal',187.27],['Rapid Transit','Third Rail Sound',178.56],['Rainy Tunnel','Low Visibility',279.04],['Pirate Signal','The Night Bus Crew',147.66]]],
+ ['IRIE 92.7','roots',[['Island Bound','Bredda Sol and the Harbour Band',312.31],['Echo Chamber','Dub Foundry',323.58],['Sunday Yard','Sister Iyah',280.0],['Deep Bass Station','Ironside Sound',327.53]]],
+ ['PULSE 105.9','pulse',[['Harbor Lights','Halcyon',170.32],['Warehouse 9','Unit Nine',216.71],['Overpass at Dawn','Grey Morning',243.64],['Skyline Pulse','Altitude',225.83]]]
+].forEach(([name,dir,list])=>{const st=RADIO.findIndex(r=>r.name===name);if(st>=0)SONGS[st]=list.map(([title,artist,len],i)=>({title,artist,len,url:'music/'+dir+'/0'+(i+1)+'.json'}));});
+const MENUSONGS=['music/menu/01.json','music/menu/02.json','music/menu/03.json'];
+// where a station's clock is: the slot (seg), how far into it (ph), when the DJ break starts (brkAt), and the real song if it has one
+function slotAt(st,T){const L=SONGS[st];if(!L){const seg=Math.floor(T/RCYC);return{seg,ph:T-seg*RCYC,brkAt:RSONG,midi:null,i:0};}
+  let C=0;for(const q of L)C+=q.len;const cyc=Math.floor(T/C);let t=T-cyc*C;
+  for(let i=0;i<L.length;i++){const q=L[i];if(t<q.len||i===L.length-1)return{seg:cyc*L.length+i,ph:t,brkAt:Math.max(20,q.len-22),midi:q,i};t-=q.len;}}
 const RCLK=RADIO.map(()=>Math.random()*36000);
 const stClock=i=>RCLK[i]+performance.now()/1000;
 const TALKSEQ=(()=>{const out=[];TALKSEGS.forEach((sg,i)=>{out.push(...sg);if(i%2===1)out.push(ADS[(i*5)%ADS.length],ADS[(i*5+3)%ADS.length]);});return out;})();
 // each line gets as long as it takes to say (about 0.4 s a word), so long jokes aren't cut off
 const TALKT=(()=>{const o=[0];TALKSEQ.forEach(l=>o.push(o[o.length-1]+Math.max(4.5,l.split(' ').length*0.4+1.4)));return o;})();
-function songTitle(st,seg0,raw){const seg=raw?seg0:songSeg(st,seg0),W=SONGW[st]||SONGW[0],h=hash(seg,st*31+9);return '"'+W[0][h%W[0].length]+' '+W[1][(h>>>5)%W[1].length]+'" by '+W[2][(h>>>10)%W[2].length];}
+function songTitle(st,seg0,raw){if(SONGS[st]){const L=SONGS[st],q=L[((seg0%L.length)+L.length)%L.length];return '"'+q.title+'" by '+q.artist;}const seg=raw?seg0:songSeg(st,seg0),W=SONGW[st]||SONGW[0],h=hash(seg,st*31+9);return '"'+W[0][h%W[0].length]+' '+W[1][(h>>>5)%W[1].length]+'" by '+W[2][(h>>>10)%W[2].length];}
 function radioNow(st){const S=RADIO[st];if(!S||S.kind==='off')return null;const T=stClock(st);
   if(S.kind==='talk'){const L=TALKT[TALKT.length-1],t=T%L;let lo=0,hi=TALKT.length-1;while(lo<hi){const m=(lo+hi)>>1;if(TALKT[m+1]<=t)lo=m+1;else hi=m;}
     const k=Math.floor(T/L)*TALKSEQ.length+lo;return{key:'t'+k,line:TALKSEQ[lo],speak:true};}
-  const seg=Math.floor(T/RCYC),ph=T-seg*RCYC;
+  const q=slotAt(st,T),seg=q.seg,ph=q.ph;
   if(ph<5)return{key:'s'+seg,line:'NOW PLAYING: '+songTitle(st,seg),speak:false};
-  if(ph>=RSONG){const k=Math.min(1,Math.floor((ph-RSONG)/12.5)),dj=DJS[st];
+  if(ph>=q.brkAt){const k=Math.min(1,Math.floor((ph-q.brkAt)/12.5)),dj=DJS[st];
     if(seg%3===1)return{key:'b'+seg+k,line:ADS[(Math.floor(seg/3)*2+k+st*7)%ADS.length],speak:true};
     return{key:'b'+seg+k,line:dj.lines[(Math.floor(seg/3)*4+(seg%3?2:0)+k)%dj.lines.length],speak:true};}
   return null;}
@@ -208,10 +223,10 @@ function updateRadioText(dt){const S=RADIO[radio.st],on=!!((player.car||(ROOM&&R
   if(RGAP>0){RGAP-=dt;return;}
   if(S.kind==='talk'){const k=Math.floor(r.pos)%TALKSEQ.length,line=TALKSEQ[k];r.pos=Math.floor(r.pos)+1;radioBanner={text:S.name,sub:line,t:7};talkSay2(line,k);return;}
   // music station: what part of the song cycle are we in
-  const T=stClock(radio.st),seg=Math.floor(T/RCYC),ph=T-seg*RCYC;
+  const T=stClock(radio.st),q=slotAt(radio.st,T),seg=q.seg,ph=q.ph;
   if(r.seg!==seg){r.seg=seg;r.q=[];const it=introLine(radio.st,seg);if(it)r.q.push(['i'+seg,it]);r.brk=false;}
   if(ph<4&&!r.said.has('n'+seg)){r.said.add('n'+seg);radioBanner={text:S.name,sub:'NOW PLAYING: '+songTitle(radio.st,seg),t:4};}
-  if(ph>=RSONG-1&&!r.brk){r.brk=true;breakLines(radio.st,seg).forEach((l,j)=>r.q.push(['b'+seg+'_'+j,l]));}
+  if(ph>=q.brkAt-1&&!r.brk){r.brk=true;breakLines(radio.st,seg).forEach((l,j)=>r.q.push(['b'+seg+'_'+j,l]));}
   // intros only while the intro is still playing; break lines until the next song has properly started
   while(r.q.length){const[key,line]=r.q[0];if(r.said.has(key)||(key[0]==='i'&&ph>14)){r.q.shift();continue;}
     r.q.shift();r.said.add(key);if(r.said.size>400)r.said=new Set([...r.said].slice(-200));radioBanner={text:S.name,sub:line,t:7};talkSay2(line,key);return;}}
@@ -237,7 +252,7 @@ function songPlay(st,seed){if(!AC)initAudio();if(!AC)return;if(AC.state==='suspe
   if(!songLabT)songLabT=setInterval(()=>{if(!SONGLAB){clearInterval(songLabT);songLabT=null;return;}radioG.gain.setTargetAtTime(0.3*radv()/Math.max(0.2,fxv()),AC.currentTime,0.1);radioTick();},40);}
 function songStop(){if(SONGLAB&&AC){radioG.gain.setTargetAtTime(0,AC.currentTime,0.08);}SONGLAB=null;radio.lastSt=-1;}
 function songLab(){let el=document.getElementById('songlab');if(!el){el=document.createElement('div');el.id='songlab';document.body.appendChild(el);}
-  const st0=radio.st,music=RADIO.map((S,i)=>i).filter(i=>RADIO[i].kind!=='talk'&&RADIO[i].kind!=='off');let cur=music.includes(st0)?st0:music[0],page=0,playing=-1;
+  const st0=radio.st,music=RADIO.map((S,i)=>i).filter(i=>RADIO[i].kind!=='talk'&&RADIO[i].kind!=='off'&&!SONGS[i]); // stations with real songs aren't in the Lablet cur=music.includes(st0)?st0:music[0],page=0,playing=-1;
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:60;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eee';
   const b='padding:7px 11px;margin:3px 4px 3px 0;cursor:pointer;border-radius:6px;border:1px solid #555;background:#26272d;color:#eee;font:600 13px system-ui,sans-serif';
   const close=()=>{songStop();radio.st=st0;radio.lastSt=-1;el.style.display='none';el.innerHTML='';};

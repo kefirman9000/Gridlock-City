@@ -126,6 +126,10 @@ Each station runs on its own clock (`stClock(i)`, random start per page load), s
 Speech is event-driven since v5.14 (`updateRadioText` and `talkSay2` at the end of 06r): a line starts when the last one ends (`onend`, with a timer backstop), `RST[i]`
 keeps each station's talk position and the set of lines already said, so nothing repeats. New stations are spliced into `RADIO` at the top of 06r (before `RCLK`); `DJS[i]`/`SONGW[i]`
 are indexed by station (talk is `null`); DJs can have `intros` with `{song}`.
+Since v5.34 five stations play real songs: the Studio Lab MIDI pack, converted by `tools/midi2json.py` into `music/<folder>/NN.json` (see `music/README.md`),
+listed with their lengths in `SONGS` (06r, keyed by station index). `slotAt(st,T)` replaces the fixed 100 s slots for them (slot = the song's length, the DJ
+comes in over the last 22 s); `midiTick` in 04 fetches a song the first time (`songGet`) and schedules its notes on small Web Audio voices (`gmVoice`,
+`gmDrum`). Until a song arrives, offline, or from file:// the generator fills in. Those stations aren't in the Song Lab. The menus play `MENUSONGS` (`menuAudio`).
 
 ## Story jobs
 Mission steps live in the chapters in `js/05-story.js`. A `drive` step can take `minZ` (the car must be at least that high, e.g. the garage roof).

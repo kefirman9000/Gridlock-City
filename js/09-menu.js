@@ -57,7 +57,7 @@ function frame(now){
   if(slowT>0&&!game.paused){slowT-=dt;dt*=0.35;}
   if(FREECAM.on)freeCamTick(dt);else
   // an error in one frame used to stop the loop for good (the picture froze, the menus still worked): report it and carry on
-  try{if(game.state!=='menu'&&!game.paused&&!DLG.open)update(dt);}catch(e){loopErr(e);}
+  try{if(game.state!=='menu'&&!game.paused&&!DLG.open)update(dt);else menuAudio();}catch(e){loopErr(e);}
   try{if(game.state!=='menu')render();else menuView(dt);}catch(e){loopErr(e);}
   requestAnimationFrame(frame);
 }

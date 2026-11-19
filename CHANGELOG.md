@@ -2,6 +2,16 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.34.0
+- **Real songs on the radio.** Five music stations now play twenty tracks from the Studio Lab city radio MIDI pack, four each, note by note in the browser and still on each station's own clock (tune in mid-song and it's mid-song):
+  - **NEON 101**: eighties synth and italo
+  - **BASSLINE 104.5**: hip-hop
+  - **JUNGLE 99.9**: jungle and drum & bass
+  - **IRIE 92.7**: reggae and dub
+  - **PULSE 105.9**: house and trance
+- The DJs and ads come in over the end of each song. KRUD 88.6 keeps its generated punk, and the Song Lab now covers KRUD only.
+- The title and pause menus play three themes.
+
 ## v5.33.0
 - 01 cityEdge: corner radius 24 -> 46 tiles, south corners rounded (26) above the beach row; per-side wild depth (up to 15 tiles, capped at kept blocks, 13 beside beltway junctions); dead-end stubs removed up to three blocks in; outer blocks with no open street go wild.
 - 08-render ringRoad: corner radius 560 -> 1640, wander -120..+700 outward (east side damped); hill roads (`RING.hills`, `hill:true`) walked from the beltway and graded to 12%.

@@ -31,9 +31,56 @@ const PROG=[[0,-4,3,-2],[0,-2,-4,-5],[0,3,-2,5]];
 // v5.14: songs keep playing right through the DJ and ad breaks (the voices duck them), every song has its own hook,
 // and songs build: a sparse intro, verses, a chorus with the hook, a breakdown, and a fill into each new section.
 const chord=(minor)=>minor?[0,3,7]:[0,4,7];
+// ---- the songs: MIDI note lists (music/<station>/NN.json, see SONGS in 06r-radio.js) played on small Web Audio voices ----
+// A song is fetched the first time it's needed and kept; until it arrives (or offline / opened from a file) the old
+// generated music for that style fills in, so the station never goes quiet. The station clock decides where in the song
+// we are, so tuning in mid-song starts mid-song.
+const SONGCACHE={};
+function songGet(url){let e=SONGCACHE[url];if(e&&e.st==='fail'&&performance.now()>e.retry){delete SONGCACHE[url];e=null;}if(e)return e;
+  e=SONGCACHE[url]={st:'loading'};if(!/^https?:/.test(location.protocol)){e.st='fail';e.retry=1e18;return e;}
+  fetch(url).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{e.parts=j.parts.map(p=>{const n=p.n,k=n.length>>2,t=new Float64Array(k),d=new Float32Array(k),nt=new Uint8Array(k),v=new Uint8Array(k);let acc=0;
+    for(let i=0;i<k;i++){acc+=n[i*4];t[i]=acc/1000;d[i]=n[i*4+1]/1000;nt[i]=n[i*4+2];v[i]=n[i*4+3];}return{p:p.p,dr:!!p.d,t,d,nt,v};});e.len=j.len;e.st='ok';})
+    .catch(()=>{e.st='fail';e.retry=performance.now()+30000;});return e;}
+const mfq=n=>440*Math.pow(2,(n-69)/12);
+// one General MIDI note on a voice that suits its instrument family
+function gmVoice(t,dur,note,vel,prog){const v=vel/127,f=mfq(note),fam=prog>>3;let type='triangle',vol=0.04,lp=0,len=Math.min(dur,3),att=0.005;
+  switch(fam){case 0:len=Math.min(dur,1.4);vol=0.05;break;case 1:type='sine';len=Math.min(dur,0.8);vol=0.045;break;case 2:type='square';lp=1800;vol=0.022;break;
+    case 3:type='sawtooth';lp=2200;len=Math.min(dur,1.2);vol=0.032;break;case 4:type='sawtooth';lp=note<48?420:700;vol=0.08;break;
+    case 5:case 6:type='sawtooth';lp=1700;vol=0.022;att=0.06;break;case 7:type='sawtooth';lp=2600;vol=0.03;att=0.02;break;case 8:type='square';lp=2000;vol=0.025;break;
+    case 9:type='sine';vol=0.04;att=0.02;break;case 10:type=prog&1?'sawtooth':'square';lp=3200;vol=0.026;break;case 11:type='sawtooth';lp=1200;vol=0.02;att=0.18;break;
+    case 12:type='sine';vol=0.022;break;case 13:case 14:len=Math.min(dur,0.5);vol=0.04;break;default:return;}
+  len=Math.max(0.05,len);const o=AC.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);const g=AC.createGain();const pk=vol*v;
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(pk,t+att);
+  if(fam===0||fam===1||fam===3||fam>=13)g.gain.exponentialRampToValueAtTime(0.0001,t+len);else{g.gain.setValueAtTime(pk,t+Math.max(att,len-0.06));g.gain.exponentialRampToValueAtTime(0.0001,t+len+0.08);}
+  let n=o;if(lp){const fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.value=lp;o.connect(fl);n=fl;}n.connect(g);g.connect(radioG);o.start(t);o.stop(t+len+0.12);}
+// General MIDI drum kit (channel 10) on the generated kick / snare / hats
+function gmDrum(t,note,vel){const v=vel/127;
+  if(note===35||note===36)kick(t,0.9*v);else if(note===38||note===40)snare(t,0.6*v);else if(note===37)rn(t,0.03,2600,'bandpass',0.3*v);else if(note===39)rn(t,0.09,1500,'bandpass',0.55*v);
+  else if(note===42||note===44)hat(t,0.2*v);else if(note===46)rn(t,0.18,7000,'highpass',0.2*v);else if(note===49||note===57||note===52||note===55)rn(t,0.9,5200,'highpass',0.18*v);
+  else if(note===51||note===59||note===53)rn(t,0.3,9000,'highpass',0.12*v);else if(note>=41&&note<=50)rv(t,0.2,60+(note-41)*14,'sine',0.35*v,40);
+  else if(note===54||note===69||note===70||note===82)rn(t,0.05,6000,'highpass',0.12*v);else if(note===56)rv(t,0.08,800,'square',0.06*v);else if(note>=60&&note<=68)rv(t,0.12,180+(note-60)*40,'sine',0.25*v,120);
+  else rn(t,0.06,3000,'bandpass',0.15*v);}
+// schedule the notes of song e from song time ph0 onward, a quarter-second ahead
+function songPlay(key,e,ph0){const now=AC.currentTime;
+  if(radio.mkey!==key){radio.mkey=key;radio.ptr=e.parts.map(p=>{let lo=0,hi=p.t.length;while(lo<hi){const m=(lo+hi)>>1;if(p.t[m]<ph0+0.02)lo=m+1;else hi=m;}return lo;});}
+  const end=ph0+0.25;let n=0;
+  e.parts.forEach((p,k)=>{let i=radio.ptr[k];while(i<p.t.length&&p.t[i]<end&&n<400){const at=now+(p.t[i]-ph0);if(at>=now-0.02){if(p.dr)gmDrum(Math.max(now,at),p.nt[i],p.v[i]);else gmVoice(Math.max(now,at),p.d[i],p.nt[i],p.v[i],p.p);n++;}i++;}radio.ptr[k]=i;});
+  radio.notes=(radio.notes||0)+n;}
+// a music station with real songs (SONGS in 06r-radio.js): play the one its clock is on. false = not loaded yet, let the generator fill in
+function midiTick(st){const q=slotAt(st,stClock(st));if(!q.midi)return false;const L=SONGS[st];
+  if(q.midi.len-q.ph<30)songGet(L[(q.i+1)%L.length].url); // fetch the next one ahead of time
+  const e=songGet(q.midi.url);if(e.st!=='ok'||q.ph>=e.len)return e.st==='ok';songPlay(st+':'+q.seg,e,q.ph);return true;}
+// the title and pause menus play the three themes in turn (not while the Song Lab is auditioning)
+const MENUMUSIC=()=>{try{const m=document.getElementById('menu');return !!m&&m.style.display!=='none'&&getComputedStyle(m).display!=='none';}catch(_){return false;}};
+function menuTick(){const now=AC.currentTime;if(radio.menuT0==null)radio.menuT0=now;let T=now-radio.menuT0,i=0;
+  for(let k=0;k<12;k++){const e=songGet(MENUSONGS[i%MENUSONGS.length]);if(e.st!=='ok'||T<e.len+3)break;T-=e.len+3;i++;}
+  const e=songGet(MENUSONGS[i%MENUSONGS.length]);if(e.st==='ok'&&T<e.len)songPlay('menu'+i,e,T);}
+function menuAudio(){if(!AC||!eng||SONGLAB)return;const t=AC.currentTime;eng.g.gain.setTargetAtTime(0,t,0.1);siren.g.gain.setTargetAtTime(0,t,0.1);squeal.g.gain.setTargetAtTime(0,t,0.05);
+  const on=MENUMUSIC()&&!muted;radioG.gain.setTargetAtTime(on?0.3*radv()/Math.max(0.2,fxv()):0,t,0.2);if(on){try{menuTick();}catch(_){}}else radio.menuT0=null;}
 function radioTick(){
   try{
   const S=RADIO[radio.st];if(S.kind==='talk'||S.kind==='off')return;
+  if(!SONGLAB&&typeof SONGS!=='undefined'&&SONGS[radio.st]&&midiTick(radio.st))return; // v5.34: real songs
   // the station's own clock decides where in which song we are (see RCLK in 06r-radio.js)
   const sd=60/S.bpm/4,off=(SONGLAB?SONGLAB.off:RCLK[radio.st])+performance.now()/1000-AC.currentTime;
   if(radio.next<AC.currentTime||radio.lastSt!==radio.st){radio.lastSt=radio.st;radio.next=Math.ceil((off+AC.currentTime+0.05)/sd)*sd-off;}
