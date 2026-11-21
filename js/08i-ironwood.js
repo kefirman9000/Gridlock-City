@@ -59,6 +59,19 @@
           if(shore&&(h0&3)!==0&&cw>=60)o={hg:6+((h0>>>8)&7)*0.5,col:['#eef2f0','#dfeef0','#f4f0e6'][(h0>>>12)%3],st:'glass',ws:18,ant:false};
           else o={hg:1.5+((h0>>>8)&3)*0.5,col:DECO[(h0>>>11)%DECO.length],st:'plaster',ws:14,wf:.5,wh:.5,shop:((h0>>>15)&3)!==0,awn:DAWN[(h0>>>17)%DAWN.length],corn:true};
           if(put(x,y,cw-3,rh-3,o,2,1))nB++;}}}}
+  // Ocean Drive: Coral Beach runs on down to it; Deco hotels face the sea, neon blades lit at night, café tables out front;
+  // past the far sidewalk the promenade's palms, then the beach (umbrellas, towels, lifeguard towers)
+  const OD=IWNET.out.find(P=>P.ocean);
+  if(OD){for(const q of OD)for(let dy=-300;dy<=300;dy+=16)for(let dx=-300;dx<=300;dx+=16){const k=tcell(q.x+dx,q.y+dy);if(ISL2M[k]&&TTYPE[k]!==1&&dx*dx+dy*dy<300*300)IWCM[k]=3;}
+    const NEON=['#ff4fa0','#3ff0e0','#5aa0ff','#ffd040','#c060ff'],L=OD[OD.length-1].s,C=ISL2C;let nh=0,lg=0;
+    for(let s=70;s<L-70;s+=78){if(OD.J.some(J=>Math.abs(J.s-s)<J.ow+48))continue;const q=iwAt(OD,s),nx=-q.uy,ny=q.ux,sd=((C.x-q.x)*nx+(C.y-q.y)*ny)>0?1:-1,h0=hb(s,77),w=66+(h0&15),dep=80+((h0>>>4)&15),o=OD.hw+OD.sw+12+dep/2;
+      const b=put(q.x+nx*o*sd-w/2,q.y+ny*o*sd-dep/2,w,dep,{hg:2+((h0>>>8)&3)*0.5,col:DECO[(h0>>>11)%DECO.length],st:'plaster',ws:14,wf:.5,wh:.5,shop:true,awn:DAWN[(h0>>>14)%DAWN.length],neon:true,nc:NEON[(h0>>>17)%NEON.length]},2);
+      if(b){b.nrgb=rgbOf(b.nc);nh++;nB++;for(const f of[-0.25,0.25]){const u=iwAt(OD,s+f*w),oo=OD.hw+OD.sw-5;props.push({x:u.x+nx*oo*sd,y:u.y+ny*oo*sd,k:'umbrella',c:['#e8417a','#18a8a0','#f6e3a1','#ffffff'][(h0>>>20+(f>0?2:0))&3],rad:4,ht:21});}}}
+    for(let s=40;s<L-40;s+=46){const q=iwAt(OD,s),nx=-q.uy,ny=q.ux,sd=((C.x-q.x)*nx+(C.y-q.y)*ny)>0?-1:1;
+      for(let o=OD.hw+OD.sw+40;o<520;o+=34){const x=q.x+nx*o*sd,y=q.y+ny*o*sd,k=tcell(x,y);if(TTYPE[k]===1)break;if(TTYPE[k]!==2||COAST.D[k]<1.6)continue;const h0=hb(x,y);
+        if((h0&7)<3){const cols=['#e04a3a','#2a8ad8','#f0c030','#38b070','#e070b0'];props.push({x,y,k:'umbrella',c:cols[h0%5],rad:5,ht:21},{x:x+9,y:y+7,k:'towel',c:cols[(h0>>>3)%5],a:(h0>>>6)%6,rad:0,ht:1});}
+        else if((h0&63)===9&&lg++<6)props.push({x,y,k:'lifeguard',rad:9,ht:24});}}
+    IWNET.ocean={nh};}
   // trees along the sidewalks: palms in Palm Heights and Coral Beach (and on Sunset), plane trees downtown
   let nT=0;
   for(const P of IWNET.out){if(!P.sw)continue;const step=P.blvd?56:64;

@@ -339,6 +339,19 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
       add([...cv,[su.b,3450]],{hw:36,sw:14,nm:'SUNSET BOULEVARD',blvd:true});segs.splice(segs.indexOf(su),1);}}
   for(const s of segs)add(pts(s),{hw:s.hw,sw:s.sw,dist:s.d,ave:s.o==='v'});
   for(const P2 of out){P2.dist=P2.dist||0;}
+  // Ocean Drive: Coral Beach's beach road, on the sea side of the island road along the south shore (that stretch of the island road
+  // is Collins Avenue). Deco hotels stand between the two, the promenade and the beach are on the far side. Joined to the island
+  // road at both ends and by two cross streets.
+  {const off=246,cand=[];for(let i=jB;i<=lastI;i++){const q=I[i];if(q.y<5900||q.x<12050||q.x>13600)continue;let nx=-q.uy,ny=q.ux;if((q.x-C.x)*nx+(q.y-C.y)*ny<0){nx=-nx;ny=-ny;}
+      const x=q.x+nx*off,y=q.y+ny*off,k=cellK(x,y),ok=ISL2M[k]&&COAST.D[k]>4&&TTYPE[k]!==1&&HMAP[k]>3;cand.push([i,ok,x,y]);}
+    let best=null,run=null;for(const c of cand){if(c[1]){if(!run)run=[c];else run.push(c);if(!best||run.length>best.length)best=run.slice();}else run=null;}
+    if(best&&best.length>30){best=best.slice(4,-4);const a=best[0][0],b=best[best.length-1][0],clear=q=>!ends.some(e=>hyp(e[0]-q.x,e[1]-q.y)<150);let ka=14,kb=14;while(ka<60&&!clear(I[Math.max(jB,a-ka)]))ka++;while(kb<60&&!clear(I[Math.min(lastI,b+kb)]))kb++;
+      const A0=I[Math.max(jB,a-ka)],B0=I[Math.min(lastI,b+kb)];ends.push([A0.x,A0.y],[B0.x,B0.y]);
+      let cp=[[A0.x,A0.y],...best.filter((c,k)=>k%3===0).map(c=>[c[2],c[3]]),[B0.x,B0.y]];for(let k=0;k<3;k++)cp=chaikin(cp);cp[0]=[A0.x,A0.y];cp[cp.length-1]=[B0.x,B0.y];
+      const OD=add(cp,{hw:28,sw:20,nm:'OCEAN DRIVE',ocean:true,blvd:true,dist:3});
+      // two cross streets from Ocean Drive straight up to the island road
+      let made=0;for(const f of[0.36,0.32,0.4,0.28,0.44,0.68,0.64,0.72,0.6,0.76]){if(made>=2||(made===1&&f<0.5))continue;const q=OD[Math.round(OD.length*f)];let bi=0,bd=1e18;for(let i=jB;i<=lastI;i++){const d=dist2(I[i].x,I[i].y,q.x,q.y);if(d<bd){bd=d;bi=i;}}
+        if(ends.some(e=>hyp(e[0]-I[bi].x,e[1]-I[bi].y)<150))continue;ends.push([I[bi].x,I[bi].y]);add([[q.x,q.y],[I[bi].x,I[bi].y]],{hw:24,sw:14,dist:3});made++;}}}
   RING.paths.push(WS);for(const P2 of out)RING.paths.push(P2);
   // ---- 4. junctions, found from the geometry; roads that meet share one height there ----
   const NETP=[WS,...out],ALL=[I,WS,...out],pid=P2=>RING.paths.indexOf(P2),G=new Map(),gk=(x,y)=>Math.floor(x/40)+','+Math.floor(y/40);
@@ -944,7 +957,7 @@ function wall(ax,ay,bx,by,z0,z1,b,k,fg,det,gr){
   }
   if(b.lad&&gr&&det&&faceOf(nx,ny)===b.feFace)drawLadder(b.lad,fg);
   if(st==='brick'){L3.beginPath();for(let fl=Math.max(1,fl0);fl<nf2;fl++){const zz=z0+fl*fh;quadP(ax,ay,zz,bx,by,zz,bx,by,zz+1,ax,ay,zz+1);}L3.fillStyle=lit(b.rgb,k*1.25,fg);L3.fill();}
-  if(gr&&b.neon&&len>40){const sx=len*0.18,pa=ax+dx*sx,pb=ay+dy*sx,za=fh*1.1,zb=fh*2.7,on=LIGHTK>0.1&&!neonOff(b);quad(pa,pb,za,pa+nx*8,pb+ny*8,za,pa+nx*8,pb+ny*8,zb,pa,pb,zb,lit(on||LIGHTK<=0.1?b.nrgb:mixA(b.nrgb,[30,30,34],0.7),LIGHTK>0.1?1:0.85,fg,on));
+  if(gr&&b.neon&&len>40){const sx=len*0.18,pa=ax+dx*sx,pb=ay+dy*sx,za=z0+fh*1.1,zb=z0+fh*2.7,on=LIGHTK>0.1&&!neonOff(b);quad(pa,pb,za,pa+nx*8,pb+ny*8,za,pa+nx*8,pb+ny*8,zb,pa,pb,zb,lit(on||LIGHTK<=0.1?b.nrgb:mixA(b.nrgb,[30,30,34],0.7),LIGHTK>0.1?1:0.85,fg,on));
     if(on&&proj(pa+nx*4,pb+ny*4,(za+zb)/2))glow(PX,PY,4*PK,b.nc,0.6*LIGHTK);}
 }
 // some neon signs are on the blink: they cut out for a moment now and then

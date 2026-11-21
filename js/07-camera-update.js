@@ -374,7 +374,7 @@ function update(dt){
   if(combo.t>0){combo.t-=dt;if(combo.t<=0)combo.n=0;}
   for(const h of hitMarks)h.t-=dt;hitMarks=hitMarks.filter(h=>h.t>0);
   if(!inHall(player.x,player.y)&&!ROOM){const z=zoneOf(player.x,player.y),dn=districtAt(player.x,player.y),key=z+'|'+dn;if(key!==curZone){const zc=z!==Math.floor((curZone+'').split('|')[0]);curZone=key;
-    if(dn&&dn!=='RIVER BRIDGE')zoneBanner={text:dn,sub:z>=0?GANGS[z].name+' turf':'Downtown',col:'#ffe9a8',t:2.6};else if(zc||dn==='RIVER BRIDGE')zoneBanner={text:dn||(z>=0?GANGS[z].name.toUpperCase()+' TURF':'DOWNTOWN'),sub:z>=0?respectLabel(z):'Police HQ district',col:dn?'#ffe9a8':z>=0?GANGS[z].col:'#cfd6e0',t:2.6};}}
+    if(dn&&dn!=='RIVER BRIDGE')zoneBanner={text:dn,sub:(player.x>WPX+2000&&typeof IWCM!=='undefined')?'Ironwood Island':z>=0?GANGS[z].name+' turf':'Downtown',col:'#ffe9a8',t:2.6};else if(zc||dn==='RIVER BRIDGE')zoneBanner={text:dn||(z>=0?GANGS[z].name.toUpperCase()+' TURF':'DOWNTOWN'),sub:z>=0?respectLabel(z):'Police HQ district',col:dn?'#ffe9a8':z>=0?GANGS[z].col:'#cfd6e0',t:2.6};}}
   if(zoneBanner&&!big){zoneBanner.t-=dt;if(zoneBanner.t<=0)zoneBanner=null;}
   if(radioBanner){radioBanner.t-=dt;if(radioBanner.t<=0)radioBanner=null;}
   clock=(clock+dt/420)%1;
