@@ -74,12 +74,12 @@ function islandTraffic(dt){const I=RING.isl;if(!I)return;islandTraffic.t=(island
   if(player.x<RING.br2.x0-900)return;
   // v5.35: the island road, West Shore Drive and every town street (IWNET) carry traffic, busier in town
   const ps=[RING.paths.indexOf(I),...(IWNET?IWNET.NETP.map(P=>RING.paths.indexOf(P)):[])],set=new Set(ps);let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&set.has(c.ai.pth))n++;
-  const town=IWCM[tcell(player.x,player.y)];if(n>=(town?14:7))return;
+  const town=IWCM[tcell(player.x,player.y)];if(n>=Math.round((town?14:7)*iwRush(town)))return;
   const cand=[];for(const pi of ps){const P=RING.paths[pi];for(let i=2;i<P.length-2;i+=3){const d=dist2(P[i].x,P[i].y,player.x,player.y);if(d>350*350&&d<1300*1300)cand.push([pi,i]);}}
   for(let tries=0;tries<8&&cand.length;tries++){const[pi,i]=cand[Math.floor(R()*cand.length)],P=RING.paths[pi],q=P[i],dir=R()<0.5?1:-1,lo=P.lo||14,x=q.x-q.uy*dir*lo,y=q.y+q.ux*dir*lo;
     if(P.J&&P.J.some(J=>Math.abs(J.i-i)<3))continue;if(camSees(x,y)||carNear(x,y,120))continue;
-    const c=makeCar(pick((town?['sedan','taxi','sports','suv','van','compact','sedan']:['sedan','pickup','van','sports','suv']).filter(t=>CT[t])),x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;
-    c.traffic=true;c.driver='ai';ringJoin(c,pi,i,dir);c.ai.cruise=P.net?rr(120,170):rr(150,220);const sp=c.ai.cruise*0.7;c.vx=Math.cos(c.a)*sp;c.vy=Math.sin(c.a)*sp;break;}}
+    const ty=iwCarType(IWCM[tcell(q.x,q.y)]||town,P);if(!ty)continue;const c=makeCar(ty,x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;iwCarStyle(c,IWCM[tcell(q.x,q.y)]||town);
+    c.traffic=true;c.driver='ai';ringJoin(c,pi,i,dir);c.ai.cruise=c.t.icecream?75:c.t.bus?120:P.net?rr(120,170):rr(150,220);const sp=c.ai.cruise*0.7;c.vx=Math.cos(c.a)*sp;c.vy=Math.sin(c.a)*sp;break;}}
 
 // ================= THE SUBWAY =================
 const METRO=(()=>{const st=SUBWAY.map((s,i)=>({i,n:s.n,sx:s.x,sy:s.y})),cx=WPX/2,cy=WPX/2;
@@ -344,7 +344,7 @@ const IWV=[];
   // scattered homes on the rest of the road
   for(let i=s0+60;i<N-4;i+=9){const q=I[i],hh=hash(i,919)>>>0;if(hh%3)continue;const sd=(hh&8)?1:-1,w=46+hh%20,h=40+(hh>>>5)%14,off=64+h/2,cx=q.x-q.uy*off*sd,cy=q.y+q.ux*off*sd;
     if(house(cx-w/2,cy-h/2,w,h,hh,['#c9b79c','#a8b5a2','#e8d8c0'][(hh>>>9)%3])&&(hh&64))park.push({x:q.x-q.uy*34*sd,y:q.y+q.ux*34*sd,a:Math.atan2(q.uy,q.ux)+(sd>0?0:PI)});}
-  IWD.park=park;
+  IWD.park=park.concat(typeof IWLIFE!=='undefined'&&IWLIFE.park?IWLIFE.park:[]);
   // a windmill by the farms, the resort hotel and the beach below Sunset Point
   const fv=IWV.find(v=>v.name==='EASTSIDE FARMS');if(fv)for(const[dx,dy]of[[120,-160],[-90,220]]){const x=fv.x+dx,y=fv.y+dy;if(okAt(x-8,y-8,16,16))props.push({x,y,k:'windmill',rad:8,ht:92});}
   const E=I[N-1];
@@ -368,7 +368,7 @@ const IWV=[];
 // parked cars and people on the island while you're out there
 function islandFolk(dt){islandFolk.t=(islandFolk.t||0)-dt;if(islandFolk.t>0)return;islandFolk.t=0.9;if(player.x<WPX+2400||!ISL2M[tcell(player.x,player.y)])return;
   for(const s of IWD.park||[]){if(s.c&&cars.includes(s.c))continue;const d=dist2(s.x,s.y,player.x,player.y);if(d>1100*1100||d<300*300||camSees(s.x,s.y)||carNear(s.x,s.y,70))continue;
-    const c=makeCar(pick(['sedan','pickup','wagon','compact','suv','van'].filter(t=>CT[t])),s.x,s.y,s.a);if(c){s.c=c;}break;}
+    const c=makeCar(s.ty&&CT[s.ty]?s.ty:pick(['sedan','pickup','wagon','compact','suv','van'].filter(t=>CT[t])),s.x,s.y,s.a);if(c){s.c=c;if(s.col)c.col=s.col;}break;}
   let n=0;for(const p of peds)if(p.isl&&!p.gone)n++;if(n>=(IWCM[tcell(player.x,player.y)]?18:9))return;
   for(let tries=0;tries<6;tries++){const b=OUTB[Math.floor(R()*OUTB.length)];if(!b||b.kind!=='ironwood')continue;const sd=R()<0.5?-1:1,x=b.x+b.w/2+sd*(b.w/2+rr(10,24)),y=b.y+b.h/2+rr(-b.h/2,b.h/2),d=dist2(x,y,player.x,player.y);
     if(d>900*900||d<260*260||camSees(x,y)||(TTYPE[tcell(x,y)]===10&&(!b.iwc||iwTarmac(x,y)))||bldAt(x,y))continue;const p=makePed(x,y);p.isl=true;break;}}

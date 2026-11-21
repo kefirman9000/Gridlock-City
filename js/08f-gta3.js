@@ -229,6 +229,8 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<(S.isl?0.2:S.hill?0.12:0.35)){if(S.isl||S.hill)ringJoin(c,k,0,1);else ringJoin(c,k,S.length-1,-1);return;}}}}
   const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=P.lo||14,gx=q.x-uy*lo,gy=q.y+ux*lo;
   const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=P.farm?Math.min(ai.cruise,130):ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);target=Math.min(target,jcap);
+  if(c.t.bus&&P.stops){if(ai.stopT>0){ai.stopT-=dt;target=0;}else{const s0=P[i].s;for(const S of P.stops){if(S.dir!==dir||S.cool>game.t)continue;const ds=(S.s-s0)*dir;if(ds<0||ds>170)continue;
+      target=Math.min(target,Math.max(30,(ds-6)*1.4));if(ds<14){ai.stopT=4;S.cool=game.t+30;for(const p of peds)if(p.atStop===S&&!p.gone)p.gone=true;}break;}}}
   // joining a road (or knocked off it): crawl until back on its line, so the turn is tight enough to make it (cars used to circle)
   {const e=P[i],off=hyp(e.x-c.x,e.y-c.y);if(off>34){target=Math.min(target,off>70?38:60);steer=clamp(diff*3,-1,1);}}
   // ease off on the bends

@@ -198,7 +198,7 @@ const COAST={pts:[[-200,8230],[-330,8120],[-430,7350],[-640,6500],[-860,6620],[-
   [5200,-2550],[6400,-2950],[7600,-2650],[8600,-2350],[9600,-2950],[10600,-3650],[11250,-3350],[10950,-2350],[10500,-1100],
   [10140,300],[10200,1400],[9920,1900],[9700,2300],[9880,2780],[10200,2980],[10360,3300],[10150,3620],[10200,4000],
   [10230,4500],[10120,5200],[10250,6000],[10260,6900],[10000,7500],[9520,8000],[9080,8300],[8880,8720],[8540,8860],[8300,8420],[8230,8230]],
-  isl2:[[11450,3300],[11600,2300],[11950,1100],[12600,250],[13450,350],[14050,1150],[14250,2300],[13950,3300],[14200,4300],[14050,5500],[13550,6500],[12850,7250],[12100,7300],[11650,6650],[11500,5600],[11750,4650],[11430,4150]]};
+  isl2:[[11450,3300],[11600,2300],[11950,1100],[12600,250],[13450,350],[14050,1150],[14250,2300],[13950,3300],[14200,4200],[14330,4700],[14350,5400],[14350,6100],[14280,6650],[13900,7150],[13200,7380],[12450,7380],[11650,6650],[11500,5600],[11750,4650],[11430,4150]]};
 const ISL2C={x:12850,y:3800},ISL2M=new Uint8Array(HN*HN);
 (function coast(){const C=COAST.pts,n=C.length,cr=(p0,p1,p2,p3,t)=>{const t2=t*t,t3=t2*t;return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);};
   // the south shore under the city closes the loop: the outline runs along the city's beach from the south-east corner to the south-west
@@ -207,7 +207,8 @@ const ISL2C={x:12850,y:3800},ISL2M=new Uint8Array(HN*HN);
     for(let k=0;k<seg;k++){const t=k/seg;poly.push([cr(p0[0],p1[0],p2[0],p3[0],t),cr(p0[1],p1[1],p2[1],p3[1],t)]);}}
   // roughen the outline: small coves and points along the normal (none along the city's own beach)
   const P2=poly.map((q,i)=>{const a=poly[(i-1+poly.length)%poly.length],b=poly[(i+1)%poly.length],tx=b[0]-a[0],ty=b[1]-a[1],tl=hyp(tx,ty)||1;
-    if(isMain&&q[1]>8100&&q[0]>-60&&q[0]<WPX+60)return q;const o=110*(fbm(q[0]/520,q[1]/520,41)-0.5)+50*(fbm(q[0]/170,q[1]/170,42)-0.5);return[q[0]+ty/tl*o,q[1]-tx/tl*o];});
+    if(isMain&&q[1]>8100&&q[0]>-60&&q[0]<WPX+60)return q;
+    if(!isMain&&q[0]>14150&&q[1]>4550&&q[1]<6350)return q; /* v5.36: Coral Beach's long straight beach (Ocean Drive runs beside it) */const o=110*(fbm(q[0]/520,q[1]/520,41)-0.5)+50*(fbm(q[0]/170,q[1]/170,42)-0.5);return[q[0]+ty/tl*o,q[1]-tx/tl*o];});
   return P2;};
   // fill: land inside each outline (even-odd scanlines), and the city square is always land
   const LAND=new Uint8Array(HN*HN);
@@ -274,7 +275,7 @@ const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDI2=new Int32Arr
 // Every road ends at a junction: no dead ends (DESIGN RULE B1). Junctions are found from the geometry (IWNET.J), roads that meet
 // share one height there, and traffic picks a way at each one (aiRing in 08f). Roads carry their own width (P.hw) and
 // sidewalks (P.sw); the ground raster paints curbs, sidewalks, centre lines and zebra crossings from the per-pixel distance.
-var IWNET=null;
+var IWNET=null,IWNET_BW=null;
 const IWCM=new Uint8Array(HN*HN); // district mask: 1 Central, 2 Palm Heights, 3 Coral Beach
 const IWDIST=[null,{name:'IRONWOOD CENTRAL',x0:11900,x1:13800,y0:850,y1:2420},{name:'PALM HEIGHTS',x0:12650,x1:13800,y0:2420,y1:4380},{name:'CORAL BEACH',x0:11900,x1:13800,y0:5330,y1:7100}];
 function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const C=ISL2C,iI=RING.paths.indexOf(I),lastI=I.length-1;
@@ -292,20 +293,29 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
   const cuts=(o,c,lo,hi)=>{const ts=[];for(let i=0,j=LP.length-1;i<LP.length;j=i++){const a=LP[j],b=LP[i];
       if(o==='h'){if((a[1]>c)!==(b[1]>c)){const x=a[0]+(b[0]-a[0])*(c-a[1])/(b[1]-a[1]);if(x>lo&&x<hi)ts.push(x);}}
       else{if((a[0]>c)!==(b[0]>c)){const y=a[1]+(b[1]-a[1])*(c-a[0])/(b[0]-a[0]);if(y>lo&&y<hi)ts.push(y);}}}return ts.sort((u,v)=>u-v);};
+  // Ocean Drive's line: 262 in from the straight east beach (worked out first, so the ground round it can be shaped)
+  let xc=1e9;for(let y=4900;y<=6200;y+=50){let x=13600;while(x<14800&&COAST.LAND[cellK(x,y)])x+=8;xc=Math.min(xc,x);}
+  const ODX=Math.round(xc-262),ODY0=4760,ODY1=6420,PARK=ODX+62+110;IWDIST.odx=ODX;IWDIST.ody=[ODY0,ODY1];IWDIST.shore=xc;
+  const odStrip=(x,y)=>y>4640&&y<6760&&x>13250;
   // ---- 2. the districts' ground: inside the loop, smoothed to a gentle grade and given a town surface ----
   {const bx0=11300,bx1=14400,by0=400,by1=7200,i0=((bx0+HM)/HS)|0,i1=((bx1+HM)/HS)|0,j0=((by0+HM)/HS)|0,j1=((by1+HM)/HS)|0,nw=i1-i0+1,nh=j1-j0+1;
     const wgt=new Float32Array(nw*nh),inL=new Uint8Array(nw*nh);
     for(let j=0;j<nh;j++)for(let i=0;i<nw;i++){const x=-HM+(i0+i)*HS,y=-HM+(j0+j)*HS,k=(j0+j)*HN+i0+i;if(!ISL2M[k])continue;const L=pip(x,y);inL[j*nw+i]=L?1:0;
-      for(let d=1;d<=3;d++){const R2=IWDIST[d],e=Math.max(R2.x0-x,x-R2.x1,R2.y0-y,y-R2.y1);if(e<0&&L){IWCM[k]=d;}const w=1-smooth01(e/220);if(w>wgt[j*nw+i])wgt[j*nw+i]=w;}}
+      for(let d=1;d<=3;d++){const R2=IWDIST[d],e=Math.max(R2.x0-x,x-R2.x1,R2.y0-y,y-R2.y1);if(e<0&&L){IWCM[k]=d;}const w=1-smooth01(e/220);if(w>wgt[j*nw+i])wgt[j*nw+i]=w;}
+      if(!L&&odStrip(x,y)&&x<xc-40){if(x<ODX+62)IWCM[k]=3;wgt[j*nw+i]=1;}}
     let H=new Float32Array(nw*nh);for(let j=0;j<nh;j++)for(let i=0;i<nw;i++)H[j*nw+i]=HMAP[(j0+j)*HN+i0+i];
     const blur=(A,r)=>{const B=new Float32Array(A.length);for(let j=0;j<nh;j++){let s=0;for(let i=-r;i<=r;i++)s+=A[j*nw+clamp(i,0,nw-1)];for(let i=0;i<nw;i++){B[j*nw+i]=s/(2*r+1);s+=A[j*nw+clamp(i+r+1,0,nw-1)]-A[j*nw+clamp(i-r,0,nw-1)];}}
       const D=new Float32Array(A.length);for(let i=0;i<nw;i++){let s=0;for(let j=-r;j<=r;j++)s+=B[clamp(j,0,nh-1)*nw+i];for(let j=0;j<nh;j++){D[j*nw+i]=s/(2*r+1);s+=B[clamp(j+r+1,0,nh-1)*nw+i]-B[clamp(j-r,0,nh-1)*nw+i];}}return D;};
     let S=blur(blur(H,14),14);
-    for(let j=0;j<nh;j++)for(let i=0;i<nw;i++){const w=wgt[j*nw+i],k=(j0+j)*HN+i0+i;if(w<=0||!ISL2M[k]||TTYPE[k]===1||TTYPE[k]===2)continue;
+    for(let j=0;j<nh;j++)for(let i=0;i<nw;i++){const w=wgt[j*nw+i],k=(j0+j)*HN+i0+i;if(w<=0||!ISL2M[k]||TTYPE[k]===1)continue;if(TTYPE[k]===2&&!odStrip(-HM+(i0+i)*HS,-HM+(j0+j)*HS))continue;
       // the town ground: a smooth surface stretched between the heights of the loop road round it (inverse-distance weights),
       // so every street meets the coast road level with it, with a little of the land's own lie kept
       const x=-HM+(i0+i)*HS,y=-HM+(j0+j)*HS;let sw2=0,sh2=0;for(let m=0;m<LP.length;m+=3){const p=LP[m],dd=dist2(p[0],p[1],x,y)+400,wq=1/(dd*dd);sw2+=wq;sh2+=wq*p[2];}
       const mem=sh2/sw2+(S[j*nw+i]-sh2/sw2)*0.15;let h=lerp(HMAP[k],mem,w*0.95);if(IWCM[k])h=Math.max(h,8);HMAP[k]=h;
+      if(odStrip(x,y)&&!pip(x,y)){HMAP[k]=Math.max(4,Math.min(HMAP[k],8+Math.max(0,ODX-x)*0.07));}
+      // Lummus Park and the beach beyond Ocean Drive: a lawn, then sand running gently down to the sea
+      if(!IWCM[k]&&!pip(x,y)&&odStrip(x,y)&&x>=ODX+62){const n=(hash(i0+i,j0+j)&7);if(x<PARK){TTYPE[k]=3;HMAP[k]=8;TCOL[k]=packC(90+n,136+n,64+n);}
+        else{const f=clamp((x-PARK)/Math.max(60,xc-PARK),0,1);HMAP[k]=lerp(7,1.5,f);TTYPE[k]=2;TCOL[k]=packC(226+n,210+n,162+n);}continue;}
       const d=IWCM[k];if(d){const n=(hash(i0+i,j0+j)&7);TTYPE[k]=3;TCOL[k]=d===1?packC(146+n,144+n,138+n):d===2?packC(102+n,134+n,66+n):packC(108+n,148+n,82+n);}}}
   // ---- 3. the street grids: axis lines, kept between junctions far enough from the loop, run on to it where that's clean ----
   const L=[],H2=(c,lo,hi,d,hw,sw)=>L.push({o:'h',c,lo,hi,d,hw,sw}),V2=(c,lo,hi,d,hw,sw,id)=>L.push({o:'v',c,lo,hi,d,hw,sw,id});
@@ -326,6 +336,23 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
     {const t=ts.find(t=>t>b);if(t!=null&&t<=l.hi+1&&ext(b,t)){b=t;eb=true;}}
     if(b-a<60)continue;if(ea)ends.push(l.o==='h'?[a,l.c]:[l.c,a]);if(eb)ends.push(l.o==='h'?[b,l.c]:[l.c,b]);
     segs.push(Object.assign({},l,{a,b}));}
+  // Ocean Drive, after the real one in Miami Beach: the beach road, one block seaward of the island road (which is Collins Avenue
+  // along this shore). Coral Beach's avenues run on across Collins to end at it, a continuous row of Deco hotels with sidewalk
+  // cafés faces the sea across it, and Lummus Park (a lawn of palms with a winding beach walk) and the beach lie beyond.
+  let ODcp=null;
+  {const y0=ODY0,y1=ODY1,near=(x,y,from,to)=>{let bi=from,bd=1e18;for(let i=from;i<=to;i++){const d=dist2(I[i].x,I[i].y,x,y);if(d<bd){bd=d;bi=i;}}return bi;};
+    const clear=q=>!ends.some(e=>hyp(e[0]-q.x,e[1]-q.y)<150);
+    let iN=near(ODX-150,y0-230,jB,lastI),iS=near(ODX-560,y1+260,jB,lastI);for(let k=0;k<30&&!clear(I[iN]);k++)iN+=iN<iS?-1:1;for(let k=0;k<30&&!clear(I[iS]);k++)iS+=iS>iN?1:-1;
+    const A0=I[iN],B0=I[iS];ends.push([A0.x,A0.y],[B0.x,B0.y]);
+    let cN=[[A0.x,A0.y],[(A0.x+ODX)/2+30,y0-120],[ODX,y0-20],[ODX,y0+40]];for(let k=0;k<3;k++)cN=chaikin(cN);
+    let cS=[[ODX,y1-40],[ODX,y1+40],[ODX-140,y1+190],[B0.x+60,B0.y+20],[B0.x,B0.y]];for(let k=0;k<3;k++)cS=chaikin(cS);
+    const mid=[];for(let y=y0+80;y<y1-40;y+=40)mid.push([ODX,y]);
+    const cp=[[A0.x,A0.y],...cN.slice(1),...mid,...cS.slice(0,-1),[B0.x,B0.y]];ODcp=cp;
+      // the avenues: from where they meet the island road, straight on (south) to Ocean Drive
+      for(const s of segs){if(s.d!==3&&s.id!=='grand')continue;
+        for(const end of['a','b']){const v=s[end],sg=end==='a'?-1:1,E=s.o==='h'?[v,s.c]:[s.c,v];if(loopD(E[0],E[1])>30)continue;let hit=null;
+          for(let k=6;k+1<cp.length-6;k++){const p=cp[k],q=cp[k+1],ax=s.o==='h'?1:0,cx=s.o==='h'?0:1;if((p[ax]-s.c)*(q[ax]-s.c)>0)continue;const f=(s.c-p[ax])/((q[ax]-p[ax])||1e-9),u=p[cx]+(q[cx]-p[cx])*f,go=(u-v)*sg;if(go>60&&go<820&&(hit==null||go<(hit-v)*sg))hit=u;}
+          if(hit!=null)s[end]=hit;}}}
   const pts=s=>s.o==='h'?[[s.a,s.c],[s.b,s.c]]:[[s.c,s.a],[s.c,s.b]],byId=id=>segs.find(s=>s.id===id);
   const out=[];const add=(p,o)=>{let P2=mk(p);Object.assign(P2,{net:true,lo:Math.round(o.hw*0.47)},o);out.push(P2);return P2;};
   const curve=(c)=>{let p=c;for(let k=0;k<3;k++)p=chaikin(p);p[0]=c[0];p[p.length-1]=c[c.length-1];return p;};
@@ -337,22 +364,15 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
   {const su=segs.find(s=>s.o==='h'&&s.c===3450);let bi=jB,bd=1e18;for(let i=jB;i<Math.min(I.length,jB+80);i++){const d=dist2(I[i].x,I[i].y,C.x-1000,3460);if(d<bd){bd=d;bi=i;}}
     if(su&&su.a<=12741){const S0=[I[bi].x,I[bi].y],cv=curve([S0,[S0[0]+160,S0[1]-10],[12150,3330],[12420,3420],[12600,3440],[12740,3450]]);
       add([...cv,[su.b,3450]],{hw:36,sw:14,nm:'SUNSET BOULEVARD',blvd:true});segs.splice(segs.indexOf(su),1);}}
-  for(const s of segs)add(pts(s),{hw:s.hw,sw:s.sw,dist:s.d,ave:s.o==='v'});
+  for(const s of segs)add(pts(s),{hw:s.hw,sw:s.sw,dist:s.d,ave:s.o==='v',nm:s.id==='grand'?'GRAND AVENUE':undefined,grand:s.id==='grand'});
   for(const P2 of out){P2.dist=P2.dist||0;}
-  // Ocean Drive: Coral Beach's beach road, on the sea side of the island road along the south shore (that stretch of the island road
-  // is Collins Avenue). Deco hotels stand between the two, the promenade and the beach are on the far side. Joined to the island
-  // road at both ends and by two cross streets.
-  {const off=246,cand=[];for(let i=jB;i<=lastI;i++){const q=I[i];if(q.y<5900||q.x<12050||q.x>13600)continue;let nx=-q.uy,ny=q.ux;if((q.x-C.x)*nx+(q.y-C.y)*ny<0){nx=-nx;ny=-ny;}
-      const x=q.x+nx*off,y=q.y+ny*off,k=cellK(x,y),ok=ISL2M[k]&&COAST.D[k]>4&&TTYPE[k]!==1&&HMAP[k]>3;cand.push([i,ok,x,y]);}
-    let best=null,run=null;for(const c of cand){if(c[1]){if(!run)run=[c];else run.push(c);if(!best||run.length>best.length)best=run.slice();}else run=null;}
-    if(best&&best.length>30){best=best.slice(4,-4);const a=best[0][0],b=best[best.length-1][0],clear=q=>!ends.some(e=>hyp(e[0]-q.x,e[1]-q.y)<150);let ka=14,kb=14;while(ka<60&&!clear(I[Math.max(jB,a-ka)]))ka++;while(kb<60&&!clear(I[Math.min(lastI,b+kb)]))kb++;
-      const A0=I[Math.max(jB,a-ka)],B0=I[Math.min(lastI,b+kb)];ends.push([A0.x,A0.y],[B0.x,B0.y]);
-      let cp=[[A0.x,A0.y],...best.filter((c,k)=>k%3===0).map(c=>[c[2],c[3]]),[B0.x,B0.y]];for(let k=0;k<3;k++)cp=chaikin(cp);cp[0]=[A0.x,A0.y];cp[cp.length-1]=[B0.x,B0.y];
-      const OD=add(cp,{hw:28,sw:20,nm:'OCEAN DRIVE',ocean:true,blvd:true,dist:3});
-      // two cross streets from Ocean Drive straight up to the island road
-      let made=0;for(const f of[0.36,0.32,0.4,0.28,0.44,0.68,0.64,0.72,0.6,0.76]){if(made>=2||(made===1&&f<0.5))continue;const q=OD[Math.round(OD.length*f)];let bi=0,bd=1e18;for(let i=jB;i<=lastI;i++){const d=dist2(I[i].x,I[i].y,q.x,q.y);if(d<bd){bd=d;bi=i;}}
-        if(ends.some(e=>hyp(e[0]-I[bi].x,e[1]-I[bi].y)<150))continue;ends.push([I[bi].x,I[bi].y]);add([[q.x,q.y],[I[bi].x,I[bi].y]],{hw:24,sw:14,dist:3});made++;}}}
-  RING.paths.push(WS);for(const P2 of out)RING.paths.push(P2);
+  if(ODcp){add(ODcp,{hw:40,sw:22,nm:'OCEAN DRIVE',ocean:true,blvd:true,dist:3,lo:13});
+    // Lummus Park's beach walk: a winding paved path through the palms between Ocean Drive and the sand (no cars: paint only)
+    const OD=out[out.length-1],C2=ISL2C,wp=[];for(let i=2;i<OD.length-2;i+=2){const q=OD[i];let nx=-q.uy,ny=q.ux;if((q.x-C2.x)*nx+(q.y-C2.y)*ny<0){nx=-nx;ny=-ny;}
+      const o=OD.hw+OD.sw+58+26*Math.sin(q.s/140),x=q.x+nx*o,y=q.y+ny*o,k=cellK(x,y);if(!ISL2M[k]||TTYPE[k]===1||COAST.D[k]<2.5){if(wp.length>8)break;wp.length=0;continue;}wp.push([x,y]);}
+    if(wp.length>8){let p=wp;for(let k=0;k<2;k++)p=chaikin(p);const BW=mk(p);for(let pass=0;pass<4;pass++){for(let i=1;i<BW.length;i++){const m=0.09*(BW[i].s-BW[i-1].s);BW[i].h=clamp(BW[i].h,BW[i-1].h-m,BW[i-1].h+m);}for(let i=BW.length-2;i>=0;i--){const m=0.09*(BW[i+1].s-BW[i].s);BW[i].h=clamp(BW[i].h,BW[i+1].h-m,BW[i+1].h+m);}}BW.net=true;BW.walk=true;BW.hw=7;BW.sw=0;BW.lo=0;BW.nm='BEACH WALK';BW.J=[];IWNET_BW=BW;}}
+
+  RING.paths.push(WS);for(const P2 of out)RING.paths.push(P2);if(IWNET_BW)RING.paths.push(IWNET_BW);
   // ---- 4. junctions, found from the geometry; roads that meet share one height there ----
   const NETP=[WS,...out],ALL=[I,WS,...out],pid=P2=>RING.paths.indexOf(P2),G=new Map(),gk=(x,y)=>Math.floor(x/40)+','+Math.floor(y/40);
   for(const P2 of ALL)P2.J=P2.J||[];
@@ -386,7 +406,7 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
 const NPX=[0,0,0];
 function netPix(ea,eb,wx,wy,nz,gi){let t=null,cb=null,wk=null,sh=null,box=false;const A=_npA,B=_npB;let n=0;
   for(const e of[ea,eb]){if(!e)continue;const P=RING.paths[e.p],d=roadLat(e,wx,wy),q=n?B:A;q.P=P;q.d=d;q.s=RLS;q.la=RLA;q.hw=P.hw||RING.hw;q.sw=P.net?(P.sw||0):0;n++;}
-  for(let k=0;k<n;k++){const q=k?B:A;if(q.d<q.hw){if(t)box=true;if(!t||q.d/q.hw<t.d/t.hw)t=q;}else if(q.P.net&&q.d<q.hw+2.5)cb=q;else if(q.P.net&&q.d<q.hw+q.sw)wk=q;else if(!q.P.net&&q.d<q.hw+4)sh=q;}
+  let bw=null;for(let k=0;k<n;k++){const q=k?B:A;if(q.P.walk){if(q.d<q.hw)bw=q;continue;}if(q.d<q.hw){if(t)box=true;if(!t||q.d/q.hw<t.d/t.hw)t=q;}else if(q.P.net&&q.d<q.hw+2.5)cb=q;else if(q.P.net&&q.d<q.hw+q.sw)wk=q;else if(!q.P.net&&q.d<q.hw+4)sh=q;}
   let r,g,b;
   if(t){r=62+nz;g=62+nz;b=66+nz;const P=t.P;let zeb=false;
     let stop=false;
@@ -394,12 +414,14 @@ function netPix(ea,eb,wx,wy,nz,gi){let t=null,cb=null,wk=null,sh=null,box=false;
       else if((J.sig||J.yield)&&ds<J.ow+3.5&&t.d<t.hw-3&&(t.s<J.s?t.la<-0.8:t.la>0.8))stop=true;}
     if(!box){if(zeb){if((((t.la+90)/6)|0)&1){r=206;g=206;b=200;}}else if(stop){r=212;g=212;b=206;}
       else if(P.net){if(P.blvd||P.ave){if(t.d>1.2&&t.d<3.7){r=168;g=137;b=58;}}else if(t.d<1.85){r=168;g=137;b=58;}
-        if(P.blvd&&Math.abs(t.d-t.hw*0.52)<1.6&&(((t.s%48)+48)%48)<26){r=200;g=200;b=194;}}
+        if(P.ocean){if(Math.abs(t.d-27)<1.3||(t.d>27&&t.d<t.hw-2&&(((t.s%54)+54)%54)<1.7)){r=206;g=206;b=200;}} // parking bays along both curbs
+        else if(P.blvd&&Math.abs(t.d-t.hw*0.52)<1.6&&(((t.s%48)+48)%48)<26){r=200;g=200;b=194;}}
       else if(t.d>t.hw-3.5){r=g=b=196;}}}
-  else if(cb){r=150;g=147;b=140;}
-  else if(wk){const u=((wk.s%22)+22)%22,v=wk.d-wk.hw;if(IWCM[gi]===3){r=196+nz;g=172+nz;b=150+nz;if(u<1.2||(v>2.5&&v<3.6)){r-=34;g-=34;b-=30;}}
+  else if(cb){if(cb.P.ocean){r=214;g=176;b=62;}else{r=150;g=147;b=140;}} // Ocean Drive's curb is painted yellow
+  else if(wk){const u=((wk.s%22)+22)%22,v=wk.d-wk.hw;if(wk.P.ocean){r=198+nz;g=150+nz;b=142+nz;if(u<1.2||(v>2.5&&v<3.6)){r-=30;g-=32;b-=30;}}else if(IWCM[gi]===3){r=196+nz;g=172+nz;b=150+nz;if(u<1.2||(v>2.5&&v<3.6)){r-=34;g-=34;b-=30;}}
     else{r=146+nz;g=144+nz;b=138+nz;if(u<1.1||(v>2.5&&v<3.5)){r-=26;g-=26;b-=24;}}}
   else if(sh){r=112+nz;g=106+nz;b=92+nz;}
+  else if(bw){r=214+nz;g=204+nz;b=184+nz;if(bw.d>bw.hw-1.4){r-=40;g-=40;b-=36;}}
   else{const c=ROLD[gi]||0xff406a3a;r=(c&255)+nz*2-7;g=((c>>8)&255)+nz*2-7;b=((c>>16)&255)+nz-3;}
   NPX[0]=r;NPX[1]=g;NPX[2]=b;return NPX;}
 const _npA={},_npB={};
@@ -913,10 +935,21 @@ function roofProps(b,x0,y0,x1,y1,z,fg){
     if(bk.vent){const vx=x0+(x1-x0)*(1-bk.u),vy=y0+(y1-y0)*(1-bk.v);obox(vx,vy,0,1.4,1.4,z,z+9,[120,122,126],null,fg);obox(vx+5,vy+3,0,1,1,z,z+6,[110,112,116],null,fg);}}}
   if(CZ>z)for(const a of b.ac){const s=Math.min(x1-x0,y1-y0)*a.s,ax=x0+(x1-x0)*a.x,ay=y0+(y1-y0)*a.y;obox(ax+s/2,ay+s/2,0,s/2,s/2,z,z+8,mixA(b.rgb,[200,200,200],.3),null,fg);}
 }
+// v5.36 Ocean Drive's Art Deco hotels (b.deco): a ledge ("eyebrow") over every floor, white by day; at night neon tubes on the ledges,
+// the corner fins and the roofline, in the hotel's colour
+function decoWall(ax,ay,bx,by,z0,z1,b,k,fg){const len=hyp(bx-ax,by-ay);if(len<8)return;if(!b.nrgb)b.nrgb=rgbOf(b.nc||'#ff4fa0');const dx=(bx-ax)/len,dy=(by-ay)/len,nx=dy,ny=-dx,H=z1-z0,nf=Math.max(2,Math.round(H/(BH/2))),fh=H/nf,on=LIGHTK>0.12;
+  const c=on?lit(mixA(b.nrgb,[255,255,255],0.25),1,fg,true):lit([250,248,242],k*1.08,fg),o=1.4;
+  L3.beginPath();for(let fl=1;fl<nf;fl++){const zz=z0+fl*fh-1.2;quadP(ax+nx*o,ay+ny*o,zz,bx+nx*o,by+ny*o,zz,bx+nx*o,by+ny*o,zz+1.6,ax+nx*o,ay+ny*o,zz+1.6);}
+  {const zz=z1-2.4;quadP(ax+nx*o,ay+ny*o,zz,bx+nx*o,by+ny*o,zz,bx+nx*o,by+ny*o,zz+1.8,ax+nx*o,ay+ny*o,zz+1.8);}
+  for(const s of[1.2,len-2.8]){const px=ax+dx*s+nx*o,py=ay+dy*s+ny*o;quadP(px,py,z0+fh*0.9,px+dx*1.6,py+dy*1.6,z0+fh*0.9,px+dx*1.6,py+dy*1.6,z1,px,py,z1);}
+  L3.fillStyle=c;L3.fill();
+  if(on&&proj(ax+dx*len/2+nx*4,ay+dy*len/2+ny*4,z1-3))glow(PX,PY,Math.min(12,len*0.12*PK),b.nc,0.25*LIGHTK);}
 function wall(ax,ay,bx,by,z0,z1,b,k,fg,det,gr){
   const st=b.st;
   const za=gr?GH(ax,ay)-ZOFF-1:z0,zb=gr?GH(bx,by)-ZOFF-1:z0;
-  quad(ax,ay,za,bx,by,zb,bx,by,z1,ax,ay,z1,lit(b.rgb,st==='glass'?k*0.85:k,fg));
+  const wash=b.deco&&LIGHTK>0.12;if(wash&&!b.nrgb)b.nrgb=rgbOf(b.nc||'#ff4fa0');
+  quad(ax,ay,za,bx,by,zb,bx,by,z1,ax,ay,z1,wash?lit(mixA(b.rgb,b.nrgb,0.55*Math.min(1,LIGHTK*1.5)),k*0.9+0.25*LIGHTK,fg,LIGHTK>0.3):lit(b.rgb,st==='glass'?k*0.85:k,fg));
+  if(b.deco&&det)decoWall(ax,ay,bx,by,z0,z1,b,k,fg);
   if(st==='garage'){garageWall(ax,ay,bx,by,z0,z1,b,k,fg,det);return;}
   if(!det)return;
   const len=hyp(bx-ax,by-ay),dx=(bx-ax)/len,dy=(by-ay)/len,nx=dy,ny=-dx,H=z1-z0,nf=Math.max(1,Math.round(H/(BH/2))),fh=H/nf,litOn=LIGHTK>0.12;
@@ -1065,7 +1098,7 @@ function drawProp3(o,fg){
         for(const s2 of[-1,1]){const px=o.x+ca*f-sa*s2*12.4,py=o.y+sa*f+ca*s2*12.4;obox(px,py,a,3.8,0.7,h+10,h+11.6,[70,76,84],null,fg);if(i%4===0)obox(px,py,0,0.6,0.6,h,h+10,[70,76,84],null,fg);}}return;}
     case 'ladder':{const ca=Math.cos(a),sa=Math.sin(a);for(const s2 of[-3.5,3.5])obox(o.x-sa*s2,o.y+ca*s2,a,0.6,0.6,o.z0,o.z1,[60,64,70],null,fg);
       for(let z=o.z0+3;z<o.z1;z+=4)obox(o.x,o.y,a,0.5,3.5,z,z+0.8,[80,84,90],null,fg);return;}
-    case 'busstop':obox(o.x,o.y,0,18,6,0,24,[70,110,150],null,fg);obox(o.x,o.y,0,20,8,24,26,[200,200,206],[220,220,226],fg);obox(o.x-14,o.y,0,1,1,26,36,[60,60,64],null,fg);sign3(o.x-14,o.y,38,'BUS','#2a6ad8','#ffffff',6,fg);return;
+    case 'busstop':{const a=o.a||0,ca=Math.cos(a),sa=Math.sin(a);obox(o.x,o.y,a,18,6,0,24,[70,110,150],null,fg);obox(o.x,o.y,a,20,8,24,26,[200,200,206],[220,220,226],fg);obox(o.x-ca*14,o.y-sa*14,a,1,1,26,36,[60,60,64],null,fg);sign3(o.x-ca*14,o.y-sa*14,38,'BUS','#2a6ad8','#ffffff',6,fg);return;}
     case 'flood':{obox(o.x,o.y,0,2,2,0,130,[80,84,90],null,fg);obox(o.x,o.y,0,9,3,124,136,[60,64,70],[60,64,70],fg);if(LIGHTK>0.1&&proj(o.x,o.y,130)){glow(PX,PY,12*PK,'#fff6d8',0.6+0.4*LIGHTK);}return;}
     case 'goal':obox(o.x,o.y,a,14,1,0,12,[240,240,240],null,fg);return;
     case 'statue':{const t=game.t;obox(o.x,o.y,0,18,18,0,24,[150,146,138],[170,166,156],fg);obox(o.x,o.y,0,10,10,24,44,[160,156,148],null,fg);
@@ -1107,7 +1140,9 @@ function drawProp3(o,fg){
       obox(o.x+ca*96,o.y+sa*96,a,4,4,62,70,[110,110,116],null,fg);if(LIGHTK>0.1&&proj(o.x,o.y,174))glow(PX,PY,2.5*PK,'#ff3030',0.4+0.5*(Math.floor(game.t*1.5)%2));return;}
     case 'umbrella':{const c=rgbOf(o.c);obox(o.x,o.y,0,0.6,0.6,0,20,[220,220,220],null,fg);obox(o.x,o.y,PI/4,10,10,18,21,c,mixA(c,[255,255,255],0.15),fg);return;}
     case 'towel':{const c=rgbOf(o.c);obox(o.x,o.y,a,8,4,0,0.8,c,c,fg);return;}
-    case 'lifeguard':{for(const[dx,dy]of[[-6,-6],[6,-6],[-6,6],[6,6]])obox(o.x+dx,o.y+dy,0,0.9,0.9,0,20,[230,230,226],null,fg);obox(o.x,o.y,0,8,8,20,22,[200,60,40],null,fg);obox(o.x,o.y,0,7,7,22,34,[240,236,228],[200,60,40],fg);return;}
+    case 'cafe':{const ca=Math.cos(a),sa=Math.sin(a);obox(o.x,o.y,0,0.8,0.8,0,7,[60,56,52],null,fg);obox(o.x,o.y,0,3.6,3.6,7,7.8,[236,232,222],null,fg);
+      for(const sd of[-1,1]){const cx=o.x+ca*6.5*sd,cy=o.y+sa*6.5*sd;obox(cx,cy,a,2.2,2.2,0,4.6,o.ch||[176,140,96],null,fg);obox(cx+ca*2*sd,cy+sa*2*sd,a,0.6,2.2,4.6,9,o.ch||[176,140,96],null,fg);}return;}
+    case 'lifeguard':{for(const[dx,dy]of[[-6,-6],[6,-6],[-6,6],[6,6]])obox(o.x+dx,o.y+dy,0,0.9,0.9,0,20,[230,230,226],null,fg);obox(o.x,o.y,0,8,8,20,22,o.r||[200,60,40],null,fg);obox(o.x,o.y,0,7,7,22,34,o.c||[240,236,228],o.r||[200,60,40],fg);return;}
     case 'rail':obox(o.x,o.y,a,20,1,6,10,[196,198,204],null,fg);obox(o.x,o.y,a,1,1,0,9,[110,110,116],null,fg);return;
     case 'seawall':obox(o.x,o.y,a,20,3,-6,9,[150,146,138],[170,166,158],fg);return;
     case 'bench':{const ca=Math.cos(a),sa=Math.sin(a);obox(o.x+ca*5,o.y+sa*5,a,1,6,0,4,[40,40,42],null,fg);obox(o.x-ca*5,o.y-sa*5,a,1,6,0,4,[40,40,42],null,fg);

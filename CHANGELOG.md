@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.36.0
+- Ocean Drive rebuilt after the real one: Ironwood's south-east coast is a long straight east beach (COAST.isl2, no roughening there); Ocean Drive is a straight net road 262 in from the shore (hw 40, parking bays, yellow curb, pink sidewalks), joined to the island road at both ends; Coral Beach's streets run through to it (segment ends on the loop carry on to Ocean Drive). Hotel row sized to the road's angle; Deco apartments behind back to the island road; Lummus-style park (lawn, beach walk path `walk:true`, dune hedge), flat beach with umbrella rows and pastel lifeguard huts (`o.c`/`o.r`).
+- Deco facades (`b.deco`, decoWall in 08-render): ledges over every floor, at night a neon wash over the front and neon on ledges, fins and roofline. Neon blades sit on the building's base. Cafe tables (`cafe` prop) with chairs.
+- Junctions: signals (JSIG, jSig, 18 s cycle) at crossings of two town roads, light posts in TLIGHTS (`jid`/`jp`), stop lines, give-way at T junctions; aiRing stops at the line, waits for gaps and stops for people on a zebra (IWX). Zebras across the line of the crossing road's sidewalks.
+- Sidewalk walkers (`p.iw`, iwPedTick): walk a road's sidewalk, turn corners or cross on their green, go in and out of buildings; joggers at dawn, rollerbladers and nightlife in Coral Beach.
+- Island life (08i iwLifeTick): rush hours and quiet nights per town (iwRush, iwPedK), per-town traffic (iwCarType: cabs, lowriders that hop, ice-cream van, convertibles, limos), hot dog carts, steam vents, sprinklers, the Grand Avenue bus with stops (`P.stops`, rotated `busstop` props), cafe-goers, people diving from cars on the sidewalk, bystanders filming crimes (`p.film`), radio news of police chases (NEWSQ via a breakLines wrapper).
+
 ## v5.35.0
 - Ironwood City on Ironwood Island (08-render ironwoodNet, new js/08i-ironwood.js). Three districts inside the island loop: Ironwood Central (Manhattan), Palm Heights (Los Angeles), Coral Beach (Miami Beach), masked in IWCM, named through districtAt. About 140 buildings and 500 street trees, hash only (no R()).
 - A street network on the ring-road system: town roads are RING.paths with `net`, their own width `hw` and sidewalks `sw`; junctions are found from the geometry and kept in `P.J` ({id,i,s,p,j,ow}) on both roads; heights come from one solve over the whole network (junction points shared, island-road meetings held, every step within 1 in 10). The district ground is a smooth surface stretched between the loop road's heights.

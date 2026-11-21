@@ -43,7 +43,7 @@ function lookTick(dt){
   if(p.umb==null){const h=(Math.random()*1000)|0;p.umb=!p.cop&&p.gang==null&&h%3!==0;p.phone=h%7===1;p.smoke=!p.cop&&h%11===2;p.umbC=[[200,40,48],[40,60,140],[30,30,34],[230,190,40],[60,130,80],[150,60,140]][h%6];}
   const a=p.a||0,ca=Math.cos(a),sa=Math.sin(a);
   if(p.umb&&rain>0.25&&!p.cover){const hx=p.x-sa*2,hy=p.y+ca*2;obox(hx,hy,0,0.4,0.4,18,37.5,[44,44,46],null,fg);const uc=p.umbC||(p.umbC=[[200,40,48],[40,70,150],[30,30,34],[230,180,40],[60,130,80]][(p.id||0)%5]),ud=mixA(uc,[0,0,0],0.25);obox(hx,hy,a,6.6,6.6,35.4,36.4,ud,uc,fg);obox(hx,hy,a,4.2,4.2,36.4,37.5,uc,mixA(uc,[255,255,255],0.12),fg);obox(hx,hy,a,1.6,1.6,37.5,38.3,uc,mixA(uc,[255,255,255],0.2),fg);}
-  else if(p.phone&&p.moving){const hx=p.x-sa*3.2+ca*0.8,hy=p.y+ca*3.2+sa*0.8;obox(hx,hy,a,0.6,0.9,20,24,[26,26,30],null,fg);if(LIGHTK>0.3&&proj(hx,hy,22))glow(PX,PY,1.4*PK,'#b8d8ff',0.5*LIGHTK);}
+  else if(p.phone&&(p.moving||p.film>0)){const hx=p.x-sa*3.2+ca*0.8,hy=p.y+ca*3.2+sa*0.8;obox(hx,hy,a,0.6,0.9,20,24,[26,26,30],null,fg);if(LIGHTK>0.3&&proj(hx,hy,22))glow(PX,PY,1.4*PK,'#b8d8ff',0.5*LIGHTK);}
   if(p.smoke&&!p.moving&&proj(p.x+ca*2.6,p.y+sa*2.6,22))glow(PX,PY,1.1*PK,'#ff8a30',0.45+0.35*Math.sin(game.t*2.3+p.x));}}
 
 // ---- neon blade signs on shopfronts: bars, diners, hotels, pawn shops; they glow at night and a few flicker ----

@@ -31,6 +31,20 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.36
+- **Ocean Drive, set up like the real one in Miami Beach.** Ironwood Island now has a long straight east beach. Ocean Drive runs beside it with an unbroken row of white and pastel Art Deco hotels. Their sidewalk cafes have tables and big umbrellas, the curb is painted yellow, the sidewalks are pink, palms line the curb, and cars (the odd classic among them) are parked in bays.
+  - At night the hotel fronts glow in pink, blue and green neon, with neon on the ledges, fins and rooflines, and the cafes fill up.
+  - Across the road is a palm park with a winding beach walk, a dune hedge, then a wide beach with umbrellas in rows and pastel lifeguard huts.
+  - Coral Beach's streets run straight through to Ocean Drive.
+- **Junctions that work.** Traffic lights at every crossing on the island, stop lines, give-way at T junctions, and traffic that queues.
+- **People with places to go.** People walk the sidewalks, wait for their green and cross on the zebras, go in and out of buildings, queue at hot dog carts and wait for the Grand Avenue bus.
+- **Each town has its own life.**
+  - Central: yellow cabs, steaming manholes.
+  - Palm Heights: lowriders that hop at the lights, morning sprinklers, an ice-cream van.
+  - Coral Beach: convertibles, rollerbladers, nightlife.
+  - Everywhere: rush hours and quiet nights.
+- **A world that notices.** People dive out of the way if you drive on the sidewalk, bystanders film your crimes on their phones, and the radio news reports your police chases.
+
 ## What's new in v5.35
 - **Ironwood City.** The island across the Ironwood Bridge is no longer mostly grass. Inside its coast road there are now three towns:
   - **Ironwood Central**: a dense downtown after Manhattan. Blocks are built out to the sidewalk, glass towers with set-backs and masts rise toward the middle, and brick walk-ups and shops line the edges.
@@ -39,19 +53,6 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - **Real streets.** Curbs, sidewalks, centre lines and zebra crossings at every junction. **Sunset Boulevard** comes in from the bridge over the hills, **Mulholland Drive** winds from downtown over the hills to the beach, and **Grand Avenue** runs the island's length. **West Shore Drive** closes the island loop, so nothing dead-ends any more.
 - **Traffic that turns.** Cars pick a way at each junction and the towns are busier, with more people on the sidewalks.
 - Lane dashes on the diagonal avenues are solid dashes instead of a chain of dots.
-
-## What's new in v5.34
-- **Real songs on the radio.** Five music stations now play twenty tracks from the Studio Lab city radio MIDI pack, four each, note by note in the browser and still on each station's own clock (tune in mid-song and it's mid-song):
-  - **NEON 101**: eighties synth and italo
-  - **BASSLINE 104.5**: hip-hop
-  - **JUNGLE 99.9**: jungle and drum & bass
-  - **IRIE 92.7**: reggae and dub
-  - **PULSE 105.9**: house and trance
-- The DJs and ads come in over the end of each song. KRUD 88.6 keeps its generated punk, and the Song Lab now covers KRUD only.
-- The title and pause menus play three themes.
-- *v5.34.1:* fixed the songs being silent in v5.34.0.
-- *v5.34.2:* cars keep their speed on grass much better.
-- *v5.34.3:* crooked side streets strike off from junctions at a clear angle instead of running alongside the main road.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.
