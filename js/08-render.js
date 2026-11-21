@@ -346,8 +346,8 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
   ALL.forEach((P2,pi)=>P2.forEach((q,i)=>{const k=gk(q.x,q.y);if(!G.has(k))G.set(k,[]);G.get(k).push([pi,i]);}));
   const near=(x,y,r,skip)=>{let b=null,bd=r*r;const ci=Math.floor(x/40),cj=Math.floor(y/40);for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const g=G.get((ci+di)+','+(cj+dj));if(!g)continue;
       for(const[pi,i]of g){if(pi===skip)continue;const q=ALL[pi][i],d=dist2(q.x,q.y,x,y);if(d<bd){bd=d;b=[pi,i,Math.sqrt(d)];}}}return b;};
-  let jid=0;const JN=[];const link=(A,i,B,j)=>{if(A.J.some(J=>J.p===pid(B)&&Math.abs(J.i-i)<4))return;jid++;const ow=P2=>(P2.hw||RING.hw)+(P2.sw||0);
-    A.J.push({id:jid,i,s:A[i].s,p:pid(B),j,ow:ow(B)});B.J.push({id:jid,i:j,s:B[j].s,p:pid(A),j:i,ow:ow(A)});JN.push([A,i,B,j]);};
+  let jid=0;const JN=[];const link=(A,i,B,j)=>{if(A.J.some(J=>J.p===pid(B)&&Math.abs(J.i-i)<4))return;jid++;const ow=P2=>(P2.hw||RING.hw)+(P2.net?(P2.sw||0):14),hw2=P2=>P2.hw||RING.hw,en=(P2,k)=>k<=1||k>=P2.length-2;
+    A.J.push({id:jid,i,s:A[i].s,p:pid(B),j,ow:ow(B),ohw:hw2(B),end:en(A,i)});B.J.push({id:jid,i:j,s:B[j].s,p:pid(A),j:i,ow:ow(A),ohw:hw2(A),end:en(B,j)});JN.push([A,i,B,j]);};
   for(const A of NETP){const ai=ALL.indexOf(A);for(const e of[0,A.length-1]){const r=near(A[e].x,A[e].y,30,ai);if(r)link(A,e,ALL[r[0]],r[1]);else console.warn('IWNET dead end',A.nm||'',Math.round(A[e].x),Math.round(A[e].y));}}
   for(const A of out){const ai=ALL.indexOf(A);for(const B of ALL){const bi=ALL.indexOf(B);if(bi===ai||(NETP.includes(B)&&NETP.indexOf(B)<NETP.indexOf(A)&&B!==WS))continue;
       let cl=null;for(let i=2;i<A.length-2;i++){const q=A[i],r=near(q.x,q.y,14,ai);if(!r||r[0]!==bi){if(cl){if(cl[3]>2&&cl[3]<B.length-3)link(A,cl[1],B,cl[3]);cl=null;}continue;}
@@ -365,6 +365,7 @@ function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const 
         const s=Math.sign(d)*ex;if(FX[a]&&FX[b])continue;if(FX[a])H[b]-=s;else if(FX[b])H[a]+=s;else{H[a]+=s/2;H[b]-=s/2;}}if(worst<0.01)break;}
     for(const P2 of NETP)for(let i=0;i<P2.length;i++)P2[i].h=H[v(P2,i)];}
   for(const P2 of ALL)P2.J.sort((a,b)=>a.i-b.i);
+  for(const P2 of ALL)for(const J of P2.J){const Q=RING.paths[J.p],K=Q.J.find(k=>k.id===J.id);J.sig=P2!==I&&Q!==I&&!J.end&&!(K&&K.end);J.yield=J.end&&P2!==I;}
   IWNET={WS,out,NETP,ALL,LP,pip,loopD,jB,segs,JN};}
 
 // v5.35 town roads (P.net): tarmac wins over any other road's curb or sidewalk; markings come from the road that owns the tarmac,
@@ -375,8 +376,10 @@ function netPix(ea,eb,wx,wy,nz,gi){let t=null,cb=null,wk=null,sh=null,box=false;
   for(let k=0;k<n;k++){const q=k?B:A;if(q.d<q.hw){if(t)box=true;if(!t||q.d/q.hw<t.d/t.hw)t=q;}else if(q.P.net&&q.d<q.hw+2.5)cb=q;else if(q.P.net&&q.d<q.hw+q.sw)wk=q;else if(!q.P.net&&q.d<q.hw+4)sh=q;}
   let r,g,b;
   if(t){r=62+nz;g=62+nz;b=66+nz;const P=t.P;let zeb=false;
-    if(P.J&&!box)for(const J of P.J){const ds=Math.abs(t.s-J.s);if(ds<J.ow){box=true;break;}if(ds<J.ow+13&&t.d<t.hw-4)zeb=true;}
-    if(!box){if(zeb){if((((t.la+90)/6)|0)&1){r=206;g=206;b=200;}}
+    let stop=false;
+    if(P.J&&!box)for(const J of P.J){const ds=Math.abs(t.s-J.s);if(ds<J.ohw+1){box=true;break;}if(ds<J.ow-1.5){if(t.d<t.hw-4)zeb=true;}
+      else if((J.sig||J.yield)&&ds<J.ow+3.5&&t.d<t.hw-3&&(t.s<J.s?t.la<-0.8:t.la>0.8))stop=true;}
+    if(!box){if(zeb){if((((t.la+90)/6)|0)&1){r=206;g=206;b=200;}}else if(stop){r=212;g=212;b=206;}
       else if(P.net){if(P.blvd||P.ave){if(t.d>1.2&&t.d<3.7){r=168;g=137;b=58;}}else if(t.d<1.85){r=168;g=137;b=58;}
         if(P.blvd&&Math.abs(t.d-t.hw*0.52)<1.6&&(((t.s%48)+48)%48)<26){r=200;g=200;b=194;}}
       else if(t.d>t.hw-3.5){r=g=b=196;}}}
@@ -564,7 +567,7 @@ function drawTL(o,fg){
   const ca=Math.cos(o.a),sa=Math.sin(o.a),hx=o.x+ca*1.5,hy=o.y+sa*1.5;
   obox(hx,hy,o.a,1.8,2.6,32,46,[28,28,30],null,fg);
   if((CX-hx)*ca+(CY-hy)*sa<=0)return;
-  const st=tlState(o.ix,o.iy,o.ew),fx=hx+ca*1.9,fy=hy+sa*1.9,rx=-sa*1.5,ry=ca*1.5;
+  const st=o.jid!=null?jSig(o.jid,o.jp):tlState(o.ix,o.iy,o.ew),fx=hx+ca*1.9,fy=hy+sa*1.9,rx=-sa*1.5,ry=ca*1.5;
   for(let i=0;i<3;i++){const z0=43.2-i*4,z1=z0+2.8,on=(2-i)===st,c=on?TLC[2-i]:mixA(TLC[2-i],[20,20,20],0.8);
     quad(fx-rx,fy-ry,z0,fx+rx,fy+ry,z0,fx+rx,fy+ry,z1,fx-rx,fy-ry,z1,lit(c,1,fg,on));
     if(on&&proj(fx,fy,(z0+z1)/2))glow(PX,PY,2.6*PK,rgbS(TLC[2-i]),0.35+0.5*LIGHTK);}

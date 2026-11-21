@@ -78,3 +78,59 @@
 // what's a road surface (not sidewalk) on the island streets
 function iwTarmac(x,y){const k=tcell(x,y);if(TTYPE[k]!==10)return false;for(const ix of[RDI[k],RDI2[k]]){if(ix<0)continue;const e=RDP[ix],P=RING.paths[e.p];if(roadLat(e,x,y)<(P.hw||RING.hw))return true;}return false;}
 {const f=districtAt;districtAt=function(x,y){if(x>WPX+2000){const d=IWCM[tcell(x,y)];if(d)return IWDIST[d].name;}return f(x,y);};}
+// ---------- v5.35 junctions: signals at every crossing of two town roads, give-way where a road ends at another ----------
+// An 18 s cycle per crossing (offset by its id): the first road green 7 s, amber 2 s, then red while the second road has its turn.
+const JSIG={};
+function jSig(id,pi){const S=JSIG[id];if(!S)return 0;if(typeof BLACKOUT!=='undefined'&&BLACKOUT)return 3;const t=(game.t+S.off)%18;return pi===S.a?(t<7?0:t<9?1:2):(t<9?2:t<16?0:1);} // 0 green 1 amber 2 red
+// how long a road keeps its red (so people only step out with time to cross)
+function jRedLeft(id,pi){const S=JSIG[id];if(!S)return 0;const t=(game.t+S.off)%18;return pi===S.a?(t>=9?18-t:0):(t<9?9-t:0);}
+(function iwSignals(){if(!IWNET)return;
+  for(const P of IWNET.out){const pi=RING.paths.indexOf(P);for(const J of P.J){if(!J.sig||JSIG[J.id])continue;JSIG[J.id]={a:Math.min(pi,J.p),b:Math.max(pi,J.p),off:(J.id*7)%18};
+      // four light posts, one on the right of each way in, at the stop line, facing the traffic coming
+      for(const[Q,k,qi]of[[P,J.i,pi],[RING.paths[J.p],J.j,J.p]]){const K=Q.J.find(x=>x.id===J.id),back=K.ow+6;
+        for(const dir of[1,-1]){const s=Q[k].s-dir*back,q=iwAt(Q,s),o=Q.hw+Q.sw*0.4;TLIGHTS.push({x:q.x-q.uy*o*dir,y:q.y+q.ux*o*dir,a:Math.atan2(-q.uy*dir,-q.ux*dir),jid:J.id,jp:qi});}}}}
+  SGRID=null;})();
+// a point on a path at distance s along it (with its direction)
+function iwAt(P,s){let i=clamp(Math.floor(s/24),0,P.length-2);while(i>0&&P[i].s>s)i--;while(i<P.length-2&&P[i+1].s<s)i++;const a=P[i],b=P[i+1],f=clamp((s-a.s)/((b.s-a.s)||1),0,1);
+  return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,ux:a.ux+(b.ux-a.ux)*f,uy:a.uy+(b.uy-a.uy)*f,h:a.h+(b.h-a.h)*f};}
+// ---------- people on the sidewalks: walk a road's sidewalk, and at each corner turn the corner or cross on the zebra (on their green) ----------
+const IWX=[]; // people out on a crossing right now (traffic stops for them)
+function iwWalker(pi,s,side,dir){const P=RING.paths[pi],q=iwAt(P,s),o=P.hw+P.sw*0.5,x=q.x-q.uy*o*side,y=q.y+q.ux*o*side;const p=makePed(x,y);if(!p)return null;
+  p.isl=true;p.iw={pi,s,side,dir,st:'walk',sp:rr(38,52),lx:x,ly:y,last:-1};return p;}
+function iwPedTick(p,dt){const w=p.iw;
+  if(p.state!=='walk'||hyp(p.x-w.lx,p.y-w.ly)>8){p.iw=null;p.xing=false;const k=IWX.indexOf(p);if(k>=0)IWX.splice(k,1);return false;} // knocked off their route: ordinary pedestrian now
+  const P=RING.paths[w.pi];let gx,gy;
+  if(w.st==='walk'){w.s+=w.dir*w.sp*dt;
+    if(w.s<2||w.s>P[P.length-1].s-2){w.dir=-w.dir;w.side=-w.side;w.s=clamp(w.s,2,P[P.length-1].s-2);} // (never happens: every road ends at a junction)
+    // the corner of the next junction ahead
+    let nJ=null,nd=1e9;for(const J of P.J){if(J.id===w.last)continue;const Q=RING.paths[J.p],cw=(Q.hw||RING.hw)+(Q.net?Q.sw*0.5:7),cs=J.s-w.dir*cw,ahead=(cs-w.s)*w.dir;if(ahead>-4&&ahead<nd){nd=ahead;nJ=[J,cs,Q];}}
+    if(nJ&&nd<=0){const[J,cs,Q]=nJ;w.s=cs;w.last=J.id;const X=Q[J.j],q=iwAt(P,cs),o=P.hw+P.sw*0.5,cx=q.x-q.uy*o*w.side,cy=q.y+q.ux*o*w.side;
+      const canOn=J.s+w.dir*((Q.hw||RING.hw)+(Q.net?Q.sw*0.5:7))>2&&J.s+w.dir*((Q.hw||RING.hw)+(Q.net?Q.sw*0.5:7))<P[P.length-1].s-2;
+      const r=R(),turn=Q.net&&(r<0.4||!canOn),across=!turn&&canOn&&!J.end;
+      if(turn){// round the corner onto the other road's sidewalk, walking away from the junction
+        const ux=X.ux,uy=X.uy,dx=cx-X.x,dy=cy-X.y,tau=Math.sign(dx*ux+dy*uy)||1,sd=Math.sign(dx*-uy+dy*ux)||1;
+        w.pi=J.p;w.s=X.s+tau*(P.hw+P.sw*0.5);w.dir=tau;w.side=sd;w.last=J.id;}
+      else if(across){w.st='wait';w.J=J;w.cross={pi:J.p};w.to=J.s+w.dir*((Q.hw||RING.hw)+(Q.net?Q.sw*0.5:7));}
+      else{w.st='wait';w.J=J;w.cross={pi:w.pi,self:true};w.to=cs;} // cross this road, then walk back the way they came on the other side
+    }
+    const q=iwAt(RING.paths[w.pi],w.s),o2=RING.paths[w.pi].hw+RING.paths[w.pi].sw*0.5;gx=q.x-q.uy*o2*w.side;gy=q.y+q.ux*o2*w.side;}
+  else if(w.st==='wait'){const J=w.J,cr=w.cross.pi;let go;
+    if(J.sig)go=jSig(J.id,cr)===2&&jRedLeft(J.id,cr)>3.5;
+    else{const P2=RING.paths[cr],m=iwAt(P2,w.cross.self?w.s:J.s);go=!cars.some(c=>dist2(c.x,c.y,m.x,m.y)<200*200&&hyp(c.vx,c.vy)>25)&&!(player.car&&dist2(player.car.x,player.car.y,m.x,m.y)<200*200&&hyp(player.car.vx,player.car.vy)>25);}
+    gx=p.x;gy=p.y;
+    if(go){w.st='xing';p.xing=true;IWX.push(p);const q=iwAt(P,w.cross.self?w.s:w.to),o=P.hw+P.sw*0.5,sd=w.cross.self?-w.side:w.side;w.tx=q.x-q.uy*o*sd;w.ty=q.y+q.ux*o*sd;
+      if(w.cross.self){w.side=-w.side;w.dir=-w.dir;}else w.s=w.to;}}
+  if(w.st==='xing'){gx=w.tx;gy=w.ty;if(hyp(gx-p.x,gy-p.y)<3){w.st='walk';p.xing=false;const k=IWX.indexOf(p);if(k>=0)IWX.splice(k,1);}}
+  const dx=gx-p.x,dy=gy-p.y,l=hyp(dx,dy),sp=w.st==='xing'?w.sp*1.25:w.sp;
+  if(l>0.5){const m=Math.min(l,sp*dt*1.6);p.x+=dx/l*m;p.y+=dy/l*m;p.a=lerpAng(p.a,Math.atan2(dy,dx),Math.min(1,dt*10));p.moving=true;p.anim+=dt*sp*0.18;}else{p.moving=false;}
+  p.vx=p.vy=0;w.lx=p.x;w.ly=p.y;return true;}
+{const f=lifePed;lifePed=function(p,dt){if(p.iw&&iwPedTick(p,dt))return true;return f(p,dt);};}
+// keep the sidewalks busy near the player in town (and let people go when they're far away)
+function iwPeople(dt){iwPeople.t=(iwPeople.t||0)-dt;if(iwPeople.t>0)return;iwPeople.t=0.5;if(!IWNET)return;
+  for(const p of peds)if(p.iw&&dist2(p.x,p.y,player.x,player.y)>1500*1500){p.gone=true;const k=IWX.indexOf(p);if(k>=0)IWX.splice(k,1);}
+  for(let k=IWX.length-1;k>=0;k--)if(IWX[k].gone||!IWX[k].iw)IWX.splice(k,1);
+  if(!IWCM[tcell(player.x,player.y)])return;let n=0;for(const p of peds)if(p.iw&&!p.gone)n++;if(n>=iwPeople.max)return;
+  for(let tries=0;tries<10;tries++){const P=IWNET.out[Math.floor(R()*IWNET.out.length)];if(!P.sw)continue;const s=rr(30,P[P.length-1].s-30),q=iwAt(P,s),side=R()<0.5?1:-1,o=P.hw+P.sw*0.5,x=q.x-q.uy*o*side,y=q.y+q.ux*o*side,d=dist2(x,y,player.x,player.y);
+    if(d>1000*1000||d<200*200||camSees(x,y)||P.J.some(J=>Math.abs(J.s-s)<J.ow+10))continue;iwWalker(RING.paths.indexOf(P),s,side,R()<0.5?1:-1);break;}}
+iwPeople.max=26;
+{const f=g3Tick;g3Tick=function(dt){f(dt);iwPeople(dt);};}

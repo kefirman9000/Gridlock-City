@@ -204,7 +204,15 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   if(P.J&&P.J.length)for(const J of P.J){if(Math.abs(J.i-i)>1||ai.lastJ===J.id)continue;ai.lastJ=J.id;
     const atEnd=(dir>0&&J.i>=last-2)||(dir<0&&J.i<=2),Q=RING.paths[J.p];if(!Q)continue;
     if(atEnd||R()<0.3){const nd=J.j<=2?1:J.j>=Q.length-3?-1:(R()<0.5?1:-1);ringJoin(c,J.p,J.j,nd);c.ai.lastJ=J.id;c.vx*=0.7;c.vy*=0.7;return;}}
-  if(P.net&&((dir>0&&i>=last-1)||(dir<0&&i<=1))){ai.dir=-dir;c.vx*=0.2;c.vy*=0.2;return;} // (a town road always ends at a junction; just in case)
+  if(P.net&&((dir>0&&i>=last-1)||(dir<0&&i<=1))){ai.dir=-dir;c.vx*=0.2;c.vy*=0.2;return;}
+  // v5.35 signals and give-way: stop at the line on red (and on amber if there's room), and where this road ends at another, slow, look, wait for a gap
+  let jcap=1e9;
+  if(P.J&&P.J.length&&typeof jSig==='function'){let nJ=null,nd=1e9;for(const J of P.J){if((J.i-i)*dir<=1)continue;const ds=Math.abs(J.s-P[i].s);if(ds<nd){nd=ds;nJ=J;}}
+    if(nJ&&nd<280){const line=nJ.ow+5+c.t.L/2,stopAt=Math.max(0,(nd-line)*1.6);
+      if(nJ.sig){const st=jSig(nJ.id,ai.pth);if((st===2||(st===1&&nd-line>40))&&nd>line-10)jcap=stopAt;}
+      else if(nJ.yield&&((dir>0&&nJ.i>=last-2)||(dir<0&&nJ.i<=2))){jcap=Math.max(28,stopAt);
+        if(nd<line+40){const X=RING.paths[nJ.p][nJ.j],busy=o=>o!==c&&dist2(o.x,o.y,X.x,X.y)<180*180&&hyp(o.vx,o.vy)>20&&((X.x-o.x)*o.vx+(X.y-o.y)*o.vy>0);
+          if(cars.some(o=>busy(o)&&o.ai&&o.ai.pth===nJ.p)||(player.car&&busy(player.car)))jcap=stopAt;}}}} // (a town road always ends at a junction; just in case)
   // the end of a road: back into town, or onto the beltway
   if((dir>0&&i>=last-1)||(dir<0&&i<=1)){
     if(P.tun){const k=cars.indexOf(c);if(k>=0&&c!==player.car)cars.splice(k,1);return;} // the East River Tunnel: cars leave the world at the ends
@@ -220,7 +228,7 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   // on the beltway: now and then take a spur into town
   if(ai.pth===0&&ai.lastSpur!==i){for(let k=1;k<RING.paths.length;k++){const S=RING.paths[k];if(Math.abs(S.ringI-i)<=1&&ai.lastSpur!==S.ringI){ai.lastSpur=S.ringI;if(R()<(S.isl?0.2:S.hill?0.12:0.35)){if(S.isl||S.hill)ringJoin(c,k,0,1);else ringJoin(c,k,S.length-1,-1);return;}}}}
   const spd=hyp(c.vx,c.vy),look=Math.max(2,Math.round((40+spd*0.35)/24)),j=clamp(i+dir*look,0,last),q=P[j],ux=q.ux*dir,uy=q.uy*dir,lo=P.lo||14,gx=q.x-uy*lo,gy=q.y+ux*lo;
-  const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=P.farm?Math.min(ai.cruise,130):ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);
+  const diff=angDiff(Math.atan2(gy-c.y,gx-c.x),c.a);let steer=clamp(diff*2.2,-1,1),target=P.farm?Math.min(ai.cruise,130):ai.cruise;if(Math.abs(diff)>0.5)target=Math.min(target,90);target=Math.min(target,jcap);
   // joining a road (or knocked off it): crawl until back on its line, so the turn is tight enough to make it (cars used to circle)
   {const e=P[i],off=hyp(e.x-c.x,e.y-c.y);if(off>34){target=Math.min(target,off>70?38:60);steer=clamp(diff*3,-1,1);}}
   // ease off on the bends
@@ -228,6 +236,7 @@ function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);
   const fx=Math.cos(c.a),fy=Math.sin(c.a),D=c.t.L/2+22+spd*0.45,hw=c.t.Wd/2;let blocked=false;
   for(const o of cars){if(o===c)continue;const rx=o.x-c.x,ry=o.y-c.y;if(rx*rx+ry*ry>(D+80)**2)continue;const f=rx*fx+ry*fy;if(f<=0)continue;if(f<D+o.t.L/2&&Math.abs(-rx*fy+ry*fx)<hw+o.t.Wd/2+2){blocked=true;break;}}
   if(!blocked){const p=player.car?null:player;if(p){const rx=p.x-c.x,ry=p.y-c.y,f=rx*fx+ry*fy;if(f>0&&f<D&&Math.abs(-rx*fy+ry*fx)<hw+10)blocked=true;}}
+  if(!blocked&&typeof IWX!=='undefined')for(const p of IWX){const rx=p.x-c.x,ry=p.y-c.y,f=rx*fx+ry*fy;if(f>0&&f<D+12&&Math.abs(-rx*fy+ry*fx)<hw+14){blocked=true;break;}} // people on a zebra
   if(blocked){ai.blockT+=dt;if(ai.blockT<3.5)target=0;if(ai.blockT>5.5)ai.blockT=0;}else ai.blockT=Math.max(0,ai.blockT-dt*2);
   const vf=c.vx*fx+c.vy*fy;let thr=vf<target-10?1:vf>target+15?-1:0.15;if(target===0)thr=vf>5?-1:0;
   if(target>0&&spd<12){ai.stuckT+=dt;if(ai.stuckT>2.5){ai.revT=1;ai.stuckT=0;}}else ai.stuckT=0;if(ai.revT>0){ai.revT-=dt;thr=-1;steer=-steer;}
