@@ -84,6 +84,9 @@ Heights: one constraint solve over the network (junction points shared, meetings
 (tarmac wins, markings from the owning road, no paint in a junction box, zebras outside it, curbs, sidewalk slabs). `aiRing` turns at `P.J` junctions.
 `js/08i-ironwood.js` (after 08g, before 08h) builds the districts' buildings (`b.iwc`), street trees, hill houses and names. This is the system the main city's
 streets are meant to move onto (a curved, junction-aware network instead of the grid).
+v5.36: `HM` is 7600 (the world reaches further out). Ocean Drive is a straight net road (`P.ocean`) 560 in from Ironwood's straight east beach (COAST.isl2, not roughened there),
+with Lummus-style park, beach walk (`walk:true` path, paint only) and beach; `IWDIST.odx`. Roads with hw >= 46 are `P.park` (lanes to 28, parking lanes beyond; `IWPARK` fills them
+with parked cars). Signals `JSIG`/`jSig`, sidewalk walkers `p.iw` (iwPedTick), Deco facades `b.deco` (decoWall), island life in `iwLifeTick` (08i).
 
 ## The island (v5.11)
 The terrain grid reaches `HM` (6400 since v5.26; was 2600) beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

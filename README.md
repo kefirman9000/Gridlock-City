@@ -36,6 +36,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
   - At night the hotel fronts glow in pink, blue and green neon, with neon on the ledges, fins and rooflines, and the cafes fill up.
   - Across the road is a palm park with a winding beach walk, a dune hedge, then a wide beach with umbrellas in rows and pastel lifeguard huts.
   - Coral Beach's streets run straight through to Ocean Drive.
+- **Wider streets you can park on.** The avenues and the Palm Heights and Coral Beach streets have a parking lane on each side, filled with parked cars.
 - **Junctions that work.** Traffic lights at every crossing on the island, stop lines, give-way at T junctions, and traffic that queues.
 - **People with places to go.** People walk the sidewalks, wait for their green and cross on the zebras, go in and out of buildings, queue at hot dog carts and wait for the Grand Avenue bus.
 - **Each town has its own life.**

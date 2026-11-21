@@ -344,7 +344,7 @@ const IWV=[];
   // scattered homes on the rest of the road
   for(let i=s0+60;i<N-4;i+=9){const q=I[i],hh=hash(i,919)>>>0;if(hh%3)continue;const sd=(hh&8)?1:-1,w=46+hh%20,h=40+(hh>>>5)%14,off=64+h/2,cx=q.x-q.uy*off*sd,cy=q.y+q.ux*off*sd;
     if(house(cx-w/2,cy-h/2,w,h,hh,['#c9b79c','#a8b5a2','#e8d8c0'][(hh>>>9)%3])&&(hh&64))park.push({x:q.x-q.uy*34*sd,y:q.y+q.ux*34*sd,a:Math.atan2(q.uy,q.ux)+(sd>0?0:PI)});}
-  IWD.park=park.concat(typeof IWLIFE!=='undefined'&&IWLIFE.park?IWLIFE.park:[]);
+  IWD.park=park;
   // a windmill by the farms, the resort hotel and the beach below Sunset Point
   const fv=IWV.find(v=>v.name==='EASTSIDE FARMS');if(fv)for(const[dx,dy]of[[120,-160],[-90,220]]){const x=fv.x+dx,y=fv.y+dy;if(okAt(x-8,y-8,16,16))props.push({x,y,k:'windmill',rad:8,ht:92});}
   const E=I[N-1];

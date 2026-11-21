@@ -33,7 +33,7 @@ var IWLIFE={vents:[],stops:[],gi:-1,cafes:[],park:[]};
   const DECO=['#f4b6c2','#9fe0d8','#f6e3a1','#c8b6e8','#bfe8c0','#f2efe6','#ffd0a8','#a8d8f0'],DAWN=['#e8417a','#18a8a0','#f08a20','#7a52c8','#2a9a5a'];
   const BLK={1:{xs:[11900,12100,12420,12740,13060,13800],ys:[850,1090,1340,1590,1840,2090,2340]},
     2:{xs:[12740,13060,13330,13800],ys:[2340,2610,2890,3170,3450,3730,4010,4290]},
-    3:{xs:[11900,12180,12460,12740,13060,13340,13800],ys:[5450,5690,5930,6170,6410,7000]}};
+    3:{xs:[11900,12180,12460,12740,13060,13340,13800],ys:[5450,5750,6050,6350,6650,7000]}};
   const ctr={x:12740,y:1700};let nB=0;
   for(const d of[1,2,3]){const B=BLK[d];
     for(let bj=0;bj+1<B.ys.length;bj++)for(let bi=0;bi+1<B.xs.length;bi++){const[x0,x1,y0,y1]=free(B.xs[bi],B.xs[bi+1],B.ys[bj],B.ys[bj+1]);const W2=x1-x0,H3=y1-y0;if(W2<40||H3<40)continue;
@@ -57,8 +57,8 @@ var IWLIFE={vents:[],stops:[],gi:-1,cafes:[],park:[]};
       else{// Coral Beach: deco blocks shoulder to shoulder along each street; condo towers by the shore road
         const rows=H3>140?[[0,Math.min(80,H3/2)],[H3-Math.min(80,H3/2),Math.min(80,H3/2)]]:[[0,H3]];
         for(const[ry,rh]of rows)for(const[cx,cw]of cuts(W2,56,104,x0+ry*3,y0+bi)){const x=x0+cx,y=y0+ry,h0=hb(x,y),shore=IWNET.loopD(x+cw/2,y+rh/2)<260&&y>5900;let o;
-          if(shore&&(h0&3)!==0&&cw>=60)o={hg:6+((h0>>>8)&7)*0.5,col:['#eef2f0','#dfeef0','#f4f0e6'][(h0>>>12)%3],st:'glass',ws:18,ant:false};
-          else o={hg:1.5+((h0>>>8)&3)*0.5,col:DECO[(h0>>>11)%DECO.length],st:'plaster',ws:14,wf:.5,wh:.5,shop:((h0>>>15)&3)!==0,awn:DAWN[(h0>>>17)%DAWN.length],corn:true};
+          o={hg:(shore?3:1.5)+((h0>>>8)&3)*0.5,col:DECO[(h0>>>11)%DECO.length],st:'plaster',ws:14,wf:.5,wh:.5,shop:((h0>>>15)&3)!==0,awn:DAWN[(h0>>>17)%DAWN.length],deco:shore||((h0>>>20)&3)===0,nc:['#ff3aa0','#38d8ff','#3aff9a','#c060ff'][(h0>>>22)&3]};
+          if(cw>=50&&rh>=50&&((h0>>>24)&1))o.tier={ins:6+((h0>>>25)&7),hg2:o.hg+0.5};
           if(put(x,y,cw-3,rh-3,o,2,1))nB++;}}}}
   // Ocean Drive: Coral Beach runs on down to it; Deco hotels face the sea, neon blades lit at night, café tables out front;
   // past the far sidewalk the promenade's palms, then the beach (umbrellas, towels, lifeguard towers)
@@ -73,7 +73,7 @@ var IWLIFE={vents:[],stops:[],gi:-1,cafes:[],park:[]};
       const h0=hb(s,77),q0=iwAt(OD,s),ax=Math.abs(q0.ux),ay=Math.abs(q0.uy),A=44+(h0&23),D=86;let w,h;if(ax>0.8){w=A;h=D;}else if(ay>0.8){w=D;h=A;}else{w=h=66;}
       const tl=(w*ax+h*ay)/2,en=(w*ay+h*ax)/2,q=iwAt(OD,s+tl),nx=-q.uy,ny=q.ux,sd=((C.x-q.x)*nx+(C.y-q.y)*ny)>0?1:-1,o=OD.hw+OD.sw+16+en;
       if(OD.J.some(J=>Math.abs(J.s-(s+2*tl))<J.ow+14)){s+=8;continue;}
-      const b=put(q.x+nx*o*sd-w/2,q.y+ny*o*sd-h/2,w,h,{hg:3+((h0>>>6)&3)*0.5,col:HOT[(h0>>>9)%HOT.length],st:'plaster',ws:13,wf:.46,wh:.5,shop:true,awn:UMB[(h0>>>12)%UMB.length],neon:(h0>>>15)%3!==0,nc:NEON[(h0>>>17)%NEON.length],deco:true},1);
+      const b=put(q.x+nx*o*sd-w/2,q.y+ny*o*sd-h/2,w,h,{tier:((h0>>>28)&1)&&w>=50&&h>=50?{ins:6+((h0>>>24)&7),hg2:3.5+((h0>>>6)&3)*0.5}:null,hg:3+((h0>>>6)&3)*0.5,col:HOT[(h0>>>9)%HOT.length],st:'plaster',ws:13,wf:.46,wh:.5,shop:true,awn:UMB[(h0>>>12)%UMB.length],neon:(h0>>>15)%3!==0,nc:NEON[(h0>>>17)%NEON.length],deco:true},1);
       const w2=w;
       if(b){b.nrgb=rgbOf(b.nc);nh++;nB++;
         // the café out front: tables, chairs and big umbrellas on the sidewalk
@@ -87,10 +87,9 @@ var IWLIFE={vents:[],stops:[],gi:-1,cafes:[],park:[]};
         let xw=xe;while(xw>xe-700&&!isR(xw,ym))xw-=6;xw+=8;if(xe-xw<44)continue;
         const rows=y1-y0>150?[[y0,(y1-y0)/2-2],[y0+(y1-y0)/2+2,(y1-y0)/2-2]]:[[y0,y1-y0]];
         for(const[ry,rh]of rows)for(const[cx,cw]of cuts(xe-xw,52,86,xw+ry,ym)){const h1=hb(xw+cx,ry);if(put(xw+cx,ry,cw-3,rh,{hg:1.5+((h1>>>8)&3)*0.5,col:DECO[(h1>>>11)%DECO.length],st:'plaster',ws:14,wf:.5,wh:.5,shop:((h1>>>15)&3)===0,awn:DAWN[(h1>>>17)%DAWN.length],deco:((h1>>>19)&3)===0,neon:false,nc:'#ff4fa0'},2))nB++;}}}
-    // parked along both curbs, the odd classic among them
-    for(let s=80;s<L-80;s+=58){if(OD.J.some(J=>Math.abs(J.s-s)<J.ow+40))continue;const q=iwAt(OD,s),h0=hb(s,991);if(h0&1)continue;
-      for(const sd of[-1,1]){if((h0>>>(sd>0?2:3))&1)continue;const x=q.x-q.uy*34*sd,y=q.y+q.ux*34*sd,classic=((h0>>>5)&3)===0;
-        IWLIFE.park.push({x,y,a:Math.atan2(q.uy*-sd,q.ux*-sd)+(sd>0?0:0),ty:classic?'muscle':null,col:classic?['#3ad6c0','#f4a6c0','#f6f0e0','#e8c84a'][(h0>>>8)&3]:null});}}
+    // Ocean Drive's street furniture: Deco lamp posts on both sidewalks, parking meters at the curb
+    for(let s=30;s<L-30;s+=62){if(OD.J.some(J=>Math.abs(J.s-s)<J.ow+20))continue;const q=iwAt(OD,s);for(const sd of[-1,1]){const o=OD.hw+3,x=q.x-q.uy*o*sd,y=q.y+q.ux*o*sd;
+        if(((s/62)|0)%2===0)props.push({x:q.x-q.uy*(OD.hw+OD.sw-3)*sd,y:q.y+q.ux*(OD.hw+OD.sw-3)*sd,k:'dlamp',rad:2,ht:36});props.push({x,y,k:'pmeter',rad:1,ht:12});}}
     // the beach: a dune hedge along the edge of the park (gaps for the paths down to the sand), umbrellas in rows parallel to the
     // water, pastel lifeguard huts
     {const[ya,yb]=IWDIST.ody,park=IWDIST.odx+62+110,shoreAt=y=>{let x=park;while(x<park+600&&TTYPE[tcell(x,y)]!==1)x+=6;return x;};
@@ -98,6 +97,8 @@ var IWLIFE={vents:[],stops:[],gi:-1,cafes:[],park:[]};
       const cols=['#e04a3a','#2a8ad8','#f0c030','#38b070','#e070b0','#f2e6c8'];let lgN=0;
       for(let y=ya+30;y<yb+200;y+=34){const sx=shoreAt(y);for(let r=0;r<3;r++){const x=sx-70-r*40+(((y/34)|0)&1)*8,k=tcell(x,y);if(TTYPE[k]!==2||x<park+30)continue;const h0=hb(x,y);if((h0&7)<2)continue;
           props.push({x,y,k:'umbrella',c:cols[h0%cols.length],rad:5,ht:21});if(h0&8)props.push({x:x+9,y:y+6,k:'towel',c:cols[(h0>>>4)%cols.length],a:0,rad:0,ht:1});}}
+      for(let y=ya+90;y<yb;y+=560){const sx=shoreAt(y),x=sx-260;if(TTYPE[tcell(x,y)]===2)props.push({x,y,k:'vnet',rad:3,ht:24});}
+      for(let y=ya+40;y<yb+200;y+=34){const sx=shoreAt(y),x=sx-118,h0=hb(x,y*3);if(TTYPE[tcell(x,y)]!==2||(h0&3))continue;props.push({x,y,k:'lounger',c:['#ffffff','#2a8ad8','#f0c030'][h0%3],rad:3,ht:4},{x,y:y+10,k:'lounger',c:['#ffffff','#2a8ad8','#f0c030'][h0%3],rad:3,ht:4});}
       for(let y=ya+150;y<yb+100;y+=380){const sx=shoreAt(y),x=sx-180,k=tcell(x,y);if(TTYPE[k]!==2)continue;const pc=[[244,170,190],[120,214,206],[246,222,120],[190,170,232],[255,160,110]][lgN++%5];
         props.push({x,y,k:'lifeguard',c:pc,r:[255,255,255],rad:9,ht:24});}}
     IWNET.ocean={nh};}
@@ -223,10 +224,20 @@ function iwCarStyle(c,d){if(iwCarType.flag==='low'){c.lowrider=true;c.col=pick([
         for(const dir of[1,-1]){const s2=s+dir*30,q=iwAt(P,s2),o=P.hw+P.sw*0.55,x=q.x-q.uy*o*dir,y=q.y+q.ux*o*dir,S={s:s2,dir,x,y,cool:0,fx:q.x-q.uy*(P.hw-6)*dir,fy:q.y+q.ux*(P.hw-6)*dir};
           P.stops.push(S);IWLIFE.stops.push(S);props.push({x,y,k:'busstop',a:Math.atan2(q.uy,q.ux),rad:16,ht:30});}}}}
   SGRID=null;})();
+// ---- parked cars: the wide roads' parking lanes hold real cars (filled around the player, off camera) ----
+const IWPARK=[];
+(function iwParking(){if(!IWNET)return;for(const P of IWNET.out){if(!P.park)continue;const L=P[P.length-1].s,pc=(28+P.hw)/2+1;
+    for(let s=40;s<L-40;s+=62){if(P.J.some(J=>Math.abs(J.s-s)<J.ow+36))continue;const q=iwAt(P,s);for(const sd of[1,-1]){const h0=hash((s*7)|0,(P.length*31+(sd>0?1:0))|0)>>>0;if((h0&7)<3)continue;
+        IWPARK.push({x:q.x-q.uy*pc*sd,y:q.y+q.ux*pc*sd,a:Math.atan2(q.uy*sd,q.ux*sd),d:IWCM[tcell(q.x,q.y)],ocean:!!P.ocean,h:h0,c:null});}}}})();
+function iwParkTick(){let n=0;for(const S of IWPARK){if(S.c&&(S.c.gone||!cars.includes(S.c)||S.c.driver||hyp(S.c.x-S.x,S.c.y-S.y)>40))S.c=null;}
+  for(const S of IWPARK){if(S.c||n>=3)continue;const d=dist2(S.x,S.y,player.x,player.y);if(d>950*950)continue;if((d<420*420&&camSees(S.x,S.y))||carNear(S.x,S.y,30))continue;
+    const classic=S.ocean&&((S.h>>>5)&3)===0,ty=classic?'muscle':S.d===1&&(S.h&16)?'taxi':pick(['sedan','compact','suv','wagon','sedan','pickup','roadster'].filter(t=>CT[t]));
+    const c=makeCar(CT[ty]?ty:'sedan',S.x,S.y,S.a);if(!c)continue;c.traffic=true;c.iwParked=true;if(classic)c.col=['#3ad6c0','#f4a6c0','#f6f0e0','#e8c84a'][(S.h>>>8)&3];else if(S.d===3&&(S.h&64))c.col=['#f4b6c2','#9fe0d8','#ffffff','#ff8a5a'][(S.h>>>9)&3];
+    S.c=c;n++;}}
 // ---- the town's ticking life ----
 const NEWSQ=[];let NEWS={chase:false,where:''};
 function iwLifeTick(dt){iwLifeTick.t=(iwLifeTick.t||0)-dt;if(iwLifeTick.t>0)return;iwLifeTick.t=0.15;const d=IWCM[tcell(player.x,player.y)];
-  iwPeople.max=Math.round(26*iwPedK(d||1));
+  iwPeople.max=Math.round(26*iwPedK(d||1));iwLifeTick.pt=(iwLifeTick.pt||0)-0.15;if(iwLifeTick.pt<=0&&player.x>WPX+2000){iwLifeTick.pt=0.6;iwParkTick();}
   if(d){// steam from the manholes downtown, sprinklers on the lawns in the morning and evening
     if(d===1)for(const v of IWLIFE.vents)if(dist2(v.x,v.y,player.x,player.y)<650*650&&R()<0.6)puff(v.x+rr(-3,3),v.y+rr(-3,3),rr(-5,5),rr(-5,5),rr(1.4,2.4),rr(8,13),'#d4d4d8','smoke');
     const h=hr24();if(d===2&&((h>6.2&&h<9)||(h>17.6&&h<19.5))&&rain<0.1)for(const b of OUTB){if(!b.iwc||b.st!=='house'||((b.id*7)&3)||dist2(b.x,b.y,player.x,player.y)>520*520)continue;
