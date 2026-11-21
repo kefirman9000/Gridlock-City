@@ -76,6 +76,15 @@ v5.33: `cityEdge` rounds all four corners and takes a wandering depth of parklan
 Hill roads are `RING.hills` (real carved paths with `hill:true`, built in `ringRoad`); 08h puts houses on levelled pads along them (`kind:'hills'`) and populates Ironwood Island (`IWV`, `IWD`, `islandFolk`).
 The Song Lab (end of 06r): a station's songs are seeds 0..`SONGN`-1; `songSeg(st,slot)` maps the clock's slot to a song that is not denied (`songMark`: local `SONGPICK`, then `SONG_BAKED` keyed by station name). Bake picks sent by the user into `SONG_BAKED`.
 
+## Ironwood City and town roads (v5.35)
+`ironwoodNet` (08-render, called in `ringRoad` before the carve) lays out a street network on Ironwood Island: West Shore Drive closes the island loop,
+and district grids (`IWDIST`, mask `IWCM`: 1 Central, 2 Palm Heights, 3 Coral Beach) are clipped to the loop (`IWNET.pip`, `IWNET.loopD`), plus Sunset Blvd,
+Mulholland Dr and Grand Ave. Town roads are `RING.paths` with `net:true` and their own `hw`/`sw` (sidewalk); `P.J` lists junctions `{id,i,s,p,j,ow}` on both roads.
+Heights: one constraint solve over the network (junction points shared, meetings with the island road held, every step within 0.1). `netPix` paints them
+(tarmac wins, markings from the owning road, no paint in a junction box, zebras outside it, curbs, sidewalk slabs). `aiRing` turns at `P.J` junctions.
+`js/08i-ironwood.js` (after 08g, before 08h) builds the districts' buildings (`b.iwc`), street trees, hill houses and names. This is the system the main city's
+streets are meant to move onto (a curved, junction-aware network instead of the grid).
+
 ## The island (v5.11)
 The terrain grid reaches `HM` (6400 since v5.26; was 2600) beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).
 `COAST` in 08-render shapes the coastline after the land types are set (no `R()`): since v5.13 a hand-placed Oahu-style outline (`COAST.pts`, a Catmull-Rom spline) filled into `COAST.LAND` with a distance transform `COAST.D`; heights above 150 are eased and high ground is forest; the off-road runs use the old 1400 margin. The map and radar draw `ISLEMAP`

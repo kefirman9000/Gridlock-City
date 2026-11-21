@@ -200,6 +200,11 @@ function ringNear(P,i,x,y){let bi=i,bd=1e18;for(let j=Math.max(0,i-8);j<=Math.mi
 function ringJoin(c,pth,i,dir){const ai=c.ai||(c.ai=newAI('lane',0,0,rr(150,210)));ai.mode='ring';ai.pth=pth;ai.pi=i;ai.dir=dir;ai.blockT=ai.blockT||0;ai.stuckT=0;ai.revT=0;}
 function aiRing(c,dt){const ai=c.ai,P=RING.paths[ai.pth];if(!P){laneFromHere(c);return;}
   ai.pi=ringNear(P,ai.pi|0,c.x,c.y);const i=ai.pi,dir=ai.dir,last=P.length-1;
+  // v5.35 junctions (Ironwood Island's streets): where a road ends at another, turn onto it; at a crossing, now and then turn
+  if(P.J&&P.J.length)for(const J of P.J){if(Math.abs(J.i-i)>1||ai.lastJ===J.id)continue;ai.lastJ=J.id;
+    const atEnd=(dir>0&&J.i>=last-2)||(dir<0&&J.i<=2),Q=RING.paths[J.p];if(!Q)continue;
+    if(atEnd||R()<0.3){const nd=J.j<=2?1:J.j>=Q.length-3?-1:(R()<0.5?1:-1);ringJoin(c,J.p,J.j,nd);c.ai.lastJ=J.id;c.vx*=0.7;c.vy*=0.7;return;}}
+  if(P.net&&((dir>0&&i>=last-1)||(dir<0&&i<=1))){ai.dir=-dir;c.vx*=0.2;c.vy*=0.2;return;} // (a town road always ends at a junction; just in case)
   // the end of a road: back into town, or onto the beltway
   if((dir>0&&i>=last-1)||(dir<0&&i<=1)){
     if(P.tun){const k=cars.indexOf(c);if(k>=0&&c!==player.car)cars.splice(k,1);return;} // the East River Tunnel: cars leave the world at the ends

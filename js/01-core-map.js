@@ -114,7 +114,7 @@
 //      police; hitting bystanders or cops still does. One incident raises the wanted level by one star at most.
 //  G4. New enemies or chases say why they're happening (a note, a WANTED reason, a radio line).
 // =====================================================================================================================
-const VERSION='5.34.3',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.35.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -203,7 +203,7 @@ function diagPix(i,xi,yi,nz,tx,ty){const d=DIAGS[i],[t,sd]=diagRel(d,xi,yi),a=Ma
       if(!d.side&&eg<14&&eg>6&&a<DHW-6){if((((sd+60)/6)|0)&1){r=206;g=206;b=200;}}
       else if(eg<=4){}
       // centre line: wide enough to stay a clean line at an angle (a thin band broke into a chain of dots); avenues get a double line
-      else if(d.side?a<1.9:(a>1.1&&a<3.6)){r=168;g=137;b=58;}else if(!d.side&&Math.abs(a-28)<1&&(((t/18)|0)&1)){r=200;g=200;b=194;}else if(a>DHW-3){r=85;g=87;b=92;}}
+      else if(d.side?a<1.9:(a>1.1&&a<3.6)){r=168;g=137;b=58;}else if(!d.side&&Math.abs(a-28)<1.7&&(((t/24)|0)&1)){r=200;g=200;b=194;} /* lane dashes 3.4 wide, 24 long (DESIGN RULE A3: a 2 px band broke into dots at an angle) */else if(a>DHW-3){r=85;g=87;b=92;}}
     return[r,g,b];}
   // the avenue's sidewalks use the same paving as the neighbourhood's own sidewalks, and run on over the bits of
   // block the avenue cut into road (so there are no jagged asphalt slivers beside it)

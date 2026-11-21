@@ -31,6 +31,15 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.35
+- **Ironwood City.** The island across the Ironwood Bridge is no longer mostly grass. Inside its coast road there are now three towns:
+  - **Ironwood Central**: a dense downtown after Manhattan. Blocks are built out to the sidewalk, glass towers with set-backs and masts rise toward the middle, and brick walk-ups and shops line the edges.
+  - **Palm Heights**: after Los Angeles. Stucco bungalows with tile roofs on lawns, strip malls and offices on the main roads, and tall palms on every street.
+  - **Coral Beach**: after Miami Beach. Pastel Art Deco blocks with bright awnings, white condo towers by the shore road, and palms on sand-coloured sidewalks.
+- **Real streets.** Curbs, sidewalks, centre lines and zebra crossings at every junction. **Sunset Boulevard** comes in from the bridge over the hills, **Mulholland Drive** winds from downtown over the hills to the beach, and **Grand Avenue** runs the island's length. **West Shore Drive** closes the island loop, so nothing dead-ends any more.
+- **Traffic that turns.** Cars pick a way at each junction and the towns are busier, with more people on the sidewalks.
+- Lane dashes on the diagonal avenues are solid dashes instead of a chain of dots.
+
 ## What's new in v5.34
 - **Real songs on the radio.** Five music stations now play twenty tracks from the Studio Lab city radio MIDI pack, four each, note by note in the browser and still on each station's own clock (tune in mid-song and it's mid-song):
   - **NEON 101**: eighties synth and italo
@@ -43,13 +52,6 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - *v5.34.1:* fixed the songs being silent in v5.34.0.
 - *v5.34.2:* cars keep their speed on grass much better.
 - *v5.34.3:* crooked side streets strike off from junctions at a clear angle instead of running alongside the main road.
-
-## What's new in v5.33
-- **A less square city.** The north-west and north-east corners are wide curves, the south corners round off above the beach, and parkland reaches into the grid by a depth that wanders along each side. The beltway follows the corners and swings up to 700 px out into the hills instead of tracing a box.
-- **Hill roads.** Real graded roads leave the beltway on the north and west and wind up into the hills, with side roads and about 120 houses on levelled plots (North Hills, West Hills).
-- **Ironwood Island is lived in.** Gull Cove in the north, the Eastside farms, Sunset Point with a hotel and a beach, woods and palms, a summit lookout with a trail, parked cars and people while you are there.
-- **Song Lab** (pause menu). Play any of a station's 48 songs and approve or deny it; denied songs stop playing. COPY MY PICKS gives a line to send back so the picks become the default for everyone.
-- Subway tunnels have concrete ribs; the swimming ripple is a ring, not a pale box; a shop menu closes when you walk away.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

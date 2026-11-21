@@ -2,6 +2,16 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.35.0
+- Ironwood City on Ironwood Island (08-render ironwoodNet, new js/08i-ironwood.js). Three districts inside the island loop: Ironwood Central (Manhattan), Palm Heights (Los Angeles), Coral Beach (Miami Beach), masked in IWCM, named through districtAt. About 140 buildings and 500 street trees, hash only (no R()).
+- A street network on the ring-road system: town roads are RING.paths with `net`, their own width `hw` and sidewalks `sw`; junctions are found from the geometry and kept in `P.J` ({id,i,s,p,j,ow}) on both roads; heights come from one solve over the whole network (junction points shared, island-road meetings held, every step within 1 in 10). The district ground is a smooth surface stretched between the loop road's heights.
+- West Shore Drive closes the island loop (the island road used to dead-end, and cars turned round). Sunset Boulevard, Mulholland Drive and Grand Avenue link the districts.
+- netPix (08-render) paints town roads: tarmac wins over any other road's curb or sidewalk, markings come from the road owning the tarmac and stop inside a junction's box, zebra crossings sit outside each junction, then curbs and sidewalk slabs.
+- aiRing (08f) turns at junctions: always at a road's end, now and then at a crossing. islandTraffic covers the whole island network (up to 14 cars in town), and islandFolk spawns more people, on the sidewalks too.
+- Gull Cove and Sunset Point villages are replaced by Central and Coral Beach (Eastside Farms, the hotel, beach and summit stay).
+- Fix: the resampler `even` could repeat a road's last point, leaving a zero-length direction that claimed a huge area as road.
+- Diagonal avenue lane dashes are 3.4 wide and 24 long (DESIGN RULE A3).
+
 ## v5.34.3
 - Crooked side streets no longer creep out of a junction alongside the main road; they strike off at a clear angle (34-56 degrees) between busy junctions. naturalStreets: slopes 2x3 / 3x4 blocks instead of 1x2 / 2x1 (27 degrees off the street, which left a sliver of grass between the two roads across the crossing); both ends need a junction with at least three open streets.
 

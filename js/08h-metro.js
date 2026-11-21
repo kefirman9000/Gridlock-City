@@ -67,15 +67,19 @@ var IWD={};
   IWD.town={x:I[s0].x,y:I[s0].y};})();
 
 {const f=districtAt;districtAt=function(x,y){if(RING.br2&&x>RING.br2.x0-60&&x<RING.br2.x1+60&&Math.abs(y-RING.br2.y)<120)return 'IRONWOOD BRIDGE';
-  if(x>WPX+2000){const k=tcell(x,y);if(ISL2M[k])return IWD.town&&hyp(x-IWD.town.x,y-IWD.town.y)<900?'PORT IRONWOOD':'IRONWOOD ISLAND';}
+  if(x>WPX+2000){const k=tcell(x,y);if(ISL2M[k]&&IWCM[k])return IWDIST[IWCM[k]].name;if(ISL2M[k])return IWD.town&&hyp(x-IWD.town.x,y-IWD.town.y)<900?'PORT IRONWOOD':'IRONWOOD ISLAND';}
   if(typeof METRO!=='undefined'&&METRO&&x>=METRO.x0&&x<=METRO.x1&&y>=METRO.y0&&y<=METRO.y1)return 'SUBWAY';return f(x,y);};}
 // island traffic: a few cars on the island road and the bridge while you're over there
-function islandTraffic(dt){const I=RING.isl;if(!I)return;islandTraffic.t=(islandTraffic.t||0)-dt;if(islandTraffic.t>0)return;islandTraffic.t=1.6;
-  if(player.x<RING.br2.x0-900)return;const pid=RING.paths.indexOf(I);let near=null,bd=1e18;for(let i=0;i<I.length;i+=6){const d=dist2(I[i].x,I[i].y,player.x,player.y);if(d<bd){bd=d;near=i;}}
-  if(bd>1500*1500)return;let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&c.ai.pth===pid)n++;if(n>=5)return;
-  for(let tries=0;tries<6;tries++){const i=clamp(near+(R()<0.5?-1:1)*Math.floor(rr(28,50)),2,I.length-3),q=I[i],dir=R()<0.5?1:-1,x=q.x-q.uy*dir*14,y=q.y+q.ux*dir*14;
-    if(camSees(x,y)||carNear(x,y,120))continue;const c=makeCar(pick(['sedan','pickup','van','sports','suv'].filter(t=>CT[t])),x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;
-    c.traffic=true;c.driver='ai';ringJoin(c,pid,i,dir);c.ai.cruise=rr(150,220);const sp=c.ai.cruise*0.7;c.vx=Math.cos(c.a)*sp;c.vy=Math.sin(c.a)*sp;break;}}
+function islandTraffic(dt){const I=RING.isl;if(!I)return;islandTraffic.t=(islandTraffic.t||0)-dt;if(islandTraffic.t>0)return;islandTraffic.t=1.1;
+  if(player.x<RING.br2.x0-900)return;
+  // v5.35: the island road, West Shore Drive and every town street (IWNET) carry traffic, busier in town
+  const ps=[RING.paths.indexOf(I),...(IWNET?IWNET.NETP.map(P=>RING.paths.indexOf(P)):[])],set=new Set(ps);let n=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&set.has(c.ai.pth))n++;
+  const town=IWCM[tcell(player.x,player.y)];if(n>=(town?14:7))return;
+  const cand=[];for(const pi of ps){const P=RING.paths[pi];for(let i=2;i<P.length-2;i+=3){const d=dist2(P[i].x,P[i].y,player.x,player.y);if(d>350*350&&d<1300*1300)cand.push([pi,i]);}}
+  for(let tries=0;tries<8&&cand.length;tries++){const[pi,i]=cand[Math.floor(R()*cand.length)],P=RING.paths[pi],q=P[i],dir=R()<0.5?1:-1,lo=P.lo||14,x=q.x-q.uy*dir*lo,y=q.y+q.ux*dir*lo;
+    if(P.J&&P.J.some(J=>Math.abs(J.i-i)<3))continue;if(camSees(x,y)||carNear(x,y,120))continue;
+    const c=makeCar(pick((town?['sedan','taxi','sports','suv','van','compact','sedan']:['sedan','pickup','van','sports','suv']).filter(t=>CT[t])),x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;
+    c.traffic=true;c.driver='ai';ringJoin(c,pi,i,dir);c.ai.cruise=P.net?rr(120,170):rr(150,220);const sp=c.ai.cruise*0.7;c.vx=Math.cos(c.a)*sp;c.vy=Math.sin(c.a)*sp;break;}}
 
 // ================= THE SUBWAY =================
 const METRO=(()=>{const st=SUBWAY.map((s,i)=>({i,n:s.n,sx:s.x,sy:s.y})),cx=WPX/2,cy=WPX/2;
@@ -313,7 +317,7 @@ const IWV=[];
   const hitB=(x,y,w,h,m)=>OUTB.some(b=>x<b.x+b.w+m&&x+w+m>b.x&&y<b.y+b.h+m&&y+h+m>b.y);
   // trees first: pines on the high ground, a few broadleaf trees on the grass, palms just behind the beaches
   const TC={pine:TREEC.pine,round:TREEC.round};
-  for(let j=0;j<HN;j+=2)for(let i=0;i<HN;i+=2){const k=j*HN+i;if(!ISL2M[k])continue;const t=TTYPE[k],h=hash(i*7+3,j*13+5)>>>0,r=(h&4095)/4095,x=-HM+i*HS+((h>>>12)&15)-8,y=-HM+j*HS+((h>>>16)&15)-8;
+  for(let j=0;j<HN;j+=2)for(let i=0;i<HN;i+=2){const k=j*HN+i;if(!ISL2M[k]||IWCM[k])continue;const t=TTYPE[k],h=hash(i*7+3,j*13+5)>>>0,r=(h&4095)/4095,x=-HM+i*HS+((h>>>12)&15)-8,y=-HM+j*HS+((h>>>16)&15)-8;
     let sp=null;if(t===4&&r<0.2)sp='pine';else if(t===3&&r<0.035)sp=((h>>>20)&3)?'round':'pine';else if(t===2&&COAST.D[k]>2.5&&COAST.D[k]<7&&r<0.07)sp='palm';if(!sp||nearRoad(x,y,44)||hitB(x-6,y-6,12,12,14))continue;
     const sc=0.85+((h>>>22)&7)/14;trees.push(sp==='palm'?{x,y,sp,r:13+((h>>>25)&3),h:1+((h>>>27)&7)/20,c:['#3f8a2c','#4a9a34','#357a26'][h%3],o1:0,o2:0}:{x,y,sp,r:(12+((h>>>25)&7))*sc,h:(0.85+((h>>>28)&3)*0.15)*sc,c:TC[sp][(h>>>8)%TC[sp].length],o1:0,o2:0});}
   const okAt=(x,y,w,h)=>{for(let yy=y-8;yy<=y+h+8;yy+=16)for(let xx=x-8;xx<=x+w+8;xx+=16){const k=tcell(xx,yy);if(!ISL2M[k]||TTYPE[k]===10||TTYPE[k]===1||HMAP[k]<4)return false;}
@@ -336,7 +340,7 @@ const IWV=[];
       if(row===0&&(hh>>>20)%2===0)park.push({x:q.x-q.uy*(34+0)*sd,y:q.y+q.ux*34*sd,a:Math.atan2(q.uy,q.ux)+(sd>0?0:PI)});
       if(kind==='farm'&&o){for(let m=0;m<3;m++)props.push({x:cx+q.ux*(60+m*16),y:cy+q.uy*(60+m*16),k:'hay',a:Math.atan2(q.uy,q.ux)+m,rad:8,ht:9});}}}
     if(n)IWV.push({name,x:sx/n,y:sy/n,n});return n;};
-  village('GULL COVE',240,330,'town');village('EASTSIDE FARMS',385,500,'farm');village('SUNSET POINT',560,N,'resort');
+  village('EASTSIDE FARMS',385,500,'farm'); // v5.35: Ironwood Central and Coral Beach (08i) stand where Gull Cove and Sunset Point were
   // scattered homes on the rest of the road
   for(let i=s0+60;i<N-4;i+=9){const q=I[i],hh=hash(i,919)>>>0;if(hh%3)continue;const sd=(hh&8)?1:-1,w=46+hh%20,h=40+(hh>>>5)%14,off=64+h/2,cx=q.x-q.uy*off*sd,cy=q.y+q.ux*off*sd;
     if(house(cx-w/2,cy-h/2,w,h,hh,['#c9b79c','#a8b5a2','#e8d8c0'][(hh>>>9)%3])&&(hh&64))park.push({x:q.x-q.uy*34*sd,y:q.y+q.ux*34*sd,a:Math.atan2(q.uy,q.ux)+(sd>0?0:PI)});}
@@ -360,14 +364,14 @@ const IWV=[];
       props.push({x:q.x-(sy-q.y)/L*0+ (sx-q.x)/L*40,y:q.y+(sy-q.y)/L*40,k:'trailsign',a:0,txt:'SUMMIT TRAIL',rad:8,ht:30});IWD.summit={x:sx,y:sy};}}
   if(IWD.light)LOOKS.push({x:IWD.light.x,y:IWD.light.y+50,id:'iwl',name:'Ironwood Light'});
   SGRID=null;})();
-{const f=districtAt;districtAt=function(x,y){if(x>WPX+2000)for(const v of IWV)if(hyp(x-v.x,y-v.y)<560&&ISL2M[tcell(x,y)])return v.name;return f(x,y);};}
+{const f=districtAt;districtAt=function(x,y){if(x>WPX+2000&&!IWCM[tcell(x,y)])for(const v of IWV)if(hyp(x-v.x,y-v.y)<560&&ISL2M[tcell(x,y)])return v.name;return f(x,y);};}
 // parked cars and people on the island while you're out there
 function islandFolk(dt){islandFolk.t=(islandFolk.t||0)-dt;if(islandFolk.t>0)return;islandFolk.t=0.9;if(player.x<WPX+2400||!ISL2M[tcell(player.x,player.y)])return;
   for(const s of IWD.park||[]){if(s.c&&cars.includes(s.c))continue;const d=dist2(s.x,s.y,player.x,player.y);if(d>1100*1100||d<300*300||camSees(s.x,s.y)||carNear(s.x,s.y,70))continue;
     const c=makeCar(pick(['sedan','pickup','wagon','compact','suv','van'].filter(t=>CT[t])),s.x,s.y,s.a);if(c){s.c=c;}break;}
-  let n=0;for(const p of peds)if(p.isl&&!p.gone)n++;if(n>=9)return;
+  let n=0;for(const p of peds)if(p.isl&&!p.gone)n++;if(n>=(IWCM[tcell(player.x,player.y)]?18:9))return;
   for(let tries=0;tries<6;tries++){const b=OUTB[Math.floor(R()*OUTB.length)];if(!b||b.kind!=='ironwood')continue;const sd=R()<0.5?-1:1,x=b.x+b.w/2+sd*(b.w/2+rr(10,24)),y=b.y+b.h/2+rr(-b.h/2,b.h/2),d=dist2(x,y,player.x,player.y);
-    if(d>900*900||d<260*260||camSees(x,y)||TTYPE[tcell(x,y)]===10||bldAt(x,y))continue;const p=makePed(x,y);p.isl=true;break;}}
+    if(d>900*900||d<260*260||camSees(x,y)||(TTYPE[tcell(x,y)]===10&&(!b.iwc||iwTarmac(x,y)))||bldAt(x,y))continue;const p=makePed(x,y);p.isl=true;break;}}
 {const f=g3Tick;g3Tick=function(dt){f(dt);islandFolk(dt);};}
 
 // ================= v5.33: THE HILLS: houses along the hill roads =================

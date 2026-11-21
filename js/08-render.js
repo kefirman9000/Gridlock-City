@@ -263,6 +263,130 @@ for(let y=-HM+120;y<WPX+HM-120;y+=72)for(let x=-HM+120;x<WPX+HM-120;x+=72){if(x>
 // Graded (smoothed heights, gentle slopes) and cut into the terrain; drawn per pixel with its own markings (RD* below). No R().
 const RING={hw:30,paths:[]},RDI=new Int32Array(HN*HN).fill(-1),RDI2=new Int32Array(HN*HN).fill(-1),RDP=[],ROLD=new Uint32Array(HN*HN),RHB=new Float32Array(HN*HN).fill(1e9);
 // per pixel: the exact signed distance from a road's centre line (projected onto the two segments either side of the cell's nearest point)
+// ===================== v5.35 IRONWOOD CITY: a real street network on Ironwood Island =====================
+// The island used to be one road round the coast that stopped dead in the south-west (cars turned round there). Now:
+//  - West Shore Drive closes the loop, from the road's southern end up the west shore to the bridge;
+//  - three districts inside the loop, each a street grid clipped to the coast road: Ironwood Central (a dense, tall downtown,
+//    after Manhattan), Palm Heights (low, wide and palm-lined, after Los Angeles) and Coral Beach (pastel Art Deco by the sea,
+//    after Miami Beach);
+//  - Sunset Boulevard winds in from the bridge over the hill's flank and runs on as Palm Heights' main street, and Mulholland Drive
+//    climbs from Central over the hills, crosses Sunset, and comes down as a Coral Beach avenue; Grand Avenue runs the island's length.
+// Every road ends at a junction: no dead ends (DESIGN RULE B1). Junctions are found from the geometry (IWNET.J), roads that meet
+// share one height there, and traffic picks a way at each one (aiRing in 08f). Roads carry their own width (P.hw) and
+// sidewalks (P.sw); the ground raster paints curbs, sidewalks, centre lines and zebra crossings from the per-pixel distance.
+var IWNET=null;
+const IWCM=new Uint8Array(HN*HN); // district mask: 1 Central, 2 Palm Heights, 3 Coral Beach
+const IWDIST=[null,{name:'IRONWOOD CENTRAL',x0:11900,x1:13800,y0:850,y1:2420},{name:'PALM HEIGHTS',x0:12650,x1:13800,y0:2420,y1:4380},{name:'CORAL BEACH',x0:11900,x1:13800,y0:5330,y1:7100}];
+function ironwoodNet(mk,chaikin){const I=RING.isl;if(!I||!RING.br2)return;const C=ISL2C,iI=RING.paths.indexOf(I),lastI=I.length-1;
+  const cellK=(x,y)=>(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);
+  // ---- 1. West Shore Drive: from the road's southern end up the west shore to where the bridge road meets the loop ----
+  let jB=0;{let bd=1e18;for(let i=0;i<I.length;i++){const q=I[i];if(q.br||q.x<RING.br2.x1+300)continue;const d=dist2(q.x,q.y,C.x-1000,C.y+30);if(d<bd){bd=d;jB=i;}}}
+  const E=I[lastI],Q=I[jB];
+  let cp=[[E.x,E.y],[E.x+E.ux*90,E.y+E.uy*90],[11960,4760],[11930,4360],[Q.x+14,Q.y+200],[Q.x,Q.y]];for(let k=0;k<3;k++)cp=chaikin(cp);cp[0]=[E.x,E.y];cp[cp.length-1]=[Q.x,Q.y];
+  const WS=mk(cp);WS.net=true;WS.hw=30;WS.sw=0;WS.lo=14;WS.nm='WEST SHORE DRIVE';
+  // the loop as a polygon: the island road from the bridge junction round to its end, then West Shore Drive back
+  const LP=[];for(let i=jB;i<=lastI;i+=2)LP.push([I[i].x,I[i].y,I[i].h]);for(let i=0;i<WS.length;i+=2)LP.push([WS[i].x,WS[i].y,WS[i].h]);
+  const pip=(x,y)=>{let c=false;for(let i=0,j=LP.length-1;i<LP.length;j=i++){const a=LP[i],b=LP[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+  const loopD=(x,y)=>{let b=1e18;for(const p of LP){const d=dist2(p[0],p[1],x,y);if(d<b)b=d;}return Math.sqrt(b);};
+  // where an axis line crosses the loop: sorted parameters along it
+  const cuts=(o,c,lo,hi)=>{const ts=[];for(let i=0,j=LP.length-1;i<LP.length;j=i++){const a=LP[j],b=LP[i];
+      if(o==='h'){if((a[1]>c)!==(b[1]>c)){const x=a[0]+(b[0]-a[0])*(c-a[1])/(b[1]-a[1]);if(x>lo&&x<hi)ts.push(x);}}
+      else{if((a[0]>c)!==(b[0]>c)){const y=a[1]+(b[1]-a[1])*(c-a[0])/(b[0]-a[0]);if(y>lo&&y<hi)ts.push(y);}}}return ts.sort((u,v)=>u-v);};
+  // ---- 2. the districts' ground: inside the loop, smoothed to a gentle grade and given a town surface ----
+  {const bx0=11300,bx1=14400,by0=400,by1=7200,i0=((bx0+HM)/HS)|0,i1=((bx1+HM)/HS)|0,j0=((by0+HM)/HS)|0,j1=((by1+HM)/HS)|0,nw=i1-i0+1,nh=j1-j0+1;
+    const wgt=new Float32Array(nw*nh),inL=new Uint8Array(nw*nh);
+    for(let j=0;j<nh;j++)for(let i=0;i<nw;i++){const x=-HM+(i0+i)*HS,y=-HM+(j0+j)*HS,k=(j0+j)*HN+i0+i;if(!ISL2M[k])continue;const L=pip(x,y);inL[j*nw+i]=L?1:0;
+      for(let d=1;d<=3;d++){const R2=IWDIST[d],e=Math.max(R2.x0-x,x-R2.x1,R2.y0-y,y-R2.y1);if(e<0&&L){IWCM[k]=d;}const w=1-smooth01(e/220);if(w>wgt[j*nw+i])wgt[j*nw+i]=w;}}
+    let H=new Float32Array(nw*nh);for(let j=0;j<nh;j++)for(let i=0;i<nw;i++)H[j*nw+i]=HMAP[(j0+j)*HN+i0+i];
+    const blur=(A,r)=>{const B=new Float32Array(A.length);for(let j=0;j<nh;j++){let s=0;for(let i=-r;i<=r;i++)s+=A[j*nw+clamp(i,0,nw-1)];for(let i=0;i<nw;i++){B[j*nw+i]=s/(2*r+1);s+=A[j*nw+clamp(i+r+1,0,nw-1)]-A[j*nw+clamp(i-r,0,nw-1)];}}
+      const D=new Float32Array(A.length);for(let i=0;i<nw;i++){let s=0;for(let j=-r;j<=r;j++)s+=B[clamp(j,0,nh-1)*nw+i];for(let j=0;j<nh;j++){D[j*nw+i]=s/(2*r+1);s+=B[clamp(j+r+1,0,nh-1)*nw+i]-B[clamp(j-r,0,nh-1)*nw+i];}}return D;};
+    let S=blur(blur(H,14),14);
+    for(let j=0;j<nh;j++)for(let i=0;i<nw;i++){const w=wgt[j*nw+i],k=(j0+j)*HN+i0+i;if(w<=0||!ISL2M[k]||TTYPE[k]===1||TTYPE[k]===2)continue;
+      // the town ground: a smooth surface stretched between the heights of the loop road round it (inverse-distance weights),
+      // so every street meets the coast road level with it, with a little of the land's own lie kept
+      const x=-HM+(i0+i)*HS,y=-HM+(j0+j)*HS;let sw2=0,sh2=0;for(let m=0;m<LP.length;m+=3){const p=LP[m],dd=dist2(p[0],p[1],x,y)+400,wq=1/(dd*dd);sw2+=wq;sh2+=wq*p[2];}
+      const mem=sh2/sw2+(S[j*nw+i]-sh2/sw2)*0.15;let h=lerp(HMAP[k],mem,w*0.95);if(IWCM[k])h=Math.max(h,8);HMAP[k]=h;
+      const d=IWCM[k];if(d){const n=(hash(i0+i,j0+j)&7);TTYPE[k]=3;TCOL[k]=d===1?packC(146+n,144+n,138+n):d===2?packC(102+n,134+n,66+n):packC(108+n,148+n,82+n);}}}
+  // ---- 3. the street grids: axis lines, kept between junctions far enough from the loop, run on to it where that's clean ----
+  const L=[],H2=(c,lo,hi,d,hw,sw)=>L.push({o:'h',c,lo,hi,d,hw,sw}),V2=(c,lo,hi,d,hw,sw,id)=>L.push({o:'v',c,lo,hi,d,hw,sw,id});
+  for(const y of[1090,1340,1590,1840,2090])H2(y,11000,14600,1,26,18);H2(2340,11000,14600,1,32,20);           // Central's streets; its south edge is a wide street
+  V2(12100,0,2340,1,30,20);V2(12420,0,2340,1,30,20,'mul');V2(12740,0,4290,1,30,20);V2(13060,0,9000,1,32,20,'grand');      // avenues (Grand runs the whole island)
+  for(const y of[2610,2890,3170,3730,4010,4290])H2(y,12740,14600,2,28,14);H2(3450,12740,14600,2,36,14);V2(13330,2340,4290,2,28,14); // Palm Heights (3450 is Sunset Blvd)
+  for(const y of[5450,5690,5930,6170,6410])H2(y,11000,14600,3,26,16);for(const x of[12180,12740,13340])V2(x,5450,9000,3,26,16);V2(12460,5450,9000,3,30,20,'mul2');
+  const M=110,nodes=new Map(),key=(x,y)=>Math.round(x)+','+Math.round(y);
+  const within=(l,v)=>v>=l.lo-0.5&&v<=l.hi+0.5;
+  for(const h of L)if(h.o==='h')for(const v of L)if(v.o==='v'&&within(h,v.c)&&within(v,h.c)&&pip(v.c,h.c)&&loopD(v.c,h.c)>=M)nodes.set(key(v.c,h.c),[v.c,h.c]);
+  const ends=[],segs=[];
+  for(const l of L){const vs=[];for(const[,p]of nodes){if(l.o==='h'?Math.abs(p[1]-l.c)<0.5:Math.abs(p[0]-l.c)<0.5){const v=l.o==='h'?p[0]:p[1];if(within(l,v))vs.push(v);}}vs.sort((a,b)=>a-b);
+    if(!vs.length)continue;let a=vs[0],b=vs[vs.length-1],ea=false,eb=false;
+    const ts=cuts(l.o,l.c,l.lo-1,l.hi+1),others=L.filter(m=>m.o!==l.o&&within(m,l.c)).map(m=>m.c);
+    const ext=(from,to)=>{const lo2=Math.min(from,to),hi2=Math.max(from,to);if(others.some(c=>c>lo2+1&&c<hi2-1&&!(l.o==='h'?false:false)))return false;
+      const P0=l.o==='h'?[to,l.c]:[l.c,to];if(ends.some(e=>hyp(e[0]-P0[0],e[1]-P0[1])<130))return false;return Math.abs(to-from)>40;};
+    {const t=ts.filter(t=>t<a).pop();if(t!=null&&t>=l.lo-1&&ext(a,t)){a=t;ea=true;}}
+    {const t=ts.find(t=>t>b);if(t!=null&&t<=l.hi+1&&ext(b,t)){b=t;eb=true;}}
+    if(b-a<60)continue;if(ea)ends.push(l.o==='h'?[a,l.c]:[l.c,a]);if(eb)ends.push(l.o==='h'?[b,l.c]:[l.c,b]);
+    segs.push(Object.assign({},l,{a,b}));}
+  const pts=s=>s.o==='h'?[[s.a,s.c],[s.b,s.c]]:[[s.c,s.a],[s.c,s.b]],byId=id=>segs.find(s=>s.id===id);
+  const out=[];const add=(p,o)=>{let P2=mk(p);Object.assign(P2,{net:true,lo:Math.round(o.hw*0.47)},o);out.push(P2);return P2;};
+  const curve=(c)=>{let p=c;for(let k=0;k<3;k++)p=chaikin(p);p[0]=c[0];p[p.length-1]=c[c.length-1];return p;};
+  // Mulholland Drive: Central's avenue, over the hills, down to Coral Beach as one road
+  const mu=byId('mul'),m2=byId('mul2');
+  if(mu&&m2){const top=pts(mu),bot=pts(m2),A=top[1],B=bot[0];const hill=curve([A,[A[0],A[1]+170],[12300,2820],[12520,3160],[12380,3680],[12560,4180],[12390,4700],[B[0],B[1]-320],B]);
+    add([top[0],...hill.slice(0,-1),...[B,bot[1]]],{hw:30,sw:20,nm:'MULHOLLAND DRIVE',hillA:hyp(A[0]-top[0][0],A[1]-top[0][1]),hillB:0});segs.splice(segs.indexOf(mu),1);segs.splice(segs.indexOf(m2),1);}
+  // Sunset Boulevard: in from the bridge road, over the hill's northern flank, then Palm Heights' main street
+  {const su=segs.find(s=>s.o==='h'&&s.c===3450);let bi=jB,bd=1e18;for(let i=jB;i<Math.min(I.length,jB+80);i++){const d=dist2(I[i].x,I[i].y,C.x-1000,3460);if(d<bd){bd=d;bi=i;}}
+    if(su&&su.a<=12741){const S0=[I[bi].x,I[bi].y],cv=curve([S0,[S0[0]+160,S0[1]-10],[12150,3330],[12420,3420],[12600,3440],[12740,3450]]);
+      add([...cv,[su.b,3450]],{hw:36,sw:14,nm:'SUNSET BOULEVARD',blvd:true});segs.splice(segs.indexOf(su),1);}}
+  for(const s of segs)add(pts(s),{hw:s.hw,sw:s.sw,dist:s.d,ave:s.o==='v'});
+  for(const P2 of out){P2.dist=P2.dist||0;}
+  RING.paths.push(WS);for(const P2 of out)RING.paths.push(P2);
+  // ---- 4. junctions, found from the geometry; roads that meet share one height there ----
+  const NETP=[WS,...out],ALL=[I,WS,...out],pid=P2=>RING.paths.indexOf(P2),G=new Map(),gk=(x,y)=>Math.floor(x/40)+','+Math.floor(y/40);
+  for(const P2 of ALL)P2.J=P2.J||[];
+  ALL.forEach((P2,pi)=>P2.forEach((q,i)=>{const k=gk(q.x,q.y);if(!G.has(k))G.set(k,[]);G.get(k).push([pi,i]);}));
+  const near=(x,y,r,skip)=>{let b=null,bd=r*r;const ci=Math.floor(x/40),cj=Math.floor(y/40);for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const g=G.get((ci+di)+','+(cj+dj));if(!g)continue;
+      for(const[pi,i]of g){if(pi===skip)continue;const q=ALL[pi][i],d=dist2(q.x,q.y,x,y);if(d<bd){bd=d;b=[pi,i,Math.sqrt(d)];}}}return b;};
+  let jid=0;const JN=[];const link=(A,i,B,j)=>{if(A.J.some(J=>J.p===pid(B)&&Math.abs(J.i-i)<4))return;jid++;const ow=P2=>(P2.hw||RING.hw)+(P2.sw||0);
+    A.J.push({id:jid,i,s:A[i].s,p:pid(B),j,ow:ow(B)});B.J.push({id:jid,i:j,s:B[j].s,p:pid(A),j:i,ow:ow(A)});JN.push([A,i,B,j]);};
+  for(const A of NETP){const ai=ALL.indexOf(A);for(const e of[0,A.length-1]){const r=near(A[e].x,A[e].y,30,ai);if(r)link(A,e,ALL[r[0]],r[1]);else console.warn('IWNET dead end',A.nm||'',Math.round(A[e].x),Math.round(A[e].y));}}
+  for(const A of out){const ai=ALL.indexOf(A);for(const B of ALL){const bi=ALL.indexOf(B);if(bi===ai||(NETP.includes(B)&&NETP.indexOf(B)<NETP.indexOf(A)&&B!==WS))continue;
+      let cl=null;for(let i=2;i<A.length-2;i++){const q=A[i],r=near(q.x,q.y,14,ai);if(!r||r[0]!==bi){if(cl){if(cl[3]>2&&cl[3]<B.length-3)link(A,cl[1],B,cl[3]);cl=null;}continue;}
+        if(!cl||r[2]<cl[2])cl=[bi,i,r[2],r[1]];}
+      if(cl&&cl[3]>2&&cl[3]<B.length-3)link(A,cl[1],B,cl[3]);}}
+  // heights: the island road keeps its own; town roads meeting each other meet at the average; then everything is graded again
+  // heights: one height per point, junction points shared by the roads that meet there; the island road's points are held where
+  // town roads meet it; then every pair of neighbouring points is pulled to within a 1-in-10 grade, over and over, until it all fits
+  // (DESIGN RULE B5). Starting heights are the roads' own (following the ground), so they stay as close to it as the grade allows.
+  {const vid=new Map(),H=[],FX=[],k2=(P2,i)=>P2===I?'I'+i:NETP.indexOf(P2)+':'+i;
+    const v=(P2,i)=>{const k=k2(P2,i);if(!vid.has(k)){vid.set(k,H.length);H.push(P2[i].h);FX.push(P2===I);}return vid.get(k);};
+    for(const[A,i,B,j]of JN){const a=v(A,i);vid.set(k2(B,j),a);if(B===I){H[a]=B[j].h;FX[a]=true;}}
+    const E=[];for(const P2 of NETP)for(let i=1;i<P2.length;i++)E.push(v(P2,i-1),v(P2,i),0.1*(P2[i].s-P2[i-1].s));
+    for(let it=0;it<400;it++){let worst=0;for(let e=0;e<E.length;e+=3){const a=E[e],b=E[e+1],m=E[e+2],d=H[b]-H[a],ex=Math.abs(d)-m;if(ex<=0.001)continue;worst=Math.max(worst,ex);
+        const s=Math.sign(d)*ex;if(FX[a]&&FX[b])continue;if(FX[a])H[b]-=s;else if(FX[b])H[a]+=s;else{H[a]+=s/2;H[b]-=s/2;}}if(worst<0.01)break;}
+    for(const P2 of NETP)for(let i=0;i<P2.length;i++)P2[i].h=H[v(P2,i)];}
+  for(const P2 of ALL)P2.J.sort((a,b)=>a.i-b.i);
+  IWNET={WS,out,NETP,ALL,LP,pip,loopD,jB,segs,JN};}
+
+// v5.35 town roads (P.net): tarmac wins over any other road's curb or sidewalk; markings come from the road that owns the tarmac,
+// and stop in a junction's box; zebra crossings just outside each junction, striped across the traffic; curbs, then sidewalk slabs.
+const NPX=[0,0,0];
+function netPix(ea,eb,wx,wy,nz,gi){let t=null,cb=null,wk=null,sh=null,box=false;const A=_npA,B=_npB;let n=0;
+  for(const e of[ea,eb]){if(!e)continue;const P=RING.paths[e.p],d=roadLat(e,wx,wy),q=n?B:A;q.P=P;q.d=d;q.s=RLS;q.la=RLA;q.hw=P.hw||RING.hw;q.sw=P.net?(P.sw||0):0;n++;}
+  for(let k=0;k<n;k++){const q=k?B:A;if(q.d<q.hw){if(t)box=true;if(!t||q.d/q.hw<t.d/t.hw)t=q;}else if(q.P.net&&q.d<q.hw+2.5)cb=q;else if(q.P.net&&q.d<q.hw+q.sw)wk=q;else if(!q.P.net&&q.d<q.hw+4)sh=q;}
+  let r,g,b;
+  if(t){r=62+nz;g=62+nz;b=66+nz;const P=t.P;let zeb=false;
+    if(P.J&&!box)for(const J of P.J){const ds=Math.abs(t.s-J.s);if(ds<J.ow){box=true;break;}if(ds<J.ow+13&&t.d<t.hw-4)zeb=true;}
+    if(!box){if(zeb){if((((t.la+90)/6)|0)&1){r=206;g=206;b=200;}}
+      else if(P.net){if(P.blvd||P.ave){if(t.d>1.2&&t.d<3.7){r=168;g=137;b=58;}}else if(t.d<1.85){r=168;g=137;b=58;}
+        if(P.blvd&&Math.abs(t.d-t.hw*0.52)<1.6&&(((t.s%48)+48)%48)<26){r=200;g=200;b=194;}}
+      else if(t.d>t.hw-3.5){r=g=b=196;}}}
+  else if(cb){r=150;g=147;b=140;}
+  else if(wk){const u=((wk.s%22)+22)%22,v=wk.d-wk.hw;if(IWCM[gi]===3){r=196+nz;g=172+nz;b=150+nz;if(u<1.2||(v>2.5&&v<3.6)){r-=34;g-=34;b-=30;}}
+    else{r=146+nz;g=144+nz;b=138+nz;if(u<1.1||(v>2.5&&v<3.5)){r-=26;g-=26;b-=24;}}}
+  else if(sh){r=112+nz;g=106+nz;b=92+nz;}
+  else{const c=ROLD[gi]||0xff406a3a;r=(c&255)+nz*2-7;g=((c>>8)&255)+nz*2-7;b=((c>>16)&255)+nz-3;}
+  NPX[0]=r;NPX[1]=g;NPX[2]=b;return NPX;}
+const _npA={},_npB={};
 let RLA=0,RLS=0;
 function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.max(0,e.i-1);j<=Math.min(P.length-2,e.i);j++){const a=P[j],b=P[j+1],dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy||1;
   let t=((wx-a.x)*dx+(wy-a.y)*dy)/L2;t=t<0?0:t>1?1:t;const px=a.x+dx*t,py=a.y+dy*t,L=Math.sqrt(L2),lat=((wx-a.x)*dy-(wy-a.y)*dx)/L,d=Math.hypot(wx-px,wy-py);
@@ -288,7 +412,7 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
   {const ys=[3,9,15].map(iy=>(iy*P+2)*T);pts=pts.map(p=>{if(p[0]<=WPX)return p;const dy=Math.min(...ys.map(q=>Math.abs(p[1]-q))),w=smooth01(1-(dy-120)/520),xm=WPX+215+(1-w)*700;return[Math.min(p[0],xm),p[1]];});}
   for(let k=0;k<3;k++)pts=chaikin(pts);
   // resample evenly
-  const even=(p,step)=>{const o=[p[0]];let carry=0;for(let i=1;i<p.length;i++){let a=p[i-1],b=p[i],dl=hyp(b[0]-a[0],b[1]-a[1]),t=step-carry;while(t<=dl){o.push([a[0]+(b[0]-a[0])*t/dl,a[1]+(b[1]-a[1])*t/dl]);t+=step;}carry=dl-(t-step);}o.push(p[p.length-1]);return o;};
+  const even=(p,step)=>{const o=[p[0]];let carry=0;for(let i=1;i<p.length;i++){let a=p[i-1],b=p[i],dl=hyp(b[0]-a[0],b[1]-a[1]),t=step-carry;while(t<=dl){o.push([a[0]+(b[0]-a[0])*t/dl,a[1]+(b[1]-a[1])*t/dl]);t+=step;}carry=dl-(t-step);}{const z=o[o.length-1],e=p[p.length-1];if(hyp(z[0]-e[0],z[1]-e[1])>2)o.push(e);else o[o.length-1]=e;}return o;};
   const mk=p=>{p=even(p,24);let s=0;const P2=p.map((q,i)=>{if(i)s+=hyp(q[0]-p[i-1][0],q[1]-p[i-1][1]);return{x:q[0],y:q[1],s,h:GH(q[0],q[1])};});
     // grade it: smooth the heights, then limit the slope both ways
     const g0=P2.map(q=>q.h),sm=(n,w)=>{for(let r=0;r<n;r++){const h=P2.map(q=>q.h);for(let i=0;i<P2.length;i++){let a=0,c=0;for(let j=-w;j<=w;j++){a+=h[Math.max(0,Math.min(P2.length-1,i+j))];c++;}P2[i].h=a/c;}}};
@@ -345,14 +469,15 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
      for(const fr of[0.4,0.75]){const j=Math.floor(pts.length*fr),m=pts[j],p0=pts[j-1],b=Math.atan2(m[1]-p0[1],m[0]-p0[0])+(((hash(i,j)&1)?1:-1)*1.35),sp=walk(m[0],m[1],b,16+(hash(j,i)&7),5,90+n);
        if(sp.length>=8){let bi=0,bd=1e18;H.forEach((u,k)=>{const d=dist2(u.x,u.y,m[0],m[1]);if(d<bd){bd=d;bi=k;}});build(sp,H[bi].h,null);}}}
    RING.hills=hills;}
+  ironwoodNet(mk,chaikin);
   // carve the terrain along every path; remember the nearest centre-line point for each road cell so pixels can find their lane
   const hw=RING.hw,bank=180;
-  for(const path of RING.paths)for(let i=0;i<path.length;i++){const q=path[i],r=Math.ceil((hw+bank)/HS);
+  for(const path of RING.paths)for(let i=0;i<path.length;i++){const phw=path.hw||hw,pex=path.net?(path.sw||0)+12-HS-6:0,q=path[i],r=Math.ceil((phw+pex+bank)/HS);
     const ci=Math.round((q.x+HM)/HS),cj=Math.round((q.y+HM)/HS);
     for(let j=cj-r;j<=cj+r;j++)for(let ii=ci-r;ii<=ci+r;ii++){if(ii<1||j<1||ii>=HN-1||j>=HN-1)continue;const x=-HM+ii*HS,y=-HM+j*HS;
       if(x>=-2&&y>=-2&&x<=WPX+2&&y<=WPX+2)continue;const k=j*HN+ii;if(TTYPE[k]===0&&HMAP[k]===0&&y>WPX)continue;
       const lat=(x-q.x)*-q.uy+(y-q.y)*q.ux,lon=(x-q.x)*q.ux+(y-q.y)*q.uy;if(Math.abs(lon)>16)continue;const d=Math.abs(lat);
-      if(d<hw+HS+6){const main=path===ring,pi=RING.paths.indexOf(path);
+      if(d<phw+pex+HS+6){const main=path===ring,pi=RING.paths.indexOf(path);
         if(TTYPE[k]!==10){ROLD[k]=TCOL[k];}
         // up to two roads per cell (where a spur meets the ring), each with its nearest centre-line point
         const A=RDI[k],B=RDI2[k],e={p:pi,i,d,main};
@@ -361,7 +486,7 @@ function roadLat(e,wx,wy){const P=RING.paths[e.p];let best=1e9;for(let j=Math.ma
         // the ground height comes from the ring where it runs, else the nearest road
         const pr=main&&d<hw+4?d-1000:d;if(pr<RHB[k]){RHB[k]=pr;HMAP[k]=q.h;}
         TTYPE[k]=10;TCOL[k]=packC(70,70,74);}
-      else if(d<hw+bank&&TTYPE[k]!==10&&!q.br){const w=1-smooth01((d-hw-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
+      else if(d<phw+pex+bank&&TTYPE[k]!==10&&!q.br){const w=1-smooth01((d-phw-pex-HS)/(bank-HS));HMAP[k]=lerp(HMAP[k],q.h,w);if(TTYPE[k]===1&&HMAP[k]>0){TTYPE[k]=3;TCOL[k]=packC(96,118,62);}}}}
   // nothing standing in the road; the guard rail opens where the spurs leave town and is gone where the edge has gone wild
   const onRoad=(x,y,m)=>{const k=(((y+HM)/HS)|0)*HN+(((x+HM)/HS)|0);if(TTYPE[k]===10)return true;if(!m)return false;for(const[dx,dy]of[[m,0],[-m,0],[0,m],[0,-m]]){const k2=(((y+dy+HM)/HS)|0)*HN+(((x+dx+HM)/HS)|0);if(TTYPE[k2]===10)return true;}return false;};
   for(let i=trees.length-1;i>=0;i--){const t=trees[i];if((t.x<0||t.y<0||t.x>WPX||t.y>WPX)&&onRoad(t.x,t.y,26))trees.splice(i,1);}
@@ -621,6 +746,7 @@ function renderGround(heads){
         else if(ex>8&&ex<46&&ay<STRIPR.hw-7&&((((dy+200)|0)%7)<4))r=g=b=214;                 // threshold piano keys
         else if(ex>56&&ex<64&&ay<STRIPR.hw-7)r=g=b=214;                                       // threshold bar
         r*=sh;g*=sh;b*=sh;}
+      else if(tt===10&&((RDI[gi]>=0&&RING.paths[RDP[RDI[gi]].p].net)||(RDI2[gi]>=0&&RING.paths[RDP[RDI2[gi]].p].net))){const c=netPix(RDI[gi]>=0?RDP[RDI[gi]]:null,RDI2[gi]>=0?RDP[RDI2[gi]]:null,wx,wy,nz,gi),sh=SHMAP[gi];r=c[0]*sh;g=c[1]*sh;b=c[2]*sh;}
       else if(tt===10){const sh=SHMAP[gi],hw=RING.hw,ia=RDI[gi],ib=RDI2[gi];let al=1e9,s=0,main=false,onAny=false;
         // the nearer road decides, but a road's tarmac always wins over another road's shoulder (no grey wedges at junctions)
         if(ia>=0){const e=RDP[ia],d=roadLat(e,wx,wy);al=d;s=RLS;main=e.main;}
