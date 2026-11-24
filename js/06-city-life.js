@@ -828,7 +828,7 @@ function initCountry(){{const ys=[3,9,15].map(iy=>(iy*P+2)*T);
   for(let i=0;i<26;i++){const x=WPX+rr(200,1100),y=rr(300,WPX-300);if(ys.some(q=>Math.abs(q-y)<60)||Math.abs(x-(WPX+640))<60||GH(x,y)>150)continue;props.push({x,y,k:'hay',a:rr(0,PI),rad:12,ht:14});}
   props.push({x:WPX+760,y:(9*P+2)*T-140,k:'windmill',rad:40,ht:120});}}
 function updateStages(dt){syncBarriers();if(cityOpen()||game.state!=='play'||SUB||ROOM)return;const o=player.car||player;
-  if(o.x>RIVX1*T&&o.y>0&&o.y<WPX+400){if(stars()<4){crime(0,4);if(!keepOutShown){keepOutShown=true;showBig('KEEP OUT','The east side is closed to you for now','#ff4040',2.4);}else note('The east side is closed to you for now');}}
+  if(o.x>RIVX1*T&&o.x<WPX&&o.y>0&&o.y<WPX){if(stars()<4){crime(0,4);if(!keepOutShown){keepOutShown=true;showBig('KEEP OUT','The east side is closed to you for now','#ff4040',2.4);}else note('The east side is closed to you for now');}}
   }
 let keepOutShown=false;
 // dock workers in hard hats and hi-vis keep the port busy while you're nearby

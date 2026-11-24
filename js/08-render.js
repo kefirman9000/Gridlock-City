@@ -1232,7 +1232,7 @@ function drawPed3(p,isPl,fg){
   else return;
   ZOFF+=jz;
   const a=p.a,ca=Math.cos(a),sa=Math.sin(a),at=(f,r)=>[p.x+ca*f-sa*r,p.y+sa*f+ca*r];
-  const body=rgbOf(isPl?plook().b:(p.flash>0?'#ffffff':p.col)),skin=rgbOf(p.skin||'#e0ac69'),pants=isPl?plook().p:PANTS[(p.id||0)%PANTS.length];
+  const body=rgbOf(isPl?plook().b:(p.flash>0?'#ffffff':p.col)),skin=rgbOf(p.skin||'#e0ac69'),bw=!isPl&&p.bw?rgbOf(p.bw.c):null,pants=isPl?plook().p:bw?skin:PANTS[(p.id||0)%PANTS.length]; /* v5.38 swimwear: p.bw, legs bare */
   const hair=p.cop?rgbOf(p.kind==='swat'?'#15171c':p.kind==='fbi'?'#202020':(p.kind==='armytruck'||p.kind==='tank')?'#3d4a22':'#1b2a55'):rgbOf(p.hair||'#222');
   const sw=p.moving?Math.sin(p.anim):0,armed=isPl?!(SCENE.on||WEAPONS[player.w].fist):p.gun,lod=PK<0.7;
   // v5.16: people come in different heights and builds (the player and police keep the standard size)
@@ -1245,10 +1245,10 @@ function drawPed3(p,isPl,fg){
     const spd=isPl?hyp(player.vx||0,player.vy||0):hyp(p.vx||0,p.vy||0),run=clamp((spd-130)/110,0,1),amp=p.moving?0.8+run*0.55:0;
     const ph=p.anim||0,s1=Math.sin(ph)*amp,air=isPl&&jz>3&&(player.jv||0)!==0&&!player.swim,crouch=isPl&&!!player.cover,mant=isPl&&!!player.mantle;
     const bob=p.moving?Math.abs(Math.cos(ph))*0.9*amp:Math.sin(game.t*2.1+(p.id||0))*0.2;
-    const hip=crouch?5.6:air?8.4:9-bob*0.35,lean=run*1.5+(crouch?1.6:0),shoe=[30,28,28],belt=mixA(pants,[0,0,0],0.4),sleeve=mixA(body,[0,0,0],0.1);
+    const hip=crouch?5.6:air?8.4:9-bob*0.35,lean=run*1.5+(crouch?1.6:0),shoe=bw?mixA(skin,[0,0,0],0.08):[30,28,28],belt=bw||mixA(pants,[0,0,0],0.4),sleeve=bw?skin:mixA(body,[0,0,0],0.1);
     for(const side of[-1,1]){const sw2=air?0.9*side:crouch?0.4:s1*side,lift=air?2.6+side:Math.max(0,-sw2)*1.7,kneeF=air?2.4:crouch?3:sw2*2.3,footF=air?1:crouch?1.2:sw2*3.3,kz=Math.max(lift+1,hip*0.5+lift*0.5);
       P(kneeF*0.5,side*1.65,1.3,1.2,kz,hip,pants);P(footF*0.65+kneeF*0.35,side*1.65,1.15,1.08,lift+1,kz,pants);P(footF+0.8,side*1.65,1.9,1.2,lift,lift+1.15,shoe,mixA(shoe,[255,255,255],0.15));}
-    P(lean*0.25,0,2,3.45,hip-0.6,hip+0.9,belt);P(lean*0.4,0,1.85,3.3,hip+0.9,hip+4.6,body);P(lean*0.65,0,2.15,4.05,hip+4.6,hip+9,body,mixA(body,[255,255,255],0.1));
+    P(lean*0.25,0,2,3.45,hip-0.6,hip+0.9,belt);if(bw){P(lean*0.3,0,2.05,3.5,hip-1.6,hip+0.4,bw);if(p.bw.t==='bikini')P(lean*0.62,0,2.25,4.15,hip+6.4,hip+8.1,bw);}P(lean*0.4,0,1.85,3.3,hip+0.9,hip+4.6,body);P(lean*0.65,0,2.15,4.05,hip+4.6,hip+9,body,mixA(body,[255,255,255],0.1));
     const sh=hip+8.4,L=lean*0.65;
     if(mant){for(const side of[-1,1]){P(L+1.2,side*4.2,1,1,sh,sh+4,sleeve);P(L+1.8,side*4.2,0.9,0.9,sh+4,sh+5.4,skin);}}
     else if(armed){P(L+2.4,3.5,1.7,0.95,sh-1.7,sh,sleeve);P(L+5.4,3.5,1.7,0.85,sh-1.5,sh-0.2,sleeve);P(L+7.3,3.5,0.75,0.8,sh-1.5,sh-0.3,skin);
@@ -1259,7 +1259,7 @@ function drawPed3(p,isPl,fg){
       P(as*1.1+L,side*4.45,1,1,sh-4.2,sh,sleeve);P(as*2.3+L+run*0.9,side*4.5,0.95,0.95,sh-7.2+run*1.7,sh-4.2,sleeve);P(as*2.8+L+run*1.3,side*4.5,0.85,0.85,sh-8.4+run*2,sh-7.2+run*1.7,skin);}
     const hx=lean*0.8,hz=sh+1.3;P(hx,0,0.95,0.95,sh,hz+0.3,skin);P(hx,0,2.35,2.3,hz,hz+5,skin,hair);
     for(const e of[-0.95,0.95])P(hx+2.3,e,0.12,0.38,hz+2.6,hz+3.3,[28,24,22]);P(hx+2.45,0,0.2,0.4,hz+1.6,hz+2.4,mixA(skin,[0,0,0],0.12));
-    if(!isPl&&!p.cop&&p.gang==null){if(pv%4===1)P(-2.9+lean*0.3,0,1.1,2.7,hip+3.4,hip+8.6,rgbOf(['#3a3a40','#6a4a2a','#2a4a6a','#7a2a2a'][(pv>>12)&3])); // backpack
+    if(!isPl&&!p.cop&&p.gang==null){if(pv%4===1&&!bw)P(-2.9+lean*0.3,0,1.1,2.7,hip+3.4,hip+8.6,rgbOf(['#3a3a40','#6a4a2a','#2a4a6a','#7a2a2a'][(pv>>12)&3])); // backpack
       if(pv%5===2&&!p.hat)P(hx-2,0,0.6,2.3,hz-2.6,hz+4,hair);} // long hair
     if(p.cop){P(hx+0.3,0,2.75,2.75,hz+3.9,hz+5.9,hair);P(hx+2.9,0,0.9,2.4,hz+3.9,hz+4.5,hair);}
     else if(p.hat&&!isPl)P(hx,0,2.9,2.9,hz+4.4,hz+6.6,rgbOf(p.hat),mixA(rgbOf(p.hat),[255,255,255],0.15));
@@ -1267,7 +1267,7 @@ function drawPed3(p,isPl,fg){
   }
   else{
     P(sw*2.2,-1.7,1.4,1.3,Math.max(0,sw)*1.4,9,pants);P(-sw*2.2,1.7,1.4,1.3,Math.max(0,-sw)*1.4,9,pants);
-    P(0,0,1.9,3.8,9,18,body,mixA(body,[255,255,255],0.1));
+    P(0,0,1.9,3.8,9,18,body,mixA(body,[255,255,255],0.1));if(bw){P(0,0,2,3.9,7.5,10,bw);if(p.bw.t==='bikini')P(0,0,2,3.9,14.5,16.2,bw);}
     if(armed){P(3.2,3.6,3.4,1,15,17,body);P(7.4,3.6,2.4,0.8,15.3,17.4,[22,22,24]);
       if(isPl&&player.w===5)P(1.5,3.9,7.5,1.4,17.6,20.4,[64,84,44]);
       P(-sw*1.6,-4.9,1.1,1.1,10,17.5,mixA(body,[0,0,0],0.15));}

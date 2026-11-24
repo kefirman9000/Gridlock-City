@@ -31,6 +31,15 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.38
+- **Start on Ocean Drive.** A new game begins on the beach side of Ocean Drive, with a convertible at the curb. The city is over the Ironwood Bridge.
+- **Ocean Drive is busy, like the real one.**
+  - The sidewalks are crowded, with people strolling past the cafes day and night.
+  - Convertibles and classic cars cruise slowly up and down the drive, and both curbs are lined with parked cars.
+  - In the daytime the beach fills with people wandering the sand, stopping to look at the sea and chatting by the umbrellas.
+- **Beachwear.** At the beach and around Ocean Drive (and on the city's beach) people wear bikinis, swim trunks and one-piece swimsuits. Everywhere else they stay dressed.
+- **Ironwood Island is open from the start.** The "east side is closed" lock now covers only the city's own east side, so the island and the outer beltway are yours from the first minute.
+
 ## What's new in v5.37
 - **Sunset Pier.** Sunset Boulevard now ends at an amusement pier on Ironwood Island, after the big Southern California piers. A long boardwalk leads out over the beach to a wide deck with a Ferris wheel, a roller coaster that loops round it with a running train, a carousel house and an arcade. At the far end there's a fish restaurant and a fishing spot. Food stands sell hot dogs, funnel cake and shave ice, and at night the wheel and the entrance arch light up.
 - **Times Square plaza.** The corner of Times Square nearest the junction is now a pedestrian plaza with granite paving, red bleacher steps you can climb and sit on, a statue, cafe tables and lamps. Across the junction, the tallest tower has a ball on a mast and a stack of video screens down its front.
@@ -42,21 +51,6 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
   - teleport to any landmark or to exact x/y
   - start any story, contact or heist mission, then pass or fail it
   - unlock or reset the story
-
-## What's new in v5.36
-- **Ocean Drive, set up like the real one in Miami Beach.** Ironwood Island now has a long straight east beach. Ocean Drive runs beside it with an unbroken row of white and pastel Art Deco hotels. Their sidewalk cafes have tables and big umbrellas, the curb is painted yellow, the sidewalks are pink, palms line the curb, and cars (the odd classic among them) are parked in bays.
-  - At night the hotel fronts glow in pink, blue and green neon, with neon on the ledges, fins and rooflines, and the cafes fill up.
-  - Across the road is a palm park with a winding beach walk, a dune hedge, then a wide beach with umbrellas in rows and pastel lifeguard huts.
-  - Coral Beach's streets run straight through to Ocean Drive.
-- **Wider streets you can park on.** The avenues and the Palm Heights and Coral Beach streets have a parking lane on each side, filled with parked cars.
-- **Junctions that work.** Traffic lights at every crossing on the island, stop lines, give-way at T junctions, and traffic that queues.
-- **People with places to go.** People walk the sidewalks, wait for their green and cross on the zebras, go in and out of buildings, queue at hot dog carts and wait for the Grand Avenue bus.
-- **Each town has its own life.**
-  - Central: yellow cabs, steaming manholes.
-  - Palm Heights: lowriders that hop at the lights, morning sprinklers, an ice-cream van.
-  - Coral Beach: convertibles, rollerbladers, nightlife.
-  - Everywhere: rush hours and quiet nights.
-- **A world that notices.** People dive out of the way if you drive on the sidewalk, bystanders film your crimes on their phones, and the radio news reports your police chases.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

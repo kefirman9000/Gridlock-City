@@ -247,3 +247,54 @@ if(ODX2&&ODX2.hq)IWLM['Beach Patrol HQ']={x:ODX2.hq.x+ODX2.hq.w/2,y:ODX2.hq.y-40
     if(TTYPE[tcell(xw,yy)]===10)continue;props.push({x:xw,y:yy,k:'cwall',rad:13,ht:6});}
   SGRID=null;}catch(e){console.warn('lummus',e);}})();
 {const f=placesProp;placesProp=function(o,fg){if(o.k==='cwall'){obox(o.x,o.y,0,2.6,12,0,4.2,[214,196,164],[226,210,180],fg);return;}f(o,fg);};}
+
+// =====================================================================================================================
+// ---- v5.38: Ocean Drive comes alive. Swimwear for people in beach-like places only (the sand, Ocean Drive and its park, the city's
+// beach blocks), beachgoers wandering the sand, busy sidewalks, slow cruising traffic, and a new game starts on Ocean Drive.
+const ODZ=(x,y)=>typeof IWDIST!=='undefined'&&IWDIST.odx&&x>IWDIST.odx-130&&x<IWDIST.shore+40&&y>IWDIST.ody[0]-250&&y<IWDIST.ody[1]+250;
+function beachy(x,y){if(x>=0&&y>=0&&x<WPX&&y<WPX)return BLOCKK[Math.floor(y/T/P)*NB+Math.floor(x/T/P)]==='beach';
+  if(ODZ(x,y))return true;const k=tcell(x,y);return TTYPE[k]===2&&COAST.D&&COAST.D[k]!=null&&COAST.D[k]<40;}
+const SUITC=['#ff3a6a','#ffd23a','#2ad0e0','#ff7a2a','#ffffff','#1f3fa8','#3ad07a','#e83ad0','#111111','#ff9ac0'];
+function giveSwim(p,onSand){if(p._bwk)return;p._bwk=1;if(p.cop||p.gang!=null||p.crew||p.follow||p.target||p.busker||p.fare||p.party||p.jog||p.q)return;
+  const h=hash(p.id|0,911);if((h&255)/255>(onSand?0.85:0.4))return;const t=['bikini','bikini','trunks','trunks','one'][(h>>>8)%5],c=SUITC[(h>>>12)%SUITC.length];
+  p.bw={t,c};p.col=t==='one'?c:p.skin;p.hat=null;}
+// beachgoers: wander near a spot on the sand, stop for a while (watching the sea, chatting), wander on
+function beachTick(p,dt){const b=p.beach;if(p.state!=='walk'||p.panic>0||p.target){p.beach=null;return false;}
+  b.w-=dt;const dx=b.tx-p.x,dy=b.ty-p.y,l=hyp(dx,dy);
+  if(l<3||b.w<-9){if(b.w<0){b.w=rr(3,11);for(let k=0;k<6;k++){const a=R()*TAU,r=rr(10,70),x=b.hx+Math.cos(a)*r,y=b.hy+Math.sin(a)*r;if(TTYPE[tcell(x,y)]===2&&!onRoadCell(x,y,6)){b.tx=x;b.ty=y;break;}}}
+    p.vx=p.vy=0;p.moving=false;if(b.face!=null)p.a=lerpAng(p.a,b.face,Math.min(1,dt*3));return true;}
+  if(b.w>0){p.vx=p.vy=0;p.moving=false;if(b.face!=null)p.a=lerpAng(p.a,b.face,Math.min(1,dt*3));return true;}
+  const m=Math.min(l,30*dt);p.x+=dx/l*m;p.y+=dy/l*m;p.vx=p.vy=0;p.a=lerpAng(p.a,Math.atan2(dy,dx),Math.min(1,dt*8));p.moving=true;p.anim+=dt*6;return true;}
+{const f=lifePed;lifePed=function(p,dt){if(p.beach)return beachTick(p,dt);return f(p,dt);};}
+function odLifeTick(dt){odLifeTick.t=(odLifeTick.t||0)-dt;if(odLifeTick.t>0)return;odLifeTick.t=0.4;
+  // swimwear for anyone new who turns up somewhere beach-like (they're made out of sight, so nobody sees the change)
+  for(const p of peds)if(!p._bwk&&!p.gone&&dist2(p.x,p.y,player.x,player.y)<1500*1500){const k=p.x>WPX||p.y>WPX||p.x<0||p.y<0?tcell(p.x,p.y):-1;if(beachy(p.x,p.y))giveSwim(p,k>=0&&TTYPE[k]===2);else p._bwk=1;}
+  for(const p of peds)if(p.beach&&dist2(p.x,p.y,player.x,player.y)>1500*1500)p.gone=true;
+  if(!ODZ(player.x,player.y)&&!(player.x>IWDIST.odx-700&&ODZ(IWDIST.odx,player.y)))return;
+  const day=!nightH(),h=hr24(),busy=day?(h>9&&h<19?1:0.55):0.35,OD=RING.paths.find(P=>P.ocean),odi=RING.paths.indexOf(OD);
+  // beachgoers on the sand, in the daytime
+  let nb=0;for(const p of peds)if(p.beach&&!p.gone)nb++;
+  const want=Math.round(day?(h>9&&h<18?28:12):2);
+  for(let k=0;k<4&&nb<want;k++){const y=player.y+rr(-700,700),sx=(()=>{let x=IWDIST.odx+280;while(x<IWDIST.odx+900&&TTYPE[tcell(x,y)]!==2)x+=8;let e=x;while(e<IWDIST.odx+1200&&TTYPE[tcell(e,y)]===2)e+=8;return[x,e];})();
+    if(sx[1]-sx[0]<40)continue;const x=rr(sx[0]+10,sx[1]-6),d=dist2(x,y,player.x,player.y);if(d<180*180||d>900*900||camSees(x,y))continue;
+    const p=makePed(x,y);if(!p)continue;p.isl=true;p._bwk=0;giveSwim(p,true);p.beach={hx:x,hy:y,tx:x,ty:y,w:rr(1,8),face:R()<0.6?0:null};nb++;}
+  // the sidewalks: walkers on Ocean Drive itself
+  if(OD&&odi>=0){let nw=0;for(const p of peds)if(p.iw&&p.iw.pi===odi&&!p.gone)nw++;
+    for(let k=0;k<3&&nw<Math.round(30*busy);k++){const L=OD[OD.length-1].s;let best=null;for(const q of OD){const d=dist2(q.x,q.y,player.x,player.y);if(!best||d<best.d)best={d,s:q.s};}
+      const s=clamp(best.s+rr(-750,750),30,L-30),q=iwAt(OD,s),side=R()<0.5?1:-1,o=OD.hw+OD.sw*0.5,x=q.x-q.uy*o*side,y=q.y+q.ux*o*side,d=dist2(x,y,player.x,player.y);
+      if(d<200*200||d>950*950||camSees(x,y)||OD.J.some(J=>Math.abs(J.s-s)<J.ow+10))continue;const p=iwWalker(odi,s,side,R()<0.5?1:-1);if(p){p.iw.sp=rr(26,40);nw++;}}
+    // cruising: slow traffic up and down the drive, lots of convertibles and classics
+    let nc=0;for(const c of cars)if(c.ai&&c.ai.mode==='ring'&&c.ai.pth===odi)nc++;
+    for(let k=0;k<2&&nc<Math.round(12*(day?1:1.2));k++){const i=2+Math.floor(R()*(OD.length-4)),q=OD[i],dir=R()<0.5?1:-1,lo=OD.lo||14,x=q.x-q.uy*dir*lo,y=q.y+q.ux*dir*lo,d=dist2(x,y,player.x,player.y);
+      if(d<300*300||d>1300*1300||camSees(x,y)||carNear(x,y,120)||OD.J.some(J=>Math.abs(J.i-i)<3))continue;
+      const r=R(),ty=r<0.3&&CT.roadster?'roadster':r<0.45&&CT.muscle?'muscle':r<0.55&&CT.sports?'sports':iwCarType(3,OD);if(!ty)continue;
+      const c=makeCar(ty,x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)continue;iwCarStyle(c,3);if(ty==='roadster'||ty==='muscle')c.col=pick(['#3ad6c0','#f4a6c0','#f6f0e0','#e8c84a','#ff5a5a','#ffffff']);
+      c.traffic=true;c.driver='ai';ringJoin(c,odi,i,dir);c.ai.cruise=rr(70,110);const sp=c.ai.cruise*0.7;c.vx=Math.cos(c.a)*sp;c.vy=Math.sin(c.a)*sp;nc++;}}}
+{const f=g3Tick;g3Tick=function(dt){f(dt);try{odLifeTick(dt);}catch(e){}};}
+// a new game starts on Ocean Drive: on the beach-side sidewalk, with a convertible at the curb
+const ODSTART=(()=>{try{const OD=RING.paths.find(P=>P.ocean);if(!OD)return null;let best=null;for(const q of OD){const d=Math.abs(q.y-5600);if(!best||d<best.d)best={d,q};}
+  const q=best.q,nx=-q.uy,ny=q.ux,sd=nx>0?1:-1,o=OD.hw+OD.sw*0.5;return{x:q.x+nx*o*sd,y:q.y+ny*o*sd,a:Math.atan2(-Math.abs(q.uy),q.ux),cx:q.x+nx*43*sd,cy:q.y+ny*43*sd+60};}catch(e){return null;}})();
+function odStart(){if(!ODSTART||!game.started)return;const S=ODSTART;
+  player.x=S.x;player.y=S.y;player.jz=0;player.body=player.a=S.a;cam.yaw=S.a;cam.gz=null;cam.x=S.x-Math.cos(S.a)*96;cam.y=S.y-Math.sin(S.a)*96;setCam();
+  const c=makeCar(CT.roadster?'roadster':'sedan',S.cx,S.cy,S.a);if(c){c.col='#3ad6c0';c.iwParked=true;}
+  setTimeout(()=>{try{showBig('OCEAN DRIVE','Ironwood Island · the city is over the Ironwood Bridge','#ff7ac0',3);}catch(e){}},600);}

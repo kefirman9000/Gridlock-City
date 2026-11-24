@@ -93,6 +93,8 @@ with parked cars). Signals `JSIG`/`jSig`, sidewalk walkers `p.iw` (iwPedTick), D
 Walk surfaces may carry `za` (an absolute deck height; footFloor gives za-GH): use it for decks over sloping ground or water. Props may carry `zb` (base above the ground) so a deck prop slots by what stands on the deck,
 not from the sea floor. Buildings standing on a deck set `b.spier` (no wall skirt, own slab). footFloor returns `[height, thing]`.
 The debug menu (08b, ` key or pause menu DEBUG MENU): `dbgPlaces`, `dbgTeleport`, `dbgMissions`/`dbgStartMission`, `dbgEnemies`, god mode / no cops / coordinates in `dbgTick`.
+v5.38 (end of 08j): new games start on Ocean Drive (`ODSTART`, `odStart()` from `newGame`); the east-side lock covers only x < WPX. Swimwear `p.bw` (drawPed3) is given only where `beachy()`;
+beachgoers `p.beach` (lifePed wrapper), extra Ocean Drive walkers and cruisers in `odLifeTick`. Tests that need a city street should work from `hospitalSpawn`, not the player's start.
 `cityEdge` ends with a cleanup: every `RINGJ` node keeps an open street path into town, CUT segments are grassed, open segments are paved with their sidewalks, deg-0 nodes and stray road pieces become park.
 
 ## The island (v5.11)

@@ -106,7 +106,7 @@ function markSel(){[...document.querySelectorAll('#mmNav button')].forEach((b,i)
 function menuShow(mode){menuMode=mode;menuSel=0;closePanel();document.getElementById('menu').style.display='flex';document.getElementById('tagline').textContent=mode==='pause'?'PAUSED':'Steal cars. Answer payphones. Lose the cops.';renderNav();}
 function hideMenu(){document.getElementById('menu').style.display='none';closePanel();}
 function beginPlay(){hideMenu();initAudio();try{if(matchMedia('(pointer:coarse)').matches||'ontouchstart' in window){touchMode=true;mouse.used=false;}}catch(_){}if(!game.started)startGame();}
-function newGame(){money=0;saveMoney();beginPlay();}
+function newGame(){money=0;saveMoney();beginPlay();if(typeof odStart==='function')odStart();} // v5.38: a new game starts on Ocean Drive
 function loadFrom(s){
   if(game.started){applySave(s);clearHeat();respawnAt(hospitalSpawn);applySave(s);game.paused=false;hideMenu();note('Game loaded');return;}
   beginPlay();applySave(s);note('Game loaded');}

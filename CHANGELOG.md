@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.38.0
+- New games start on Ocean Drive (`ODSTART`, `odStart()` called from `newGame` in 09; a roadster at the curb). Respawns still use the hospital.
+- The east-side lock (`updateStages` in 06) covers x < WPX only: Ironwood Island and the outer beltway are open from the start.
+- Swimwear: `p.bw = {t:'bikini'|'trunks'|'one', c}` in drawPed3 (bare legs and arms, suit at the hips, bikini top; one-piece colours the torso). Given by `giveSwim` (hash of the ped id, no R()) only where `beachy(x,y)`: the Ocean Drive zone (`ODZ`), sand near the coast, the city's beach blocks.
+- `odLifeTick` (g3Tick wrapper, 08j): beachgoers (`p.beach`, `beachTick` through a lifePed wrapper: wander near a home spot, pause facing the sea), up to 30 Ocean Drive sidewalk walkers (iwWalker on the ocean path, slower), up to 12 slow cruisers (cruise 70-110, roadsters/muscle/sports in pastel colours).
+- Smoke test: the car check finds its lane near `hospitalSpawn` (the start is no longer in the city).
+
 ## v5.37.1
 - iwParkTick fills the nearest empty IWPARK spots first, up to 8 a tick (it was 3 a tick in list order, so Ocean Drive stayed empty for a long time).
 - Lummus-style palm groves on Ocean Drive's park lawn (clear of the beach walk and props) and a knee-high coral-stone wall (`cwall`) with gaps along the beach-side sidewalk (08j).
