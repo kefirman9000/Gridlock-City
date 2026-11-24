@@ -95,6 +95,8 @@ not from the sea floor. Buildings standing on a deck set `b.spier` (no wall skir
 The debug menu (08b, ` key or pause menu DEBUG MENU): `dbgPlaces`, `dbgTeleport`, `dbgMissions`/`dbgStartMission`, `dbgEnemies`, god mode / no cops / coordinates in `dbgTick`.
 v5.38 (end of 08j): new games start on Ocean Drive (`ODSTART`, `odStart()` from `newGame`); the east-side lock covers only x < WPX. Swimwear `p.bw` (drawPed3) is given only where `beachy()`;
 beachgoers `p.beach` (lifePed wrapper), extra Ocean Drive walkers and cruisers in `odLifeTick`. Tests that need a city street should work from `hospitalSpawn`, not the player's start.
+v5.39 (end of 08j, `V539`): the Seabreeze Hotel safehouse at the start (`b.vhotel`), lighthouse (`b.lighthouse`), observatory (`b.observ`), hill letters (`hletter`, `HFONT`), sidewalk stars (`wstar`), beach court (`bball`), Central roof tanks/billboards, `CT.moped`.
+Props 14 tall or less are culled past 640 and props 26 tall or less past 900 (in the case 13 add of 08-render); trees switch to their simple form past 560.
 `cityEdge` ends with a cleanup: every `RINGJ` node keeps an open street path into town, CUT segments are grassed, open segments are paved with their sidewalks, deg-0 nodes and stray road pieces become park.
 
 ## The island (v5.11)

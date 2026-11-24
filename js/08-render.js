@@ -1072,7 +1072,7 @@ function treeBoxes(t){
   t.rot=rnd(40)*PI;return t.bx=out;
 }
 function drawTree3(t,fg){
-  const bx=t.bx||treeBoxes(t),ca=Math.cos(t.rot),sa=Math.sin(t.rot),lod=fg>0.55;
+  const bx=t.bx||treeBoxes(t),ca=Math.cos(t.rot),sa=Math.sin(t.rot),lod=fg>0.55||(t.x-CX)*CC+(t.y-CY)*CS>560; /* v5.39: the simple tree from 560 out, not just in the fog */
   const list=[];for(let i=0;i<bx.length;i++){if(lod&&i>2)break;const b=bx[i],x=t.x+b[0]*ca-b[1]*sa,y=t.y+b[0]*sa+b[1]*ca;list.push([(x-CX)*CC+(y-CY)*CS,x,y,b]);}
   // trunk first, then crown blocks back to front, lower ones before the ones above them
   list.sort((p,q)=>p[3]===bx[0]?-1:q[3]===bx[0]?1:(q[0]-p[0])||(p[3][4]-q[3][4]));
@@ -1493,7 +1493,8 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   forCells(cl=>{for(const[k,o]of cl.s){switch(k){
     case 2:{const cd=(o.x-CX)**2+(o.y-CY)**2;if(cd<(o.r+30)**2)break; // a tree right at the camera would fill the screen with leaves: skip it (DESIGN RULES E)
       add(2,o,o.x,o.y,o.r+4,null,15+o.r*2+(o.sp==='palm'?30:0));break;}case 3:add(3,o,o.x,o.y,5,null,63);break;
-    case 13:if(o.rad){add(13,o,o.x,o.y,o.rad,null,o.ht,o.zb);break;} /* o.zb: a deck prop's base above the ground (the pier), so it slots by what stands on the deck */add(13,o,o.x,o.y,o.k==='hedge'||o.k==='rail'||o.k==='seawall'||o.k==='brail'||o.k==='deck'||o.k==='fence'||o.k==='eltrack'?24:o.k==='elplat'?64:o.k==='elcorner'||o.k==='elpillar'?20:o.k==='elstair'?30:o.k==='fountain'?30:o.k==='crane'?100:8,null,o.k==='fountain'?34:o.k==='crane'?176:o.k[0]==='e'&&o.k[1]==='l'?EL_H+12:12);break;
+    case 13:{/* v5.39: small props stop at a distance where they'd be a pixel or two (meters, towels, chairs, umbrellas): fewer boxes per frame */const ch=o.ht!=null?o.ht:99,fd=(o.x-CX)*CC+(o.y-CY)*CS;if((ch<=14&&fd>640)||(ch<=26&&(o.rad||0)<20&&!o.zb&&fd>900))break;}
+      if(o.rad){add(13,o,o.x,o.y,o.rad,null,o.ht,o.zb);break;} /* o.zb: a deck prop's base above the ground (the pier), so it slots by what stands on the deck */add(13,o,o.x,o.y,o.k==='hedge'||o.k==='rail'||o.k==='seawall'||o.k==='brail'||o.k==='deck'||o.k==='fence'||o.k==='eltrack'?24:o.k==='elplat'?64:o.k==='elcorner'||o.k==='elpillar'?20:o.k==='elstair'?30:o.k==='fountain'?30:o.k==='crane'?100:8,null,o.k==='fountain'?34:o.k==='crane'?176:o.k[0]==='e'&&o.k[1]==='l'?EL_H+12:12);break;
     case 15:add(15,o,o.x,o.y,5,null,47);break;case 16:add(16,o,o.x,o.y,32,null,16);break;case 19:if(!o.got)add(19,o,o.x,o.y,8,null,16);break;}}});
   if(fare&&fare.stage==='ride')add(18,fare,fare.x,fare.y,40,null,40);
   for(const k of pickups)if(!k.taken&&!(k.sh&&!k.sh.owned))add(4,k,k.x,k.y,8);

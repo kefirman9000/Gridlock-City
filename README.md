@@ -40,17 +40,26 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 - **Beachwear.** At the beach and around Ocean Drive (and on the city's beach) people wear bikinis, swim trunks and one-piece swimsuits. Everywhere else they stay dressed.
 - **Ironwood Island is open from the start.** The "east side is closed" lock now covers only the city's own east side, so the island and the outer beltway are yours from the first minute.
 
-## What's new in v5.37
-- **Sunset Pier.** Sunset Boulevard now ends at an amusement pier on Ironwood Island, after the big Southern California piers. A long boardwalk leads out over the beach to a wide deck with a Ferris wheel, a roller coaster that loops round it with a running train, a carousel house and an arcade. At the far end there's a fish restaurant and a fishing spot. Food stands sell hot dogs, funnel cake and shave ice, and at night the wheel and the entrance arch light up.
-- **Times Square plaza.** The corner of Times Square nearest the junction is now a pedestrian plaza with granite paving, red bleacher steps you can climb and sit on, a statue, cafe tables and lamps. Across the junction, the tallest tower has a ball on a mast and a stack of video screens down its front.
-- **More of Ocean Drive.** The Art Deco beach patrol headquarters stands on the sand, and there are outdoor gyms (pull-up and dip bars) in the park strip. Palm groves fill the beach park, a low coral-stone wall runs along the beach-side sidewalk, and (v5.37.1) parked cars line both curbs as soon as you arrive.
-- **Streets that join up.** Every road out to the beltway leads into town. Closed-off streets at the edge of the city are grassed over, the streets left open are paved with sidewalks, and stray bits of road are gone.
-- **Debug menu.** Press ` (backquote), or choose DEBUG MENU in the pause menu:
-  - god mode, no cops and a position readout
-  - spawn gang members, cops, SWAT, the army or a crowd
-  - teleport to any landmark or to exact x/y
-  - start any story, contact or heist mission, then pass or fail it
-  - unlock or reset the story
+## What's new in v5.39
+Each town on Ironwood Island takes some flavour from the games set in the city it's modelled on (the feel, not their names or maps):
+- **Ocean Drive (the Vice City beach):**
+  - You start outside the **Seabreeze Hotel**, a white, green and yellow Art Deco hotel on the drive. It's your first safehouse, free from the start, with a cream two-tone classic at the curb.
+  - A **lighthouse** with red bands stands at the south end of the beach, and its lantern lights up at night.
+  - Lifeguards in red stroll the sand, mopeds weave through the traffic, and at night the cruisers glow with neon underglow.
+- **Ironwood Central (GTA III's New York):** wooden water tanks and billboards on the rooftops, and trash bags and news boxes at the curbs.
+- **Palm Heights (Los Angeles, as in San Andreas and GTA V):**
+  - giant white **IRONWOOD** letters on the hill above town
+  - an **observatory** with copper domes on the next peak
+  - stars set in Sunset Boulevard's sidewalks
+  - a basketball court on the beach by the pier
+- **Faster:** small props and trees far away are drawn more simply, about 20% fewer boxes a frame on Ocean Drive.
+- **Fix:** a crime reported by a witness outside any named district (out on the beltway, say) no longer crashes the frame.
+
+## What's new in v5.38
+- **Start on Ocean Drive.** A new game begins on Ocean Drive. The city is over the Ironwood Bridge.
+- **Ocean Drive is busy, like the real one.** Crowded sidewalks, slow cruising convertibles and classics, parked cars on both curbs, and in the daytime a beach full of people.
+- **Beachwear.** At the beach and around Ocean Drive (and on the city's beach) people wear bikinis, swim trunks and one-piece swimsuits. Everywhere else they stay dressed.
+- **Ironwood Island is open from the start.** The "east side is closed" lock now covers only the city's own east side.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

@@ -75,7 +75,7 @@ let WIT=null;
 function witnessTick(dt){if(!WIT)return;const p=WIT.p;
   if(p.gone||p.injured||(p.hp!=null&&p.hp<=0)){WIT=null;note('The witness won\'t be calling anyone');return;}
   if(dist2(p.x,p.y,player.x,player.y)>700*700){WIT=null;return;}
-  WIT.t-=dt;if(WIT.t<=0){const w=WIT;WIT=null;w.cr(w.pts,Math.max(1,w.min));radioMsg('DISPATCH: A caller reports a crime in '+districtAt(player.x,player.y).toLowerCase().replace(/\b\w/g,s=>s.toUpperCase())+'.');}}
+  WIT.t-=dt;if(WIT.t<=0){const w=WIT;WIT=null;w.cr(w.pts,Math.max(1,w.min));radioMsg('DISPATCH: A caller reports a crime in '+areaName()+'.');}}
 function witnessHUD(sc){if(!WIT||game.state!=='play')return;const p=WIT.p,pr=projFull(p.x,p.y,34);if(!pr)return;
   hudText('📞 '+Math.ceil(WIT.t),pr[0],pr[1],Math.round(14*sc),'#ff6a5a','center','bold '+Math.round(13*sc)+'px system-ui');}
 

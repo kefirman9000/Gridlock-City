@@ -2,6 +2,13 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.39.0
+- 08j `V539`: the start hotel (`b.vhotel`, SAFEHOUSES entry 'Seabreeze Hotel', price 0, owned, no garage, kept owned by `v539Tick`; `ODSTART` moved beside its door with a two-tone `muscle` at the curb), lighthouse (`b.lighthouse`: red bands, gallery, lantern; the night glow flares when the beam faces the camera), lifeguards (a `giveSwim` wrapper), `CT.moped` in Ocean Drive traffic, neon underglow (`c.up.neon`) on night cruisers.
+- Ironwood Central: `b.wt` water tanks and `b.bill` billboards on suitable roofs, `bags`/`news` props at the curbs.
+- Palm Heights: hill letters (`hletter` props, block font `HFONT`, each letter may sit up or down the slope; forest cleared in front), the observatory (`b.observ`, domes in a drawBuilding wrapper), Sunset Boulevard sidewalk stars (`wstar`), a beach basketball court (`bball`) south of the pier. IWLM gets the new places.
+- Rendering: props 14 tall or less are skipped past 640, props 26 tall or less (rad < 20, not deck pieces) past 900; trees use their simple form past 560 (was fog only). Ocean Drive: about 4000 to 3100 quads a frame.
+- Fix: the witness dispatch line used `districtAt(...)` without a null check (crashed outside named districts); it uses `areaName()`.
+
 ## v5.38.0
 - New games start on Ocean Drive (`ODSTART`, `odStart()` called from `newGame` in 09; a roadster at the curb). Respawns still use the hospital.
 - The east-side lock (`updateStages` in 06) covers x < WPX only: Ironwood Island and the outer beltway are open from the start.

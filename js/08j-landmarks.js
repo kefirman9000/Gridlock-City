@@ -296,5 +296,98 @@ const ODSTART=(()=>{try{const OD=RING.paths.find(P=>P.ocean);if(!OD)return null;
   const q=best.q,nx=-q.uy,ny=q.ux,sd=nx>0?1:-1,o=OD.hw+OD.sw*0.5;return{x:q.x+nx*o*sd,y:q.y+ny*o*sd,a:Math.atan2(-Math.abs(q.uy),q.ux),cx:q.x+nx*43*sd,cy:q.y+ny*43*sd+60};}catch(e){return null;}})();
 function odStart(){if(!ODSTART||!game.started)return;const S=ODSTART;
   player.x=S.x;player.y=S.y;player.jz=0;player.body=player.a=S.a;cam.yaw=S.a;cam.gz=null;cam.x=S.x-Math.cos(S.a)*96;cam.y=S.y-Math.sin(S.a)*96;setCam();
-  const c=makeCar(CT.roadster?'roadster':'sedan',S.cx,S.cy,S.a);if(c){c.col='#3ad6c0';c.iwParked=true;}
+  const ty=S.classic&&CT.muscle?'muscle':CT.roadster?'roadster':'sedan',c=makeCar(ty,S.cx,S.cy,S.ca!=null?S.ca:S.a);if(c){c.col=S.classic?'#f2e6a0':'#3ad6c0';if(S.classic)c.stripe=[248,246,238];c.iwParked=true;}
   setTimeout(()=>{try{showBig('OCEAN DRIVE','Ironwood Island · the city is over the Ironwood Bridge','#ff7ac0',3);}catch(e){}},600);}
+
+// =====================================================================================================================
+// v5.39: each town takes some flavour from the games set in the cities it's modelled on (the feel, not their names or maps):
+//  - Ocean Drive (Vice City's beach): the beachfront Deco hotel you start at is your first safehouse (free), a two-tone
+//    classic at its curb, a lighthouse at the south end of the beach, strolling lifeguards, mopeds in the traffic, neon
+//    underglow on the night cruisers.
+//  - Ironwood Central (GTA III's New York): wooden water tanks and billboards on the rooftops, trash bags and news boxes on the sidewalks.
+//  - Palm Heights (San Andreas / GTA V's Los Angeles): giant letters on the hill above town, an observatory on the next peak,
+//    stars set in Sunset Boulevard's sidewalks, a beach basketball court.
+CT.moped={name:'Vespetta',L:24,Wd:10,max:300,acc:330,grip:9,turn:3.4,hp:40,mass:0.18,cols:['#f4a6c0','#9fe0d8','#f6e3a1','#ffffff','#e8417a'],bike:true};
+const V539=(()=>{const out={};try{
+  const OD=RING.paths.find(P=>P.ocean),u=(a,b)=>(hash(a|0,b|0)&65535)/65535;
+  // ---- the start hotel: the Deco hotel on the inland side of Ocean Drive nearest the start, restyled white with green and yellow
+  if(OD&&ODSTART){let best=null;for(const b of OUTB){if(!b.iwc||b.st!=='plaster'||!b.shop)continue;const cx=b.x+b.w/2,cy=b.y+b.h/2;if(cx>IWDIST.odx||cx<IWDIST.odx-260)continue;
+      const d=Math.abs(cy-ODSTART.y)+Math.abs(b.x+b.w-(IWDIST.odx-OD.hw-OD.sw))*0.5;if(!best||d<best.d)best={d,b};}
+    if(best){const b=best.b;b.col='#f4f4ec';b.rgb=rgbOf(b.col);b.deco=true;b.nc='#3aff9a';b.nrgb=rgbOf(b.nc);b.neon=true;b.awn='#2e9a5a';b.argb=rgbOf(b.awn);b.vhotel=true;
+      const door={x:b.x+b.w+12,y:b.y+b.h/2};
+      const sh={name:'Seabreeze Hotel',price:0,owned:true,lot:null,x:door.x,y:door.y,gx:null,gy:null,garage:[],gcar:[null,null,null],island:true};SAFEHOUSES.push(sh);out.hotel=b;out.sh=sh;
+      // you start on its doorstep, the classic at the curb in front
+      ODSTART.x=door.x+6;ODSTART.y=door.y+52;ODSTART.a=-PI/2; /* beside the door, not on its marker (that walks you in) */const q=iwAt(OD,0);let bq=null;for(const p of OD){const d=Math.abs(p.y-door.y);if(!bq||d<bq.d)bq={d,p};}
+      ODSTART.cx=bq.p.x-Math.abs(bq.p.uy)*43;ODSTART.cy=door.y+30;ODSTART.ca=-PI/2;ODSTART.classic=true;}}
+  // ---- the lighthouse: on the sand at the south end of the beach (square tower, gallery, red lantern; the beam sweeps at night)
+  if(typeof IWDIST!=='undefined'&&IWDIST.ody){for(let y=IWDIST.ody[1]+260;y<IWDIST.ody[1]+560;y+=20){let x=IWDIST.odx+280;while(x<IWDIST.odx+1100&&TTYPE[tcell(x,y)]!==1)x+=8;
+      const lx=x-70;if(TTYPE[tcell(lx,y)]!==2||TTYPE[tcell(lx+30,y+30)]!==2||TTYPE[tcell(lx,y+30)]!==2)continue;if(OUTB.some(b=>b.x<lx+50&&b.x+b.w>lx-20&&b.y<y+50&&b.y+b.h>y-20))continue;
+      clearRect(lx-20,y-20,lx+50,y+50);const b=outsideBuilding({x:lx,y,w:28,h:28,kind:'ironwood',iwc:true,hg:3.2,col:'#f8f6f0',st:'plaster',ws:60,wf:0.12,wh:0.22});b.lighthouse=true;out.light=b;break;}}
+  // ---- Ironwood Central: water tanks and billboards on the roofs, trash bags and news boxes at the curb
+  let wt=0,bb=0;for(const b of OUTB){if(!b.iwc||IWCM[tcell(b.x+b.w/2,b.y+b.h/2)]!==1)continue;const h=hash(b.id,539);
+    if((b.st==='brick'||b.st==='conc')&&b.hg>=2&&b.hg<=9&&b.w>=40&&b.h>=40&&!b.tier&&(h&3)!==0){b.wt=true;wt++;}
+    else if(b.hg>=3&&b.hg<=7&&b.w>=50&&((h>>>4)&3)===0&&!b.tier){b.bill=true;bb++;}}
+  let nb=0;for(const P of RING.paths){if(!P.net||!P.sw)continue;const L=P[P.length-1].s;for(let s=40;s<L-40;s+=95){const q=iwAt(P,s);if(IWCM[tcell(q.x,q.y)]!==1||P.J.some(J=>Math.abs(J.s-s)<J.ow+16))continue;
+      const side=(hash(s|0,RING.paths.indexOf(P))&1)?1:-1,o=P.hw+P.sw-5,x=q.x-q.uy*o*side,y=q.y+q.ux*o*side;if(props.some(p=>Math.abs(p.x-x)<14&&Math.abs(p.y-y)<14))continue;
+      props.push(u(x,y)<0.6?{x,y,k:'bags',rad:6,ht:6}:{x,y,k:'news',rad:4,ht:10});nb++;}}
+  out.central={wt,bb,nb};
+  // ---- Palm Heights: the letters on the hill above town, facing it
+  {const word='IRONWOOD',SP=48;let best=null; // each letter may sit up or down the slope a little (like the real sign), clear of roads and houses
+    const clear=(lx,ly)=>TTYPE[tcell(lx,ly)]!==10&&!onRoadCell(lx,ly,18)&&!OUTB.some(b=>lx>b.x-30&&lx<b.x+b.w+30&&ly>b.y-30&&ly<b.y+b.h+30);
+    for(let y=4300;y<=4800;y+=20)for(let x=12100;x<=13000;x+=25){const ys=[];let sum=0;
+      for(let i=0;i<word.length;i++){const lx=x+i*SP;let yy=null;for(const dy of[0,-25,25,-50,50,-75,75,-100,100,-125,125])if(clear(lx,y+dy)){yy=y+dy;break;}if(yy==null){ys.length=0;break;}ys.push(yy);sum+=GH(lx,yy);}
+      if(ys.length<word.length)continue;const av=sum/word.length;if(av<85)continue;const sc=av-Math.abs(GH(x,ys[0])-GH(x+(word.length-1)*SP,ys[word.length-1]))*1.5;if(!best||sc>best.sc)best={sc,x,y,ys};}
+    if(best){clearRect(best.x-60,best.y-280,best.x+word.length*SP+20,best.y+80); /* no forest in front of the letters */out.letters=[];
+      for(let i=0;i<word.length;i++){const o={x:best.x+i*SP,y:best.ys[i],k:'hletter',ch:word[i],rad:44,ht:110};props.push(o);out.letters.push(o);}}}
+  // ---- the observatory: white, a copper dome in the middle and two small ones, on the other peak
+  {let best=null;for(let y=4500;y<=4900;y+=25)for(let x=13050;x<=13450;x+=25){if(onRoadCell(x,y,70)||onRoadCell(x+110,y+50,40))continue;
+      const gs=[GH(x,y),GH(x+120,y),GH(x,y+56),GH(x+120,y+56)],mn=Math.min(...gs),mx=Math.max(...gs);if(mx-mn>26||mn<110)continue;if(OUTB.some(b=>b.x<x+150&&b.x+b.w>x-30&&b.y<y+80&&b.y+b.h>y-30))continue;
+      const sc=mn-(mx-mn)*3;if(!best||sc>best.sc)best={sc,x,y};}
+    if(best){clearRect(best.x-20,best.y-20,best.x+140,best.y+76);const b=outsideBuilding({x:best.x,y:best.y,w:120,h:56,kind:'ironwood',iwc:true,hg:1.3,col:'#f2efe6',st:'plaster',ws:16,wf:0.35,wh:0.5});b.observ=true;out.obs=b;}}
+  // ---- stars in Sunset Boulevard's sidewalks
+  {const S=RING.paths.find(P=>P.nm==='SUNSET BOULEVARD');let n=0;if(S){const L=S[S.length-1].s;for(let s=30;s<L-30;s+=34){const q=iwAt(S,s);if(IWCM[tcell(q.x,q.y)]!==2||S.J.some(J=>Math.abs(J.s-s)<J.ow+10))continue;
+      for(const side of[-1,1]){const o=S.hw+S.sw*0.5,x=q.x-q.uy*o*side,y=q.y+q.ux*o*side;props.push({x,y,k:'wstar',a:Math.atan2(q.uy,q.ux),rad:0,ht:1});n++;}}}out.stars=n;}
+  // ---- a beach basketball court south of the pier (the Venice Beach courts)
+  if(typeof SPIER!=='undefined'&&SPIER){for(let y=SPIER.Y(5)+80;y<SPIER.Y(5)+500;y+=20){let x=SPIER.x-40;while(x<SPIER.x+300&&TTYPE[tcell(x,y)]!==2)x+=6;
+      const cx=x+40;if([[cx-30,y-50],[cx+30,y-50],[cx-30,y+50],[cx+30,y+50]].every(([a,b])=>TTYPE[tcell(a,b)]===2)&&!onRoadCell(cx,y,40)&&!OUTB.some(b=>b.x<cx+40&&b.x+b.w>cx-40&&b.y<y+60&&b.y+b.h>y-60)){
+        clearRect(cx-36,y-58,cx+36,y+58);props.push({x:cx,y,k:'bball',rad:56,ht:30});out.court={x:cx,y};break;}}}
+  SGRID=null;}catch(e){console.warn('v539',e);}return out;})();
+if(V539.light)IWLM['Lighthouse (Ocean Drive)']={x:V539.light.x-40,y:V539.light.y+14};
+if(V539.obs)IWLM['Observatory']={x:V539.obs.x+60,y:V539.obs.y+90};
+if(V539.letters)IWLM['Hill letters']={x:V539.letters[3].x,y:V539.letters[0].y-90};
+if(V539.sh)IWLM['Seabreeze Hotel']={x:V539.sh.x,y:V539.sh.y};
+// a block font for the hill letters (5 wide, 7 tall)
+const HFONT={I:['11111','00100','00100','00100','00100','00100','11111'],R:['11110','10001','10001','11110','10100','10010','10001'],O:['01110','10001','10001','10001','10001','10001','01110'],
+  N:['10001','11001','10101','10101','10011','10001','10001'],W:['10001','10001','10001','10101','10101','11011','10001'],D:['11110','10001','10001','10001','10001','10001','11110']};
+function drawHLetter(o,fg){const F=HFONT[o.ch];if(!F)return;const c=8.6,w=[246,246,240],legs=[120,110,96],front=CY>o.y;
+  for(const dx of[-14,14])obox(o.x+dx,o.y+3,0,1.1,1.1,0,14,legs,null,fg);
+  for(let r=0;r<7;r++)for(let k=0;k<5;k++)if(F[r][k]==='1'){const x=o.x+(k-2)*c,z=14+(6-r)*c;obox(x,o.y,0,c/2,1.4,z,z+c,w,w,fg,null,null,false);}}
+function drawWStar(o,fg){const ca=Math.cos(o.a),sa=Math.sin(o.a);flat(o.x,o.y,o.a,7,7,0.15,lit([92,70,78],1,fg));flat(o.x,o.y,o.a,5.6,5.6,0.2,lit([232,140,168],1,fg));
+  for(const r of[0,PI/4])flat(o.x,o.y,o.a+r,2.6,2.6,0.25,lit([236,196,90],1,fg));}
+function drawBBall(o,fg){const ln=lit([246,246,240],1,fg);flat(o.x,o.y,0,30,50,0.1,lit([70,112,150],1,fg));flat(o.x,o.y,0,24,44,0.15,lit([196,96,70],1,fg));
+  flat(o.x,o.y,0,24,0.5,0.2,ln);flat(o.x-24,o.y,0,0.5,44,0.2,ln);flat(o.x+24,o.y,0,0.5,44,0.2,ln);flat(o.x,o.y-44,0,24,0.5,0.2,ln);flat(o.x,o.y+44,0,24,0.5,0.2,ln);
+  for(const s of[-1,1]){const y=o.y+s*46;obox(o.x,y+s*3,0,0.8,0.8,0,22,[60,62,66],null,fg);obox(o.x,y+s*1.2,0,6,0.5,20,27,[240,240,240],null,fg);obox(o.x,y-s*1.2,0,2.4,2.4,19.6,20.2,[230,110,40],null,fg);}}
+{const f=placesProp;placesProp=function(o,fg){switch(o.k){case 'hletter':drawHLetter(o,fg);return;case 'wstar':drawWStar(o,fg);return;case 'bball':drawBBall(o,fg);return;}f(o,fg);};}
+// the lighthouse's gallery and lantern, the observatory's domes, and the hotel's big neon name over its door
+{const f=drawBuilding;drawBuilding=function(b,fg){f(b,fg);const night=LIGHTK>0.2;
+  if(b.lighthouse){ZOFF=b.base;const top=b.hg*BH,cx=b.x+b.w/2,cy=b.y+b.h/2;for(const f2 of[0.3,0.62])obox(cx,cy,0,b.w/2+0.6,b.h/2+0.6,top*f2,top*f2+7,[200,40,40],null,fg);
+    obox(cx,cy,0,b.w/2+5,b.h/2+5,top,top+2.5,[50,52,56],[70,72,76],fg);obox(cx,cy,PI/4,9,9,top+2.5,top+16,night?[255,236,160]:[150,170,180],null,fg,null,null,night);
+    obox(cx,cy,PI/4,11,11,top+16,top+20,[200,40,40],[220,60,50],fg);obox(cx,cy,0,1,1,top+20,top+27,[60,60,64],null,fg);
+    if(night&&proj(cx,cy,top+9)){const a=game.t*0.9,face=Math.cos(a-Math.atan2(CY-cy,CX-cx)),k=Math.pow(Math.max(0,face),10);glow(PX,PY,(4+10*k)*PK,'#fff2c0',(0.5+0.5*k)*LIGHTK);}}
+  if(b.observ){ZOFF=b.base;const top=b.hg*BH,cx=b.x+b.w/2,cy=b.y+b.h/2,cu=[70,120,110],cut=[92,140,128];
+    obox(cx,cy,0,16,16,top,top+10,[240,236,226],null,fg);for(let i=0;i<5;i++){const r=16-i*3.2;obox(cx,cy,PI/8*i,r,r,top+10+i*3.6,top+13.6+i*3.6,cu,cut,fg);}
+    for(const s of[-1,1]){const x=cx+s*44;for(let i=0;i<3;i++){const r=8-i*2.4;obox(x,cy,0,r,r,top+i*3,top+3+i*3,cu,cut,fg);}}}
+  if(b.vhotel&&b.dn<1400){ZOFF=b.base;const top=b.hg*BH;if(CX>b.x+b.w)sign3(b.x+b.w+2,b.y+b.h/2,top-10,'SEABREEZE',night?'#103a24':'#f4f4ec',night?'#7dffb0':'#2e9a5a',14,fg);}};}
+// lifeguards: some of the beachgoers are on duty (red trunks and cap) and stroll further along the shore
+{const f=giveSwim;giveSwim=function(p,onSand){f(p,onSand);if(onSand&&p.bw&&(hash(p.id|0,77)&15)===0){p.bw={t:'trunks',c:'#d82020'};p.col=p.skin;p.hat='#d82020';p.lifeguard=true;}};}
+// mopeds and night underglow on Ocean Drive's cruisers, and the safehouse hotel stays yours
+function v539Tick(){if(V539.sh&&!V539.sh.owned)V539.sh.owned=true;
+  for(const c of cars){if(c._v539||!c.ai||c.ai.mode!=='ring')continue;c._v539=1;const P=RING.paths[c.ai.pth];if(!P||!P.ocean)continue;
+    if(nightH()&&!c.t.bike&&(hash(c.id|0,5)&1)){c.up=Object.assign({},c.up||{},{neon:['#ff3ad0','#3ae0ff','#7a5aff','#3aff9a'][hash(c.id|0,6)&3]});}}}
+{const f=odLifeTick;odLifeTick=function(dt){f(dt);v539Tick();
+  // a moped now and then among the cruisers
+  if(!ODZ(player.x,player.y)||(odLifeTick.mp=(odLifeTick.mp||0)-0.4)>0)return;odLifeTick.mp=6;const OD=RING.paths.find(P=>P.ocean),odi=RING.paths.indexOf(OD);
+  if(cars.filter(c=>c.type==='moped'&&dist2(c.x,c.y,player.x,player.y)<1200*1200).length>=3)return;
+  const i=2+Math.floor(R()*(OD.length-4)),q=OD[i],dir=R()<0.5?1:-1,x=q.x-q.uy*dir*14,y=q.y+q.ux*dir*14,d=dist2(x,y,player.x,player.y);
+  if(d<300*300||d>1200*1200||camSees(x,y)||carNear(x,y,100))return;const c=makeCar('moped',x,y,Math.atan2(q.uy*dir,q.ux*dir));if(!c)return;
+  c.traffic=true;c.driver='ai';ringJoin(c,odi,i,dir);c.ai.cruise=rr(60,85);};}
