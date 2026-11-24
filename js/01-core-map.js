@@ -783,13 +783,22 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
     if(dE<rc&&ty<rc&&Math.hypot(rc-dE,rc-ty)>rc)w=true;
     {const dS=LIM-ty,r2=RC2+3*(prof(tx+ty,9)-0.5);if(dS>=0&&dS<r2&&((tx<r2&&Math.hypot(r2-tx,r2-dS)>r2)||(dE<r2&&Math.hypot(r2-dE,r2-dS)>r2)))w=true;} // v5.33: the south-west and south-east corners round off above the beach row
     if(w)WILD[ty*W+tx]=1;}
-  // a street segment touched by the wild is closed and grassed over along its whole length; nodes left with no road go too
   const segTiles=(h,a,b)=>h?{x0:a*P+4,x1:a*P+13,y0:b*P,y1:b*P+3}:{x0:a*P,x1:a*P+3,y0:b*P+4,y1:b*P+13};
+  // v5.37: the way in from every beltway junction stays open all the way to the middle of town (the spur used to lead into a stub
+  // left behind when the parkland closed the street beyond it): the shortest run of open streets from each junction is kept clear of the wild
+  const keepSeg=new Set();
+  {const c=[Math.floor(NB/2)+1,Math.floor(NB/2)],ok=(x,y,d)=>linkBase(x,y,d)&&!CUT.has(segKey(x,y,d)),dist=new Map([[c+'',0]]),q=[c];
+   while(q.length){const[x,y]=q.shift();for(let d=0;d<4;d++)if(ok(x,y,d)){const k=[x+DX[d],y+DY[d]];if(!dist.has(k+'')){dist.set(k+'',dist.get([x,y]+'')+1);q.push(k);}}}
+   for(const[jx,jy]of RINGJ){let x=jx,y=jy;if(!dist.has(x+','+y))continue;
+     for(let n=0;n<60&&dist.get(x+','+y)>0;n++){let bd=-1;for(let d=0;d<4;d++)if(ok(x,y,d)){const k=(x+DX[d])+','+(y+DY[d]);if(dist.has(k)&&dist.get(k)<dist.get(x+','+y)){bd=d;break;}}if(bd<0)break;
+       keepSeg.add(segKey(x,y,bd));const h=bd===0||bd===2,a=h?(bd===0?x:x-1):x,b=h?y:(bd===1?y:y-1),r=segTiles(h,a,b);
+       for(let ty=r.y0-1;ty<=r.y1+1;ty++)for(let tx=r.x0-1;tx<=r.x1+1;tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)WILD[ty*W+tx]=0;x+=DX[bd];y+=DY[bd];}}}
+  // a street segment touched by the wild is closed and grassed over along its whole length; nodes left with no road go too
   const hit=r=>{for(let y=r.y0;y<=r.y1;y++)for(let x=r.x0;x<=r.x1;x++)if(x>=0&&y>=0&&x<W&&y<W&&WILD[y*W+x])return true;return false;};
   const fill=r=>{for(let y=r.y0;y<=r.y1;y++)for(let x=r.x0;x<=r.x1;x++)if(x>=0&&y>=0&&x<W&&y<W&&!protect(x,y))WILD[y*W+x]=1;};
   for(let b=0;b<=NB;b++)for(let a=0;a<NB;a++){
-    if(linkBase(a,b,0)&&!CUT.has(segKey(a,b,0))){const r=segTiles(true,a,b);if(hit(r)){CUT.add(segKey(a,b,0));fill(r);}}
-    if(linkBase(b,a,1)&&!CUT.has(segKey(b,a,1))){const r=segTiles(false,b,a);if(hit(r)){CUT.add(segKey(b,a,1));fill(r);}}}
+    if(linkBase(a,b,0)&&!CUT.has(segKey(a,b,0))&&!keepSeg.has(segKey(a,b,0))){const r=segTiles(true,a,b);if(hit(r)){CUT.add(segKey(a,b,0));fill(r);}}
+    if(linkBase(b,a,1)&&!CUT.has(segKey(b,a,1))&&!keepSeg.has(segKey(b,a,1))){const r=segTiles(false,b,a);if(hit(r)){CUT.add(segKey(b,a,1));fill(r);}}}
   // keep every road the traffic can reach in one piece: anything cut off from the middle of town is closed too
   {const c=[Math.floor(NB/2)+1,Math.floor(NB/2)],seen=new Set([c+'']),q=[c];while(q.length){const[x,y]=q.pop();for(let d=0;d<4;d++)if(lk(x,y,d)){const k=[x+DX[d],y+DY[d]];if(!seen.has(k+'')){seen.add(k+'');q.push(k);}}}
    for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){if(seen.has(ix+','+iy))continue;for(let d=0;d<4;d++)if(linkBase(ix,iy,d)&&!CUT.has(segKey(ix,iy,d))){CUT.add(segKey(ix,iy,d));const h=d===0||d===2,a=h?(d===0?ix:ix-1):ix,b=h?iy:(d===1?iy:iy-1);fill(segTiles(h,a,b));}}}
@@ -814,6 +823,27 @@ CUT.add(segKey(ix,iy,dd));const h=dd===0||dd===2,a=h?(dd===0?ix:ix-1):ix,b=h?iy:
     if(r<0.11+(edgeD<6?0.12:0)){const pine=((h>>>10)&3)!==0,sp2=pine?'pine':'round',cs=TREEC[sp2],sc=0.8+((h>>>12)&7)/14;
       trees.push({x:(tx+.5)*T+((h>>>15)&15)-8,y:(ty+.5)*T+((h>>>19)&15)-8,sp:sp2,r:(12+((h>>>23)&7))*sc,h:(0.8+((h>>>26)&3)*0.15)*sc,c:cs[(h>>>8)%cs.length],o1:0,o2:0});}
     else if(r>0.97)props.push({x:(tx+.5)*T,y:(ty+.5)*T,k:r>0.985?'rock':'bush',c:'#3e6a2c'});}
+  // v5.37: no road that goes nowhere. A closed street (not built over, not a plaza) still paved as road becomes a strip of park, and so does
+  // the crossing of a junction left with no open street at all (the riverside drive north of the first bridge used to be one)
+  {const toPark=(x0,x1,y0,y1)=>{for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){if(tx<0||ty<0||tx>=W||ty>=W)continue;const ti=ty*W+tx;if(map[ti]!==ROAD||RIV[ti]||BRT[ti]||DIAGT[ti])continue;map[ti]=GRASS;PARKT[ti]=1;}};
+   for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++)for(const d of[0,1]){if(!linkBase(ix,iy,d))continue;const k=segKey(ix,iy,d);if(!CUT.has(k)||BUILT.has(k))continue;const r=segTiles(d===0,ix,iy);if(d===0)toPark(r.x0+1,r.x1-1,r.y0,r.y1);else toPark(r.x0,r.x1,r.y0+1,r.y1-1);}
+   for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){let deg=0;for(let d=0;d<4;d++)if(lk(ix,iy,d))deg++;if(deg||RINGJ.some(j=>j[0]===ix&&j[1]===iy))continue;toPark(ix*P,ix*P+3,iy*P,iy*P+3);}
+   // and the other way round: every street the traffic can use is paved along its whole length (a parkland fill from a closed street
+   // next to it could grass over its end, leaving a beltway junction on a patch of road with no street to it)
+   const pave=(x0,x1,y0,y1)=>{for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){if(tx<0||ty<0||tx>=W||ty>=W)continue;const ti=ty*W+tx;if(RIV[ti]||BRT[ti]||DIAGT[ti]||map[ti]===WATER||map[ti]===BLD||map[ti]===ROAD)continue;
+       map[ti]=ROAD;PARKT[ti]=0;WILD[ti]=0;const cx=(tx+.5)*T,cy=(ty+.5)*T;for(const arr of[trees,props])for(let i=arr.length-1;i>=0;i--)if(Math.abs(arr[i].x-cx)<T*0.7&&Math.abs(arr[i].y-cy)<T*0.7)arr.splice(i,1);}};
+   // ...with its sidewalks and the corners of its junctions back where the parkland had grassed them (cars turning there had grass at the corner)
+   const walkify=(x0,x1,y0,y1)=>{for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){if(tx<0||ty<0||tx>=W||ty>=W)continue;const ti=ty*W+tx;if(!WILD[ti]||map[ti]===ROAD||map[ti]===BLD||map[ti]===WATER||RIV[ti]||BRT[ti]||DIAGT[ti])continue;
+       map[ti]=WALK;PARKT[ti]=0;WILD[ti]=0;const cx=(tx+.5)*T,cy=(ty+.5)*T;for(const arr of[trees,props])for(let i=arr.length-1;i>=0;i--)if(Math.abs(arr[i].x-cx)<T*0.7&&Math.abs(arr[i].y-cy)<T*0.7)arr.splice(i,1);walkTiles.push([tx,ty]);}};
+   for(let iy=0;iy<=NB;iy++)for(let ix=0;ix<=NB;ix++){let deg=0;for(const d of[0,1])if(lk(ix,iy,d)){deg++;const r=segTiles(d===0,ix,iy);pave(r.x0,r.x1,r.y0,r.y1);
+       if(d===0)walkify(r.x0,r.x1,r.y0-1,r.y0-1),walkify(r.x0,r.x1,r.y1+1,r.y1+1);else walkify(r.x0-1,r.x0-1,r.y0,r.y1),walkify(r.x1+1,r.x1+1,r.y0,r.y1);}
+     for(let d=0;d<4;d++)if(lk(ix,iy,d))deg++;if(deg){pave(ix*P,ix*P+3,iy*P,iy*P+3);walkify(ix*P-1,ix*P+4,iy*P-1,iy*P+4);}}
+   // little bits of road left on their own (a side lane whose streets were all closed) become park too
+   {const seen=new Uint8Array(W*W);for(let i=0;i<W*W;i++){if(seen[i]||map[i]!==ROAD)continue;const st=[i],part=[];seen[i]=1;
+      while(st.length){const k=st.pop();part.push(k);const x=k%W,y=(k/W)|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=W)continue;const kk=yy*W+xx;if(!seen[kk]&&(map[kk]===ROAD||BRT[kk])){seen[kk]=1;st.push(kk);}}}
+      if(part.length>=8&&part.length<=80)for(const k of part)if(map[k]===ROAD&&!BRT[k]&&!DIAGT[k]){map[k]=GRASS;PARKT[k]=1;}}}
+   const onPark=o=>{const tx=Math.floor(o.x/T),ty=Math.floor(o.y/T);return tx>=0&&ty>=0&&tx<W&&ty<W&&map[ty*W+tx]===GRASS&&PARKT[ty*W+tx]===1;};
+   for(const arr of[parkedSpots]){const keep=arr.filter(o=>!onPark(o));arr.length=0;arr.push(...keep);}}
 })();
 // ---- gangs ----
 const GANGS=[{name:'Red Sabres',col:'#a3222b',car:'#4f1418'},{name:'Chrome Saints',col:'#c4c7cc',car:'#2a2c31'},{name:'Jade Lotus',col:'#1f9a62',car:'#173d2d'}];

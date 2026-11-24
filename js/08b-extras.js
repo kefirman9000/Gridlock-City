@@ -78,32 +78,83 @@ function freeCamTick(dt){const k=FREECAM.k,F=FREECAM,sp=(k.ShiftLeft||k.ShiftRig
   F.yaw+=((k.KeyE||k.ArrowRight?1:0)-(k.KeyQ||k.ArrowLeft?1:0))*1.6*dt;F.h=clamp(F.h+((k.KeyR||k.Space?1:0)-(k.KeyF?1:0))*sp*0.6,16,900);
   F.pitch=clamp(F.pitch+((k.KeyT||k.ArrowUp?1:0)-(k.KeyG||k.ArrowDown?1:0))*0.9*dt,-0.5,0.62);
   cam.x=F.x;cam.y=F.y;cam.yaw=F.yaw;cam.gz=0;cam.h=Math.max(F.h,GH(F.x,F.y)+16);cam.pitch=F.pitch;game.t+=dt*0.0001;}
+// v5.37: more debug tools: god mode, no cops, enemies on demand, teleport to any landmark or coordinates, any mission, story progress,
+// and a position readout. Using it still counts as cheating for the criminal rating (STATS.cheats).
+const DBG={god:false,nocops:false,coords:false,el:null};
+function dbgPlaces(){const L=[];const add=(n,p)=>{if(p&&isFinite(p.x)&&isFinite(p.y))L.push([n,p.x,p.y]);};
+  add('Times Square',LM.tsq);add('Central Park',LM.park);add('City beach',LM.beach);add('Beach (west)',LM.beachW);add('Construction site',LM.site);add('Big bridge',LM.bridgeMid);
+  if(typeof hospitalSpawn!=='undefined')add('Hospital',hospitalSpawn);if(typeof policeSpawn!=='undefined')add('Police HQ',policeSpawn);
+  if(typeof SAFEHOUSES!=='undefined')SAFEHOUSES.forEach((s,i)=>add('Safehouse '+(s.name||i+1),s.door||s));
+  if(typeof BOSSES!=='undefined')BOSSES.forEach(b=>add('Boss: '+b.name,b.mk));
+  if(typeof CONTACTS!=='undefined')CONTACTS.forEach(c=>{try{add('Contact: '+c.id,c.near());}catch(e){}});
+  if(typeof RING!=='undefined'&&RING.br2)add('Ironwood Bridge',{x:(RING.br2.x0+RING.br2.x1)/2,y:RING.br2.y});
+  if(typeof IWLM!=='undefined')for(const k in IWLM)add(k,IWLM[k]);
+  if(typeof IWD!=='undefined'){add('Ironwood summit',IWD.summit);add('Ironwood lighthouse',IWD.light);add('Port Ironwood',IWD.town);}
+  if(typeof LOOKS!=='undefined')LOOKS.forEach(l=>add('Lookout: '+l.name,l));return L;}
+function dbgTeleport(x,y){const o=player.car||player;let bx=x,by=y;
+  // land somewhere open (not inside a wall or out on the water)
+  for(let r=0;r<400;r+=16){let ok=false;for(let a=0;a<TAU&&!ok;a+=0.5){const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(!solidPx(px,py)&&!bldAt(px,py)){bx=px;by=py;ok=true;}}if(ok)break;}
+  o.x=bx;o.y=by;if(player.car){player.x=bx;player.y=by;player.car.vx=player.car.vy=0;}else{player.jz=0;player.vx=player.vy=0;}cam.gz=null;cam.x=bx;cam.y=by;fadeIn=0.6;note('Teleported');}
+function dbgMissions(){const L=[];if(typeof CHAPTERS!=='undefined')CHAPTERS.forEach((ch,g)=>ch.forEach((d,i)=>L.push(['s'+g+','+i,(GANGS[g]?GANGS[g].name:'Story '+g)+' '+(i+1)+': '+d.title])));
+  if(typeof FINALE!=='undefined')L.push(['f','Finale: '+FINALE.title]);
+  if(typeof CONTACTS!=='undefined')CONTACTS.forEach(c=>(c.jobs||[]).forEach((j,i)=>L.push(['c'+c.id+','+i,'Contact '+c.id+' '+(i+1)+': '+j.title])));
+  if(typeof heistDef==='function')L.push(['h','Bank job: The Savings Job']);return L;}
+function dbgStartMission(key){if(mission){try{storyFail(false);}catch(e){mission=null;}}dlgClose&&dlgClose();
+  if(key==='h'){startHeist();return;}
+  if(key==='f'){runMission(FINALE,{sub:'Debug'});mission.g=0;mission.gang=-1;return;}
+  if(key[0]==='s'){const[g,i]=key.slice(1).split(',').map(Number);runMission(CHAPTERS[g][i],{sub:'Debug',replay:true});mission.g=g;mission.gang=-1;return;}
+  if(key[0]==='c'){const[id,i]=key.slice(1).split(',');const c=CONTACTS.find(q=>q.id===id);if(!c)return;runMission(c.jobs[+i],{sub:c.name});mission.contact=c.id;mission.gang=-1;}}
+function dbgEnemies(kind,n){const o=player.car||player;
+  if(kind==='cops'||kind==='swat'||kind==='army'){const s=kind==='cops'?2:kind==='swat'?4:6;heat=Math.max(heat,TH[s]+1);DBG.nocops=false;note(kind==='cops'?'The police are coming':kind==='swat'?'SWAT is on its way':'The army is on its way');return;}
+  if(kind==='crowd'){for(let i=0;i<n*3;i++){const q=walkNear(o.x,o.y,260);const p=makePed(q.x,q.y,false);if(p)pedPickNext(p);}note('Spawned a crowd');return;}
+  const g=+kind;for(let i=0;i<n;i++){let x=0,y=0;for(let k=0;k<30;k++){const a=R()*TAU,d=rr(150,280);x=o.x+Math.cos(a)*d;y=o.y+Math.sin(a)*d;if(!solidPx(x,y)&&!bldAt(x,y))break;}
+    const p=makePed(x,y,false);if(!p)continue;makeGang(p,g);p.angry=90;p.hp=50;p.gun=true;pedPickNext(p);}note('Spawned '+n+' '+GANGS[g].name);}
+function dbgTick(){if(DBG.god){player.hp=Math.max(player.hp,PMAX());player.armor=100;if(player.car&&!player.car.wreck){player.car.hp=Math.max(player.car.hp,player.car.t.hp*0.6);player.car.burn=-1;}}
+  if(DBG.nocops&&heat>0)clearHeat();
+  if(DBG.coords){if(!DBG.el){DBG.el=document.createElement('div');DBG.el.style.cssText='position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:59;background:rgba(0,0,0,.6);color:#ffcc00;font:12px monospace;padding:3px 8px;border-radius:4px;pointer-events:none';document.body.appendChild(DBG.el);}
+    DBG.el.style.display='block';const o=player.car||player;DBG.el.textContent='x '+Math.round(o.x)+'  y '+Math.round(o.y)+'  z '+Math.round(GH(o.x,o.y))+'  '+districtAt(o.x,o.y)+'  '+fpsV+' fps'+(mission?'  mission: '+mission.title:'');}
+  else if(DBG.el)DBG.el.style.display='none';}
 function debugMenu(){
-  if(!dbgEl){dbgEl=document.createElement('div');dbgEl.id='dbg';dbgEl.style.cssText='position:fixed;left:12px;top:12px;z-index:60;background:rgba(12,14,18,.94);color:#e8e8e8;font:13px system-ui,sans-serif;padding:12px 14px;border:1px solid #ffcc00;border-radius:8px;max-width:330px;display:none';document.body.appendChild(dbgEl);
-    dbgEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.d,v=b.dataset.v;STATS.cheats=(STATS.cheats||0)+1;
+  if(!dbgEl){dbgEl=document.createElement('div');dbgEl.id='dbg';dbgEl.style.cssText='position:fixed;left:12px;top:12px;z-index:60;background:rgba(12,14,18,.94);color:#e8e8e8;font:13px system-ui,sans-serif;padding:12px 14px;border:1px solid #ffcc00;border-radius:8px;max-width:370px;max-height:92vh;overflow:auto;display:none';document.body.appendChild(dbgEl);
+    dbgEl.addEventListener('keydown',e=>e.stopPropagation());
+    dbgEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.d,v=b.dataset.v,sel=n=>dbgEl.querySelector('select[name='+n+']');STATS.cheats=(STATS.cheats||0)+1;
       if(a==='time')clock=+v;
       else if(a==='wx'){if(v==='clear'){rain=0;rainTarget=0;fogTarget=0;FOGK=0;}else if(v==='rain'){rain=0.95;rainTarget=1;}else{rain=0;rainTarget=0;fogTarget=0.9;FOGK=0.9;}weatherT=240;}
       else if(a==='stars'){if(v==='0')clearHeat();else{const s=Math.min(6,stars()+1);heat=TH[s]+1;}}
       else if(a==='heal'){player.hp=PMAX();player.armor=100;if(player.car){player.car.hp=player.car.t.hp;player.car.burn=-1;player.car.dmg=null;player.car.flat=false;}}
       else if(a==='cash')addMoney(10000);
       else if(a==='ammo'){for(let i=0;i<WEAPONS.length;i++)if(player.ammo[i]!==Infinity)player.ammo[i]=Math.max(player.ammo[i]||0,WEAPONS[i].kind==='b'?300:20);}
-      else if(a==='spawn'){const ty=dbgEl.querySelector('select').value,o=player.car||player,an=player.car?player.car.a:(cam.base!=null?cam.base:player.a);let x=o.x+Math.cos(an)*90,y=o.y+Math.sin(an)*90;
+      else if(a==='god')DBG.god=!DBG.god;else if(a==='nocops'){DBG.nocops=!DBG.nocops;if(DBG.nocops)clearHeat();}else if(a==='coords')DBG.coords=!DBG.coords;
+      else if(a==='spawn'){const ty=sel('veh').value,o=player.car||player,an=player.car?player.car.a:(cam.base!=null?cam.base:player.a);let x=o.x+Math.cos(an)*90,y=o.y+Math.sin(an)*90;
         if(solidPx(x,y)){const s=laneSpotNear(o.x,o.y);if(s){x=s.x;y=s.y;}}const c=makeCar(ty,x,y,an);if(c.t.heli)c.alt=0;note('Spawned: '+c.t.name);}
-      else if(a==='tp'){if(!WAYPOINT){note('Set a waypoint on the map first (TAB)');}else{const o=player.car||player;o.x=WAYPOINT.x;o.y=WAYPOINT.y;if(player.car){player.x=o.x;player.y=o.y;player.car.vx=player.car.vy=0;}else player.jz=0;cam.gz=null;}}
+      else if(a==='enemy')dbgEnemies(sel('who').value,+sel('n').value);
+      else if(a==='tp'){if(!WAYPOINT){note('Set a waypoint on the map first (TAB)');}else dbgTeleport(WAYPOINT.x,WAYPOINT.y);}
+      else if(a==='tpl'){const p=dbgPlaces()[+sel('place').value];if(p)dbgTeleport(p[1],p[2]);}
+      else if(a==='tpxy'){const x=+dbgEl.querySelector('input[name=tx]').value,y=+dbgEl.querySelector('input[name=ty]').value;if(isFinite(x)&&isFinite(y))dbgTeleport(x,y);}
+      else if(a==='mis'){dbgEl.style.display='none';dbgStartMission(sel('mis').value);return;}
+      else if(a==='mpass'){if(mission&&mission.type==='story')storyPass();else note('No story mission running');}
+      else if(a==='mfail'){if(mission)storyFail('Debug');}
+      else if(a==='story'){if(v==='all'){STORY.prog=CHAPTERS.map(c=>c.length);note('Every chapter done (the finale is open)');}else{STORY.prog=STORY.prog.map(()=>0);STORY.fin=0;note('Story reset');}}
       else if(a==='open'){STORY.prog[0]=Math.max(STORY.prog[0],2);note('Bridges open');}
       else if(a==='fps'){DBGFPS=!DBGFPS;}
       else if(a==='cam'){game.paused=false;hideMenu();freeCam(true);return;}
       else if(a==='x'){dbgEl.style.display='none';return;}
       debugMenu();debugMenu();});}
   if(dbgEl.style.display!=='none'){dbgEl.style.display='none';return;}
-  const B=(d,v,t)=>`<button data-d="${d}" data-v="${v}" style="margin:2px 3px 2px 0;padding:4px 8px;background:#2a2d34;color:#fff;border:1px solid #555;border-radius:4px;cursor:pointer">${t}</button>`;
-  const types=Object.keys(CT).filter(k=>!CT[k].rc).sort();
-  dbgEl.innerHTML='<b style="color:#ffcc00">DEBUG MENU</b> <small>(` to close)</small><br><small>Time</small><br>'+B('time',0.27,'Dawn')+B('time',0.5,'Noon')+B('time',0.78,'Dusk')+B('time',0.95,'Night')
-    +'<br><small>Weather</small><br>'+B('wx','clear','Clear')+B('wx','rain','Rain')+B('wx','fog','Fog')
-    +'<br><small>Wanted level: '+stars()+'</small><br>'+B('stars','0','Clear')+B('stars','1','+1 star')
-    +'<br><small>You</small><br>'+B('heal','','Heal + armor + fix car')+B('cash','','+$10,000')+B('ammo','','Ammo')
-    +'<br><small>Spawn a vehicle in front of you</small><br><select style="padding:4px;background:#111;color:#fff;border:1px solid #555;border-radius:4px">'+types.map(k=>`<option value="${k}">${CT[k].name}</option>`).join('')+'</select> '+B('spawn','','Spawn')
-    +'<br><small>World</small><br>'+B('tp','','Teleport to waypoint')+B('open','','Open the bridges')+B('fps','','FPS '+(DBGFPS?'on':'off'))+B('cam','','Free camera')+B('x','','Close');
+  const B=(d,v,t,on)=>`<button data-d="${d}" data-v="${v}" style="margin:2px 3px 2px 0;padding:4px 8px;background:${on?'#6a5a10':'#2a2d34'};color:#fff;border:1px solid ${on?'#ffcc00':'#555'};border-radius:4px;cursor:pointer">${t}</button>`;
+  const S=(n,opts)=>`<select name="${n}" style="padding:4px;max-width:250px;background:#111;color:#fff;border:1px solid #555;border-radius:4px">${opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select> `;
+  const types=Object.keys(CT).filter(k=>!CT[k].rc).sort(),H=t=>'<br><small style="color:#ffcc00">'+t+'</small><br>';
+  dbgEl.innerHTML='<b style="color:#ffcc00">DEBUG MENU</b> <small>(` to close)</small>'
+    +H('You')+B('god','','God mode '+(DBG.god?'ON':'off'),DBG.god)+B('nocops','','No cops '+(DBG.nocops?'ON':'off'),DBG.nocops)+B('heal','','Heal + fix car')+B('cash','','+$10,000')+B('ammo','','Ammo')
+    +H('Wanted level: '+stars())+B('stars','0','Clear')+B('stars','1','+1 star')
+    +H('Enemies')+S('who',[...GANGS.map((g,i)=>[i,g.name]),['cops','Police (2 stars)'],['swat','SWAT (4 stars)'],['army','Army (6 stars)'],['crowd','Crowd of people']])+S('n',[[4,'4'],[1,'1'],[8,'8']])+B('enemy','','Spawn')
+    +H('Vehicle in front of you')+S('veh',types.map(k=>[k,CT[k].name]))+B('spawn','','Spawn')
+    +H('Teleport')+S('place',dbgPlaces().map((p,i)=>[i,p[0]]))+B('tpl','','Go')+B('tp','','To waypoint')
+    +'<br><input name="tx" placeholder="x" size="6" style="background:#111;color:#fff;border:1px solid #555;padding:3px"> <input name="ty" placeholder="y" size="6" style="background:#111;color:#fff;border:1px solid #555;padding:3px"> '+B('tpxy','','Go to x, y')
+    +H('Missions'+(mission?' (running: '+mission.title+')':''))+S('mis',dbgMissions())+B('mis','','Start')+B('mpass','','Pass current')+B('mfail','','Fail current')
+    +'<br>'+B('story','all','Unlock whole story')+B('story','reset','Reset story')+B('open','','Open the bridges')
+    +H('Time and weather')+B('time',0.27,'Dawn')+B('time',0.5,'Noon')+B('time',0.78,'Dusk')+B('time',0.95,'Night')+B('wx','clear','Clear')+B('wx','rain','Rain')+B('wx','fog','Fog')
+    +H('View')+B('coords','','Position readout '+(DBG.coords?'ON':'off'),DBG.coords)+B('fps','','FPS '+(DBGFPS?'on':'off'))+B('cam','','Free camera')+B('x','','Close');
   dbgEl.style.display='block';}
 function fpsTick(){fpsN++;const n=performance.now();if(n-fpsT>500){fpsV=Math.round(fpsN*1000/(n-fpsT));fpsN=0;fpsT=n;}}
 
@@ -241,7 +292,7 @@ function updateFlight(dt){const c=player.car,pln=c&&c.t.plane?c:null;
   if(FLIGHT.t>1.5){const t=FLIGHT.t,best=STATS.flightBest||0;STATS.flightBest=Math.max(best,t);showBig('FLIGHT TIME',t.toFixed(1)+' seconds'+(t>best&&best>0?'  ·  NEW RECORD':''),'#8ecbff',2.6);}
   FLIGHT.t=0;}
 let dodoT=4;
-function extrasTick(dt){updateScreenRain(dt);updateActs(dt);updateFlight(dt);updateRating(dt);
+function extrasTick(dt){dbgTick();updateScreenRain(dt);updateActs(dt);updateFlight(dt);updateRating(dt);
   dodoT-=dt;if(dodoT<=0){dodoT=6;if(STRIP&&hyp((player.car||player).x-STRIP.x0,(player.car||player).y-STRIP.y)<2600)spawnDodo();}}
 function extrasHUD(sc){if(DBGFPS){fpsTick();hudText(fpsV+' FPS',VW/2,16*sc,Math.round(13*sc),'#7dff8a','center','system-ui,sans-serif');}
   if(FLIGHT.t>0.3)hudText('FLIGHT  '+FLIGHT.t.toFixed(1)+' s',VW/2,(touchMode?70:44)*sc,Math.round(18*sc),'#8ecbff','center');
