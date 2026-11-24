@@ -34,7 +34,7 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 ## What's new in v5.37
 - **Sunset Pier.** Sunset Boulevard now ends at an amusement pier on Ironwood Island, after the big Southern California piers. A long boardwalk leads out over the beach to a wide deck with a Ferris wheel, a roller coaster that loops round it with a running train, a carousel house and an arcade. At the far end there's a fish restaurant and a fishing spot. Food stands sell hot dogs, funnel cake and shave ice, and at night the wheel and the entrance arch light up.
 - **Times Square plaza.** The corner of Times Square nearest the junction is now a pedestrian plaza with granite paving, red bleacher steps you can climb and sit on, a statue, cafe tables and lamps. Across the junction, the tallest tower has a ball on a mast and a stack of video screens down its front.
-- **More of Ocean Drive.** The Art Deco beach patrol headquarters stands on the sand, and there are outdoor gyms (pull-up and dip bars) in the park strip.
+- **More of Ocean Drive.** The Art Deco beach patrol headquarters stands on the sand, and there are outdoor gyms (pull-up and dip bars) in the park strip. Palm groves fill the beach park, a low coral-stone wall runs along the beach-side sidewalk, and (v5.37.1) parked cars line both curbs as soon as you arrive.
 - **Streets that join up.** Every road out to the beltway leads into town. Closed-off streets at the edge of the city are grassed over, the streets left open are paved with sidewalks, and stray bits of road are gone.
 - **Debug menu.** Press ` (backquote), or choose DEBUG MENU in the pause menu:
   - god mode, no cops and a position readout

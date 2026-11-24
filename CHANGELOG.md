@@ -2,6 +2,10 @@
 
 Release-by-release notes are in each version's `version.json` and the git history. Below is the full feature list as it stood in the README before v5.1 (newest additions first), kept here so the README can stay short.
 
+## v5.37.1
+- iwParkTick fills the nearest empty IWPARK spots first, up to 8 a tick (it was 3 a tick in list order, so Ocean Drive stayed empty for a long time).
+- Lummus-style palm groves on Ocean Drive's park lawn (clear of the beach walk and props) and a knee-high coral-stone wall (`cwall`) with gaps along the beach-side sidewalk (08j).
+
 ## v5.37.0
 - Sunset Pier (js/08j-landmarks.js, `SPIER`): at the end of Sunset Boulevard in Palm Heights. A deck of 40-unit tiles (`spd` props; rails on outer edges, piles and slab sides only on edges so inner tiles never poke over their neighbours), three walk surfaces with an absolute height (`za` in WALKS: footFloor uses za-GH), buildings on the deck (`b.spier`: base at deck level, own slab and piles drawn in a drawBuilding wrapper, no wall skirt via a walls wrapper), a Ferris wheel (`spferris`), a coaster as per-piece props (`spco`, train timed by drop height), food stands and fishing (placesTick wrapper), entrance arch. Beach houses in its footprint are removed. Props can carry `zb` (base above the ground) so deck props slot by what stands on the deck.
 - Times Square plaza (`TSPLAZA`): the largest corner rectangle of whole buildings in a ts block at the junction is cleared (BMAP rebuilt), paved with PARKT 14 (granite pavers with steel discs), red bleacher steps (`tsteps`, stepped WALKS), statue, lamps, cafe tables, planters. The tallest ts building across the junction gets `tsball` (mast, ball that drops at midnight, stacked screens on the face toward the junction).

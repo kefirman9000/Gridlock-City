@@ -233,3 +233,17 @@ function drawFlag(o,fg){obox(o.x,o.y,0,0.6,0.6,0,58,[220,220,226],null,fg);const
     for(let s=10;s<L-6;s+=14)obox(ax+ux*s+nx*0.7,ay+uy*s+ny*0.7,0,nx?0.4:2.4,nx?2.4:0.4,z0+BH*0.35,z0+BH*0.35+4.8,[60,90,120],null,fg,null,null,LIGHTK>0.3);}};}
 {const f=placesProp;placesProp=function(o,fg){if(o.k==='gym'){drawGym(o,fg);return;}if(o.k==='flagpole'){drawFlag(o,fg);return;}f(o,fg);};}
 if(ODX2&&ODX2.hq)IWLM['Beach Patrol HQ']={x:ODX2.hq.x+ODX2.hq.w/2,y:ODX2.hq.y-40};
+// ---- Lummus-style palm groves on the lawn (clear of the beach walk, benches and gyms), and the low coral-stone wall with gaps
+// along Ocean Drive's beach-side sidewalk
+(()=>{try{if(typeof IWDIST==='undefined'||!IWDIST.odx)return;const ODX=IWDIST.odx,[ya,yb]=IWDIST.ody,OD=RING.paths.find(p=>p.ocean),BW=RING.paths.find(p=>p.walk);if(!OD)return;
+  const x0=ODX+OD.hw+OD.sw+22,x1=ODX+270,u=(a,b)=>(hash(a|0,b|0)&65535)/65535;
+  const bwD=(x,y)=>{if(!BW)return 1e9;let m=1e9;for(const q of BW)if(Math.abs(q.y-y)<80)m=Math.min(m,Math.hypot(q.x-x,q.y-y));return m;};
+  const busy=(x,y,r)=>props.some(o=>Math.abs(o.x-x)<r&&Math.abs(o.y-y)<r)||trees.some(t=>Math.abs(t.x-x)<18&&Math.abs(t.y-y)<18);
+  let n=0;for(let y=ya+20;y<yb;y+=26){for(let k=0;k<2;k++){if(u(y,k*31+7)<0.45)continue;const x=x0+(x1-x0)*u(y*3,k*17+1),yy=y+(u(y,k+5)-0.5)*16;
+      if(TTYPE[tcell(x,yy)]!==3||bwD(x,yy)<20||busy(x,yy,22)||onRoadCell(x,yy,8))continue;
+      const h0=hash(x|0,yy|0);trees.push({x,y:yy,sp:'palm',r:12+((h0>>>3)&3),h:1.25+((h0>>>6)&7)/20,c:['#3f8a2c','#4a9a34','#357a26'][h0%3],o1:0,o2:0});n++;}}
+  // the wall: coral stone, knee high, broken at every cross street and every ~140 for the paths down to the beach
+  const xw=ODX+OD.hw+OD.sw+5;for(let y=ya+10;y<yb;y+=24){const yy=y+12;if(OD.J&&OD.J.some(J=>Math.abs(OD[J.i].y-yy)<J.ow+26))continue;if(((yy-ya)%140)<30)continue;
+    if(TTYPE[tcell(xw,yy)]===10)continue;props.push({x:xw,y:yy,k:'cwall',rad:13,ht:6});}
+  SGRID=null;}catch(e){console.warn('lummus',e);}})();
+{const f=placesProp;placesProp=function(o,fg){if(o.k==='cwall'){obox(o.x,o.y,0,2.6,12,0,4.2,[214,196,164],[226,210,180],fg);return;}f(o,fg);};}

@@ -230,7 +230,9 @@ const IWPARK=[];
     for(let s=40;s<L-40;s+=62){if(P.J.some(J=>Math.abs(J.s-s)<J.ow+36))continue;const q=iwAt(P,s);for(const sd of[1,-1]){const h0=hash((s*7)|0,(P.length*31+(sd>0?1:0))|0)>>>0;if((h0&7)<3)continue;
         IWPARK.push({x:q.x-q.uy*pc*sd,y:q.y+q.ux*pc*sd,a:Math.atan2(q.uy*sd,q.ux*sd),d:IWCM[tcell(q.x,q.y)],ocean:!!P.ocean,h:h0,c:null});}}}})();
 function iwParkTick(){let n=0;for(const S of IWPARK){if(S.c&&(S.c.gone||!cars.includes(S.c)||S.c.driver||hyp(S.c.x-S.x,S.c.y-S.y)>40))S.c=null;}
-  for(const S of IWPARK){if(S.c||n>=3)continue;const d=dist2(S.x,S.y,player.x,player.y);if(d>950*950)continue;if((d<420*420&&camSees(S.x,S.y))||carNear(S.x,S.y,30))continue;
+  // nearest empty spots first, up to 8 a tick, so the street you're on fills before the ones round the corner
+  const C=[];for(const S of IWPARK){if(S.c)continue;const d=dist2(S.x,S.y,player.x,player.y);if(d<950*950)C.push([d,S]);}C.sort((a,b)=>a[0]-b[0]);
+  for(const[d,S]of C){if(n>=8)break;if((d<420*420&&camSees(S.x,S.y))||carNear(S.x,S.y,30))continue;
     const classic=S.ocean&&((S.h>>>5)&3)===0,ty=classic?'muscle':S.d===1&&(S.h&16)?'taxi':pick(['sedan','compact','suv','wagon','sedan','pickup','roadster'].filter(t=>CT[t]));
     const c=makeCar(CT[ty]?ty:'sedan',S.x,S.y,S.a);if(!c)continue;c.traffic=true;c.iwParked=true;if(classic)c.col=['#3ad6c0','#f4a6c0','#f6f0e0','#e8c84a'][(S.h>>>8)&3];else if(S.d===3&&(S.h&64))c.col=['#f4b6c2','#9fe0d8','#ffffff','#ff8a5a'][(S.h>>>9)&3];
     S.c=c;n++;}}
