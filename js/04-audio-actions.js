@@ -414,7 +414,7 @@ const WALKS=[];
 let FOOT_LADDER=false,FOOT_FE=false; // set while the player's feet are on a ladder: lets them climb over a wall's top edge
 function footFloor(x,y,z){if(z==null)z=1e9;let fl=0,on=null,lad=false,fe=false;
   for(const r of WALKS){const dx=x-r.x,dy=y-r.y;if(Math.abs(dx)>r.hl+r.hw+4||Math.abs(dy)>r.hl+r.hw+4)continue;const ca=Math.cos(r.a),sa=Math.sin(r.a),f=dx*ca+dy*sa,l=-dx*sa+dy*ca;
-    if(Math.abs(f)<r.hl&&Math.abs(l)<r.hw){const h=r.h0+(r.h1-r.h0)*(f+r.hl)/(2*r.hl);if(h>fl&&h<=z+8){fl=h;on=null;lad=!!r.ladder;fe=!!r.fe;}}}
+    if(Math.abs(f)<r.hl&&Math.abs(l)<r.hw){const h=r.za!=null?r.za-GH(x,y)+0.5:r.h0+(r.h1-r.h0)*(f+r.hl)/(2*r.hl);if(h>fl&&h<=z+8){fl=h;on=null;lad=!!r.ladder;fe=!!r.fe;}}}
   FOOT_LADDER=lad;FOOT_FE=fe;
   for(const c of cars){const dx=x-c.x,dy=y-c.y;if(dx*dx+dy*dy>3600)continue;const ca=Math.cos(c.a),sa=Math.sin(c.a),f=dx*ca+dy*sa,l=-dx*sa+dy*ca;
     if(Math.abs(f)<c.t.L/2-1&&Math.abs(l)<c.t.Wd/2){const h=carRoof(c)+(c.az||0);if(h>fl&&h<=z+8){fl=h;on=c;}}}

@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js`, `js/08g-world.js` and `js/08h-metro.js` between 08 and 09), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js`, `js/08g-world.js`, `js/08i-ironwood.js`, `js/08h-metro.js` and `js/08j-landmarks.js` between 08 and 09, in that order), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -87,6 +87,13 @@ streets are meant to move onto (a curved, junction-aware network instead of the 
 v5.36: `HM` is 7600 (the world reaches further out). Ocean Drive is a straight net road (`P.ocean`) 560 in from Ironwood's straight east beach (COAST.isl2, not roughened there),
 with Lummus-style park, beach walk (`walk:true` path, paint only) and beach; `IWDIST.odx`. Roads with hw >= 46 are `P.park` (lanes to 28, parking lanes beyond; `IWPARK` fills them
 with parked cars). Signals `JSIG`/`jSig`, sidewalk walkers `p.iw` (iwPedTick), Deco facades `b.deco` (decoWall), island life in `iwLifeTick` (08i).
+
+## Landmarks and debug (v5.37)
+`js/08j-landmarks.js` (after 08h, before 09): Sunset Pier (`SPIER`), the Times Square plaza (`TSPLAZA`, paving PARKT 14) and ball tower (`b.tsball`), Ocean Drive's beach patrol HQ and gyms (`ODX2`), and `IWLM` (places for the debug teleport).
+Walk surfaces may carry `za` (an absolute deck height; footFloor gives za-GH): use it for decks over sloping ground or water. Props may carry `zb` (base above the ground) so a deck prop slots by what stands on the deck,
+not from the sea floor. Buildings standing on a deck set `b.spier` (no wall skirt, own slab). footFloor returns `[height, thing]`.
+The debug menu (08b, ` key or pause menu DEBUG MENU): `dbgPlaces`, `dbgTeleport`, `dbgMissions`/`dbgStartMission`, `dbgEnemies`, god mode / no cops / coordinates in `dbgTick`.
+`cityEdge` ends with a cleanup: every `RINGJ` node keeps an open street path into town, CUT segments are grassed, open segments are paved with their sidewalks, deg-0 nodes and stray road pieces become park.
 
 ## The island (v5.11)
 The terrain grid reaches `HM` (6400 since v5.26; was 2600) beyond the city on every side (`HM0`=1400 is the old margin; the tree loop in 08-render keeps it so the `R()` stream is unchanged).

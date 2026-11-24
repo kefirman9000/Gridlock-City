@@ -92,9 +92,11 @@ function dbgPlaces(){const L=[];const add=(n,p)=>{if(p&&isFinite(p.x)&&isFinite(
   if(typeof IWD!=='undefined'){add('Ironwood summit',IWD.summit);add('Ironwood lighthouse',IWD.light);add('Port Ironwood',IWD.town);}
   if(typeof LOOKS!=='undefined')LOOKS.forEach(l=>add('Lookout: '+l.name,l));return L;}
 function dbgTeleport(x,y){const o=player.car||player;let bx=x,by=y;
-  // land somewhere open (not inside a wall or out on the water)
-  for(let r=0;r<400;r+=16){let ok=false;for(let a=0;a<TAU&&!ok;a+=0.5){const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(!solidPx(px,py)&&!bldAt(px,py)){bx=px;by=py;ok=true;}}if(ok)break;}
-  o.x=bx;o.y=by;if(player.car){player.x=bx;player.y=by;player.car.vx=player.car.vy=0;}else{player.jz=0;player.vx=player.vy=0;}cam.gz=null;cam.x=bx;cam.y=by;fadeIn=0.6;note('Teleported');}
+  // on foot, a deck or walkway right there (the pier, a plaza's steps) is fine to land on
+  const fl=player.car?0:footFloor(x,y,1e9)[0];
+  // otherwise land somewhere open (not inside a wall or out on the water)
+  if(!(fl>0))for(let r=0;r<400;r+=16){let ok=false;for(let a=0;a<TAU&&!ok;a+=0.5){const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(!solidPx(px,py)&&!bldAt(px,py)){bx=px;by=py;ok=true;}}if(ok)break;}
+  o.x=bx;o.y=by;if(player.car){player.x=bx;player.y=by;player.car.vx=player.car.vy=0;}else{player.jz=fl>0?fl:0;player.vx=player.vy=0;}cam.gz=null;cam.x=bx;cam.y=by;fadeIn=0.6;note('Teleported');}
 function dbgMissions(){const L=[];if(typeof CHAPTERS!=='undefined')CHAPTERS.forEach((ch,g)=>ch.forEach((d,i)=>L.push(['s'+g+','+i,(GANGS[g]?GANGS[g].name:'Story '+g)+' '+(i+1)+': '+d.title])));
   if(typeof FINALE!=='undefined')L.push(['f','Finale: '+FINALE.title]);
   if(typeof CONTACTS!=='undefined')CONTACTS.forEach(c=>(c.jobs||[]).forEach((j,i)=>L.push(['c'+c.id+','+i,'Contact '+c.id+' '+(i+1)+': '+j.title])));

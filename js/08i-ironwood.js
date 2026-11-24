@@ -268,3 +268,4 @@ function iwFilm(){for(const p of peds){if(p.gone||p.cop||p.gang!=null||p.target|
     if(p.umb==null)p.umb=false;p.phone=true;p.film=rr(5,9);if(p.iw){p.iw=null;p.xing=false;}}}
 {const f=crime;crime=function(...a){const r=f.apply(this,a);try{iwFilm();}catch(e){}return r;};}
 {const f=lifePed;lifePed=function(p,dt){if(p.film>0&&p.state==='walk'){p.film-=dt;p.vx=p.vy=0;p.moving=false;p.a=lerpAng(p.a,Math.atan2(player.y-p.y,player.x-p.x),Math.min(1,dt*6));return true;}return f(p,dt);};}
+

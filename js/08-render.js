@@ -724,6 +724,8 @@ function renderGround(heads){
             if(rn>0.3&&((nz+u)&15)===0){r+=18*rn;g+=20*rn;b+=26*rn;}
             break;}
           case 1:{const pk=PARKT[ti];
+            if(pk===14){/* Times Square plaza (v5.37): grey granite pavers with steel discs */const cu=(u+tx*32)%48,cv=(v+ty*32)%48,dd=(cu-24)*(cu-24)+(cv-24)*(cv-24);
+              if(dd<11){r=86+nz;g=88+nz;b=94+nz;if(dd<3){r+=34;g+=34;b+=36;}}else if((u&15)===0||(v&15)===0){r=116;g=116;b=114;}else{r=154+nz*2;g=152+nz*2;b=148+nz*2;}break;}
             if(pk===5){if((u&15)===0||(v&15)===0){r=120;g=36;b=32;}else{r=168+nz*2;g=52+nz;b=44+nz;}break;}
             if(pk===7){r=150+nz*2;g=110+nz*2;b=72+nz;if((v%6)===0){r=96;g=70;b=46;}break;}
             if(pk){r=146+nz*3;g=128+nz*3;b=98+nz*2;if(((nz*7+u*3+v)&31)===0){r-=30;g-=30;b-=26;}break;}
@@ -1491,7 +1493,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   forCells(cl=>{for(const[k,o]of cl.s){switch(k){
     case 2:{const cd=(o.x-CX)**2+(o.y-CY)**2;if(cd<(o.r+30)**2)break; // a tree right at the camera would fill the screen with leaves: skip it (DESIGN RULES E)
       add(2,o,o.x,o.y,o.r+4,null,15+o.r*2+(o.sp==='palm'?30:0));break;}case 3:add(3,o,o.x,o.y,5,null,63);break;
-    case 13:if(o.rad){add(13,o,o.x,o.y,o.rad,null,o.ht);break;}add(13,o,o.x,o.y,o.k==='hedge'||o.k==='rail'||o.k==='seawall'||o.k==='brail'||o.k==='deck'||o.k==='fence'||o.k==='eltrack'?24:o.k==='elplat'?64:o.k==='elcorner'||o.k==='elpillar'?20:o.k==='elstair'?30:o.k==='fountain'?30:o.k==='crane'?100:8,null,o.k==='fountain'?34:o.k==='crane'?176:o.k[0]==='e'&&o.k[1]==='l'?EL_H+12:12);break;
+    case 13:if(o.rad){add(13,o,o.x,o.y,o.rad,null,o.ht,o.zb);break;} /* o.zb: a deck prop's base above the ground (the pier), so it slots by what stands on the deck */add(13,o,o.x,o.y,o.k==='hedge'||o.k==='rail'||o.k==='seawall'||o.k==='brail'||o.k==='deck'||o.k==='fence'||o.k==='eltrack'?24:o.k==='elplat'?64:o.k==='elcorner'||o.k==='elpillar'?20:o.k==='elstair'?30:o.k==='fountain'?30:o.k==='crane'?100:8,null,o.k==='fountain'?34:o.k==='crane'?176:o.k[0]==='e'&&o.k[1]==='l'?EL_H+12:12);break;
     case 15:add(15,o,o.x,o.y,5,null,47);break;case 16:add(16,o,o.x,o.y,32,null,16);break;case 19:if(!o.got)add(19,o,o.x,o.y,8,null,16);break;}}});
   if(fare&&fare.stage==='ride')add(18,fare,fare.x,fare.y,40,null,40);
   for(const k of pickups)if(!k.taken&&!(k.sh&&!k.sh.owned))add(4,k,k.x,k.y,8);
