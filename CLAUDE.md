@@ -99,6 +99,8 @@ v5.39 (end of 08j, `V539`): the Seabreeze Hotel safehouse at the start (`b.vhote
 Props 14 tall or less are culled past 640 and props 26 tall or less past 900 (in the case 13 add of 08-render); trees switch to their simple form past 560.
 v5.40: the subway runs under the city (`js/08k-subway.js`; the old METRO loop and station hall are retired). `UGK`/`UGZ` grid (8 units: rock, track, platform, stairs), `GH` wrapped (stairs always; track/platform while `UGQ`, set in 07's player and camera sections, or `UGR` while drawing below).
 `player.ug` is set on the stairs (same x/y, no warp); while it's set, only `o.ug` things are drawn and street things (cars, police, bullets, buildings, ladders) can't reach you. Anything new that the player can touch from the street must check `player.ug`.
+v5.41: the south shore is a beach (`southShore` after `cityEdge`: the bottom street row and its stubs are closed; sand slopes to a wavy waterline). Edge parkland (`WILD`) reaches up to three blocks in and is drawn with terrain colours; keep-blocks in `cityEdge` protect stations, safehouses, hospitals and police.
+Subway entrances prefer corner plazas (`ugPlazaRect`/`ugCanClear`/`ugClear` in 08k).
 `cityEdge` ends with a cleanup: every `RINGJ` node keeps an open street path into town, CUT segments are grassed, open segments are paved with their sidewalks, deg-0 nodes and stray road pieces become park.
 
 ## The island (v5.11)

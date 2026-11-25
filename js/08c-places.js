@@ -260,7 +260,8 @@ const PIER=(()=>{if(!LM||!LM.beach)return null;const bx=Math.floor(LM.beach.x/T/
   for(const off of[20,-50,-110,250])
     {const x=LM.beach.x+off;if(RAMPS.some(r=>Math.abs(r.x-x)<EW+30&&r.y>ys-40)||PACKAGES.some(k=>Math.abs(k.x-x)<EW+10&&k.y>ys-20))continue;px=x;break;}
   if(px==null)return null;
-  {let ty=y0+5;const tx=Math.floor(px/T);while(ty<W-1&&map[ty*W+tx]===WATER&&map[ty*W+tx-1]===WATER&&map[ty*W+tx+1]===WATER)ty++;ye=ty*T-6;} // out to the end of the beach's water
+  {let ty=y0+5;const tx=Math.floor(px/T);while(ty<W-1&&map[ty*W+tx]!==WATER)ty++; /* v5.41: the shore wanders, so start where the water does */
+   while(ty<W-1&&map[ty*W+tx]===WATER&&map[ty*W+tx-1]===WATER&&map[ty*W+tx+1]===WATER)ty++;ye=ty*T-6;} // out to the end of the beach's water
   if(ye-ys<150)return null;
   const za=GH(px,ys-14)+10;clearRect(px-EW-4,ys-30,px+EW+4,ye+4);
   const segs=[],n=Math.max(1,Math.floor((ye-72-ys)/32));

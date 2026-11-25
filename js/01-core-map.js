@@ -116,7 +116,7 @@
 // =====================================================================================================================
 var UGQ=false,UGR=false; // v5.40: underground flags (see js/08k-subway.js): UGQ while your own moves run below the street, UGR while it's drawn
 function ugStair(){return false}function ugPix(){return[40,40,40]}
-const VERSION='5.40.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+const VERSION='5.41.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -761,6 +761,8 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
 (function cityEdge(){const lk=(x,y,d)=>linkBase(x,y,d)&&!CUT.has(segKey(x,y,d));const n1=(s,k)=>{const i=Math.floor(s),f=s-i,u=f*f*(3-2*f),h=q=>(hash(q*73+k*911,k*37+5)&65535)/65535;return h(i)+(h(i+1)-h(i))*u;},
     prof=(s,k)=>n1(s/18,k)*0.65+n1(s/7,k+50)*0.35;
   const okKind=k=>k==='res'||k==='park'||k==='bld'||k==='lot';const sp=new Set(Object.keys(SPECIAL));
+  // v5.41: blocks the subway stations, safehouses, hospitals and police stations are placed in stay built
+  for(const[bx,by]of[[1,3],[2,3],[1,4],[2,4],[3,12],[4,12],[3,13],[4,13],[10,5],[11,5],[10,6],[11,6],[2,7],[12,8],[10,15],[13,5],[3,13],[16,16],[3,5],[11,2],[4,16],[5,0],[6,0],[5,1],[6,1],[15,14],[16,14],[15,15],[16,15],[1,1],[2,1],[1,2],[2,2],[0,1],[1,0]])sp.add(bx+','+by); // (the last six: round the main hospital)
   const protect=(tx,ty)=>{const ti=ty*W+tx;if(RIV[ti]||BRT[ti]||DIAGT[ti]||map[ti]===WATER)return true;
     for(const[jx,jy]of RINGJ){const nx=jx*P,ny=jy*P;if(tx>=nx-1&&tx<=nx+4&&ty>=ny-1&&ty<=ny+4)return true;if(jy===0&&tx>=nx&&tx<=nx+3&&ty<=ny+P)return true;if(jx===0&&ty>=ny&&ty<=ny+3&&tx<=nx+P)return true;if(jx===NB&&ty>=ny&&ty<=ny+3&&tx>=nx-P)return true;}if(tx>=RIVX0-6&&tx<RIVX1+6)return true;
     const bx=Math.floor(tx/P),by=Math.floor(ty/P),mx=tx%P,my=ty%P;
@@ -768,14 +770,14 @@ const RINGJ=[[3,0],[12,0],[16,0],[0,5],[0,12],[0,NB-1],[NB,3],[NB,9],[NB,15],[NB
     if(mx>=4&&my>=4&&bx<NB&&by<NB){const k=BLOCKK[by*NB+bx];if(!okKind(k)||sp.has(bx+','+by))return true;}
     // the dirt roads out to the farms leave along three streets on the east side
     if(tx>=W-20&&[3,9,15].some(iy=>ty>=iy*P-1&&ty<=iy*P+4))return true;return false;};
-  const RC=46,RC2=26,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
+  const RC=78,RC2=30,LIM=W-1-P*1; // corner radius in tiles; the south-west and south-east corners stop above the beach row
   // v5.33: the north, west and east edges are ragged too: parkland reaches into the grid by a depth that wanders along each side
   // (up to two blocks), stopping short of blocks that must stay and narrowing where a street leads out to the beltway
-  const blkKeep=(bx,by)=>{const k=BLOCKK[by*NB+bx];return !okKind(k)||sp.has(bx+','+by);},DMAX=15;
-  const capN=[],capW=[],capE=[];for(let b=0;b<NB;b++){let c=DMAX;for(let d=0;d<3;d++)if(blkKeep(b,d)){c=d*P;break;}capN[b]=c;c=DMAX;for(let d=0;d<3;d++)if(blkKeep(d,b)){c=d*P;break;}capW[b]=c;c=DMAX;for(let d=0;d<3;d++)if(blkKeep(NB-1-d,b)){c=d*P;break;}capE[b]=c;}
+  const blkKeep=(bx,by)=>{const k=BLOCKK[by*NB+bx];return !okKind(k)||sp.has(bx+','+by);},DMAX=45; // v5.41: up to three blocks deep in broad bays (was one block)
+  const capN=[],capW=[],capE=[];for(let b=0;b<NB;b++){let c=DMAX;for(let d=0;d<4;d++)if(blkKeep(b,d)){c=d*P;break;}capN[b]=c;c=DMAX;for(let d=0;d<4;d++)if(blkKeep(d,b)){c=d*P;break;}capW[b]=c;c=DMAX;for(let d=0;d<4;d++)if(blkKeep(NB-1-d,b)){c=d*P;break;}capE[b]=c;}
   const capAt=(arr,t)=>{const b=Math.min(NB-1,Math.floor(t/P));let c=arr[b];if(t%P<4&&b>0)c=Math.min(c,arr[b-1]);return c;};
   const jl=(side,t)=>{for(const[jx,jy]of RINGJ){const on=side===0?jy===0:side===1?jx===0:jx===NB;if(!on)continue;const jt=(side===0?jx:jy)*P+1.5;if(Math.abs(t-jt)<10)return P-3;}return DMAX;};
-  const lobe=(t,k)=>{const v=n1(t/30,k)*0.7+n1(t/10,k+50)*0.3;return 1+(DMAX-1)*Math.pow(clamp((v-0.22)/0.6,0,1),1.4);};
+  const lobe=(t,k)=>{const v=n1(t/52,k)*0.75+n1(t/14,k+50)*0.25;return 1+(DMAX-1)*Math.pow(clamp((v-0.28)/0.55,0,1),1.25);};
   const depN=[],depW=[],depE=[];for(let t=0;t<W;t++){depN[t]=Math.min(capAt(capN,t),jl(0,t),lobe(t,21));depW[t]=Math.min(capAt(capW,t),jl(1,t),lobe(t,22));depE[t]=Math.min(capAt(capE,t),jl(2,t),lobe(t,23));}
   for(let ty=0;ty<W;ty++)for(let tx=0;tx<W;tx++){if(protect(tx,ty))continue;let w=false;
     const dN=ty,dW=tx,dE=W-1-tx;
@@ -847,6 +849,29 @@ CUT.add(segKey(ix,iy,dd));const h=dd===0||dd===2,a=h?(dd===0?ix:ix-1):ix,b=h?iy:
    const onPark=o=>{const tx=Math.floor(o.x/T),ty=Math.floor(o.y/T);return tx>=0&&ty>=0&&tx<W&&ty<W&&map[ty*W+tx]===GRASS&&PARKT[ty*W+tx]===1;};
    for(const arr of[parkedSpots]){const keep=arr.filter(o=>!onPark(o));arr.length=0;arr.push(...keep);}}
 })();
+// v5.41: the south shore. The beach blocks used to be a strip of sand and a box of water fenced in by streets, with one more street
+// along the very edge of the map and the open sea beyond it. Now the street above the beach is the beachfront road: the bottom street
+// row and the short streets down to it are closed, their tiles join the beach, and the sand runs down to a wavy shoreline into the sea.
+(function southShore(){const by=NB-1,S0=by*P+4+2,u=t=>{const i=Math.floor(t),f=t-i,s=f*f*(3-2*f),h=q=>(hash(q*131+17,977)&65535)/65535;return h(i)+(h(i+1)-h(i))*s;};
+  for(let ix=0;ix<=NB;ix++){CUT.add(segKey(ix,NB,0));CUT.add(segKey(ix,by,1));}
+  const shore=tx=>by*P+4+6+Math.round(7*(u(tx/16)*0.75+u(tx/5+40)*0.25)-3.2); // the first row of water: about 5 rows of sand below the sidewalk, give or take 2
+  for(let tx=0;tx<W;tx++){const sh=shore(tx);
+    for(let ty=by*P+4;ty<W;ty++){const ti=ty*W+tx;if(RIV[ti])continue; // (the bay's water is river water; its grass rim joins the beach like the rest)
+      if(ty<S0){if(map[ti]===ROAD){map[ti]=WALK;PARKT[ti]=7;}continue;} // the sidewalk along the beachfront runs straight across the old side streets
+      if(map[ti]===BLD)continue;const water=ty>=sh;map[ti]=water?WATER:GRASS;PARKT[ti]=6;BRT[ti]=0;DIAGT[ti]=0;}}
+  const gone=o=>{const tx=Math.floor(o.x/T),ty=Math.floor(o.y/T);return ty>=by*P+4+2&&tx>=0&&tx<W&&ty<W&&(map[ty*W+tx]===WATER||o.k==='hydrant'||o.k==='bin'||o.k==='mail'||o.k==='news'||o.k==='busstop'||o.k==='pmeter');};
+  for(const arr of[trees,props,parkedSpots,streetLights,RAMPS]){const keep=arr.filter(o=>!gone(o)&&!(arr===streetLights||arr===parkedSpots?Math.floor(o.y/T)>=by*P+4+2:false));arr.length=0;arr.push(...keep);}
+  // streets left with one end hanging (near the south corners, where the bottom row used to carry on) are closed back to the next junction
+  const lk=(x,y,d)=>linkBase(x,y,d)&&!CUT.has(segKey(x,y,d)),deg=(x,y)=>{let n=0;for(let d=0;d<4;d++)if(lk(x,y,d))n++;return n;},grass=(x0,x1,y0,y1)=>{for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){if(tx<0||ty<0||tx>=W||ty>=W)continue;const ti=ty*W+tx;if(map[ti]!==ROAD||RIV[ti]||BRT[ti]||DIAGT[ti])continue;map[ti]=GRASS;PARKT[ti]=1;WILD[ti]=1;}};
+  for(let pass=0;pass<20;pass++){let ch=false;for(let y=0;y<=NB;y++)for(let x=0;x<=NB;x++){if(deg(x,y)!==1||RINGJ.some(j=>j[0]===x&&j[1]===y))continue;let d=0;while(!lk(x,y,d))d++;
+      CUT.add(segKey(x,y,d));const h=d===0||d===2,a=d===0?x:d===2?x-1:x,b=d===1?y:d===3?y-1:y;if(h)grass(a*P+4,a*P+13,b*P,b*P+3);else grass(a*P,a*P+3,b*P+4,b*P+13);grass(x*P,x*P+3,y*P,y*P+3);
+      const nx=x+DX[d],ny=y+DY[d];if(deg(nx,ny)===0)grass(nx*P,nx*P+3,ny*P,ny*P+3);ch=true;}if(!ch)break;}
+  const onGrass=o=>{const tx=Math.floor(o.x/T),ty=Math.floor(o.y/T);return tx>=0&&ty>=0&&tx<W&&ty<W&&map[ty*W+tx]===GRASS&&WILD[ty*W+tx];};
+  for(const arr of[parkedSpots,streetLights]){const keep=arr.filter(o=>!onGrass(o));arr.length=0;arr.push(...keep);}
+  // jumps keep a clear run-up and landing now the parkland reaches further in (no trees planted in their way)
+  for(const r of RAMPS){if(r.x<0||r.y<0||r.x>=WPX||r.y>=WPX)continue;const ca=Math.cos(r.a),sa=Math.sin(r.a);
+    for(let f=-(r.hl+240);f<=r.hl+700;f+=8)for(let l=-44;l<=44;l+=8){const x=r.x+ca*f-sa*l,y=r.y+sa*f+ca*l,tx=Math.floor(x/T),ty=Math.floor(y/T);if(tx<0||ty<0||tx>=W||ty>=W)continue;const ti=ty*W+tx;if(map[ti]===TREE){map[ti]=GRASS;PARKT[ti]=PARKT[ti]||1;}}
+    const keep=trees.filter(o=>{const dx=o.x-r.x,dy=o.y-r.y,f=dx*ca+dy*sa,l=Math.abs(-dx*sa+dy*ca);return!(f>-(r.hl+240)&&f<r.hl+700&&l<48);});trees.length=0;trees.push(...keep);}})();
 // ---- gangs ----
 const GANGS=[{name:'Red Sabres',col:'#a3222b',car:'#4f1418'},{name:'Chrome Saints',col:'#c4c7cc',car:'#2a2c31'},{name:'Jade Lotus',col:'#1f9a62',car:'#173d2d'}];
 function zoneOf(x,y){const bx=Math.floor(x/T/P),by=Math.floor(y/T/P);const H=NB/2;if(bx<H&&by<H)return 0;if(bx>=H&&by<H)return 1;if(bx<H&&by>=H)return 2;return -1}

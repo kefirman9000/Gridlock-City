@@ -31,6 +31,16 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.41
+- **A real beach on the south shore.** The beach blocks used to be strips of sand beside boxes of water, fenced in by streets, with one more street running along the edge of the map. Now:
+  - the street above the beach is the beachfront road
+  - the sand runs down a gentle slope to a wavy shoreline and into the sea
+  - the river and the bay open out into it, and the South Beach pier reaches out over the water
+- **The city isn't a square any more.** Parkland reaches into the city in broad bays up to three blocks deep along the north, west and east sides, and the corners are rounded more. The parkland is drawn as the island's own meadows and woods, so the built-up city has a ragged outline that blends into the hills. The guard rails and seawall that traced the old square are gone, except beside streets that run along the edge.
+- **Subway entrances with room to walk.** Where a corner of the block can be cleared, the stairs go down from a small granite plaza beside the sidewalk instead of filling the sidewalk itself.
+- **Clean sea.** The two straight shallow channels running from the city out to the edge of the world are gone, and so is a ridge of land along the old south edge.
+- **Fixes.** Streets left with a dead end near the south corners are closed back to the next junction. Stunt ramps keep a clear run-up and landing. The subway platform now continues past the foot of every stair, including entrances that run west.
+
 ## What's new in v5.40
 - **A real subway under the city.** No more fading out and warping:
   - Each entrance is a stairwell cut into the sidewalk, behind green railings with lamps. Walk down it, and the street gives way to a tiled station under the road, with the platform's yellow edge, pillars, benches, name boards and people waiting.
@@ -39,21 +49,6 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
   - Walk back up the stairs to come out exactly where that station is on the street. The big map shows the line where it really runs, and where the trains are.
   - Down there the police up on the street lose you and can't arrest you. Stay off the tracks when a train comes.
   - On the street, you can feel the rumble when a train passes underneath, and people walk down the stairs to catch a train.
-
-## What's new in v5.39
-Each town on Ironwood Island takes some flavour from the games set in the city it's modelled on (the feel, not their names or maps):
-- **Ocean Drive (the Vice City beach):**
-  - You start outside the **Seabreeze Hotel**, a white, green and yellow Art Deco hotel on the drive. It's your first safehouse, free from the start, with a cream two-tone classic at the curb.
-  - A **lighthouse** with red bands stands at the south end of the beach, and its lantern lights up at night.
-  - Lifeguards in red stroll the sand, mopeds weave through the traffic, and at night the cruisers glow with neon underglow.
-- **Ironwood Central (GTA III's New York):** wooden water tanks and billboards on the rooftops, and trash bags and news boxes at the curbs.
-- **Palm Heights (Los Angeles, as in San Andreas and GTA V):**
-  - giant white **IRONWOOD** letters on the hill above town
-  - an **observatory** with copper domes on the next peak
-  - stars set in Sunset Boulevard's sidewalks
-  - a basketball court on the beach by the pier
-- **Faster:** small props and trees far away are drawn more simply, about 20% fewer boxes a frame on Ocean Drive.
-- **Fix:** a crime reported by a witness outside any named district (out on the beltway, say) no longer crashes the frame.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

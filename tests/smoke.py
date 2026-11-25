@@ -16,10 +16,10 @@ CHECKS = {
         return hyp(player.x-x0,player.y-y0)>40||'player did not move'}""",
     'subway stairs go down to a platform and back up': """()=>{const o=UGM.st[0],S=o.stair,a=o.sx>0?0:Math.PI;player.car=null;player.x=S.xt-o.sx*30;player.y=S.ys;player.jz=0;
         const walk=(n,ang)=>{for(let i=0;i<n;i++){player.a=player.body=ang;cam.yaw=cam.base=ang;player.y=S.ys;keys.KeyW=true;update(1/60);}keys.KeyW=false;};
-        walk(130,a);if(!player.ug)return 'not underground after the stairs (x '+Math.round(player.x)+')';UGQ=true;const z=GH(player.x,player.y);UGQ=false;
+        walk(190,a);if(!player.ug)return 'not underground after the stairs (x '+Math.round(player.x)+')';UGQ=true;const z=GH(player.x,player.y);UGQ=false;
         if(Math.abs(z-o.fz)>2)return 'not at platform level ('+Math.round(z)+' vs '+Math.round(o.fz)+')';
-        walk(170,a+Math.PI);return player.ug?'still underground after walking back up':true}""",
-    'enter, drive and leave a car': """()=>{let s=null;for(let i=0;i<80&&!s;i++)s=laneSpotNear(hospitalSpawn.x+rr(-600,600),hospitalSpawn.y+rr(-600,600));if(!s)return 'no lane spot';
+        walk(240,a+Math.PI);return player.ug?'still underground after walking back up':true}""",
+    'enter, drive and leave a car': """()=>{let s=null;for(let i=0;i<300&&!s;i++)s=laneSpotNear(hospitalSpawn.x+rr(-600,600),hospitalSpawn.y+rr(-600,600));if(!s)return 'no lane spot';
         for(let i=cars.length-1;i>=0;i--)if(hyp(cars[i].x-s.x,cars[i].y-s.y)<320)cars.splice(i,1); // a clear road ahead
         const c=makeCar('sedan',s.x,s.y,s.dir*PI/2);player.car=c;c.driver='player';c.ai=null;c.traffic=false;player.x=c.x;player.y=c.y;
         const x0=c.x,y0=c.y;keys.KeyW=true;for(let i=0;i<90;i++)update(1/60);keys.KeyW=false;const moved=hyp(c.x-x0,c.y-y0);
@@ -39,7 +39,7 @@ CHECKS = {
     'mission marker starts a boss job': """()=>{STORY.prog=[0,0,0];STORY.fin=0;const B=BOSSES[0];B.cool=false;player.car=null;heat=0;player.x=B.mk.x;player.y=B.mk.y;
         for(let i=0;i<5;i++)update(1/60);const ok=!!mission;if(mission){storyFail(false);}dlgClose&&dlgClose();SCENE.on=false;return ok||'no mission from the marker'}""",
     'wanted level and helicopter': """()=>{crime(0,4);for(let i=0;i<30;i++){player.hp=1000;bustT=0;update(1/60);}const ok=stars()>=4&&!!heli;clearHeat();heli=null;return ok||'stars '+stars()+' heli '+!!heli}""",
-    'tow truck hooks a car': """()=>{let s=null;for(let i=0;i<80&&!s;i++)s=laneSpotNear(player.x+rr(-600,600),player.y+rr(-600,600));const a=s.dir*PI/2;
+    'tow truck hooks a car': """()=>{let s=null;for(let i=0;i<300&&!s;i++)s=laneSpotNear(hospitalSpawn.x+rr(-600,600),hospitalSpawn.y+rr(-600,600));const a=s.dir*PI/2;
         const tw=makeCar('tow',s.x,s.y,a);const o=makeCar('sedan',s.x-Math.cos(a)*(tw.t.L/2+30),s.y-Math.sin(a)*(tw.t.L/2+30),a);player.car=tw;tw.driver='player';tw.ai=null;
         towToggle(tw);const ok=tw.towing===o;tw.towing=null;o.towedBy=null;exitCar(true);return ok||'not hooked'}""",
     'remapped key drives the action': """()=>{setKey('KeyF','KeyJ');const ok=KEYREV.KeyJ==='KeyF'&&KEYREV.KeyF==='Unbound';OPT.keys={};buildKeyRev();return (ok&&KEYREV.KeyF==='KeyF')||'remap table wrong'}""",

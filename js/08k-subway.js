@@ -18,12 +18,30 @@ const GH0=GH;
 GH=function(x,y){if(x>=0&&y>=0&&x<WPX&&y<WPX){const i=(y>>3)*UGN+(x>>3),k=UGK[i];if(k===3||(k!==0&&(UGQ||UGR)))return UGZ[i];}return GH0(x,y);};
 function ugStair(x,y){return x>=0&&y>=0&&x<WPX&&y<WPX&&UGK[(y>>3)*UGN+(x>>3)]===3;}
 
+// ---- corner plazas for the entrances: the block's corner nearest the street crossing, if its buildings can go ----
+function ugPlazaRect(c,sx,sy){const xa=c.x+sx*96,xb=c.x+sx*248,ya=c.y+sy*96,yb=c.y+sy*152;return{x0:Math.min(xa,xb),x1:Math.max(xa,xb),y0:Math.min(ya,yb),y1:Math.max(ya,yb)};}
+function ugCanClear(R){const used=new Set();for(const A of[typeof LIVE!=='undefined'?LIVE:[],typeof SAFELIVE!=='undefined'?SAFELIVE:[],typeof WALKSHOPS!=='undefined'?WALKSHOPS:[],typeof SHOPS!=='undefined'?SHOPS:[]])for(const s of A)if(s&&s.b)used.add(s.b);
+  const ok=q=>!(q.hollow||q.shop||q.outside||q.elev||q.enterW!=null||used.has(q)||q.lad||(q.kind&&q.kind!=='bld')||!['glass','brick','conc','plaster'].includes(q.st));
+  for(let ty=Math.floor(R.y0/T);ty<Math.ceil(R.y1/T);ty++)for(let tx=Math.floor(R.x0/T);tx<Math.ceil(R.x1/T);tx++){const t2=tileAt(tx,ty);if(t2===WATER||t2===ROAD)return null;}
+  const hit=buildings.filter(q=>q.x<R.x1&&q.x+q.w>R.x0&&q.y<R.y1&&q.y+q.h>R.y0);if(hit.some(q=>!ok(q)))return null;
+  let area=0;for(const q of hit)area+=q.w*q.h;if(area>210*210)return null;
+  if(typeof placeBusyRect==='function'&&placeBusyRect(R.x0-8,R.y0-8,R.x1+8,R.y1+8))return null;return hit;}
+function ugClear(P){const{R,old}=P;let x0=R.x0,y0=R.y0,x1=R.x1,y1=R.y1;for(const q of old){x0=Math.min(x0,q.x);y0=Math.min(y0,q.y);x1=Math.max(x1,q.x+q.w);y1=Math.max(y1,q.y+q.h);buildings.splice(buildings.indexOf(q),1);}
+  const mm=mmc.getContext('2d');mm.fillStyle='#8c8a84';
+  for(let ty=Math.floor(y0/T);ty<Math.ceil(y1/T);ty++)for(let tx=Math.floor(x0/T);tx<Math.ceil(x1/T);tx++){const i=ty*W+tx;if(map[i]===BLD||map[i]===LOT||map[i]===GRASS||map[i]===TREE){map[i]=WALK;PARKT[i]=14;mm.fillRect(tx,ty,1,1);}}
+  BMAP.fill(-1);buildings.forEach((o,i)=>{for(let ty=Math.floor(o.y/T);ty<Math.ceil((o.y+o.h)/T);ty++)for(let tx=Math.floor(o.x/T);tx<Math.ceil((o.x+o.w)/T);tx++)if(tx>=0&&ty>=0&&tx<W&&ty<W)BMAP[ty*W+tx]=i;});
+  if(typeof BGR!=='undefined')BGR=null;SGRID=null;clearRect(x0+2,y0+2,x1-2,y1-2);}
 const UGM=(()=>{const st=[];
   // ---- stations: a platform under the street beside the entrance's corner, the stairs down the sidewalk ----
   SUBWAY.forEach((s,i)=>{const ix=clamp(Math.round((s.p.x/T-2)/P),1,NB-1),iy=clamp(Math.round((s.p.y/T-2)/P),0,NB),c=ixPt(ix,iy);
-    let pick=null;for(const[sx,sy]of[[1,1],[-1,1],[1,-1],[-1,-1]]){let ok=true;for(let d=64;d<=196;d+=8){if(tileAt(Math.floor((c.x+sx*d)/T),Math.floor((c.y+sy*80)/T))!==WALK){ok=false;break;}}if(ok){pick=[sx,sy];break;}}
-    if(!pick)pick=[1,1];if(st.some(o=>o.iy===iy&&Math.abs(o.ix-ix)<3))return;
-    st.push({i,n:s.n,ix,iy,c,sx:pick[0],sy:pick[1]});});
+    if(st.some(o=>o.iy===iy&&Math.abs(o.ix-ix)<3))return;
+    // v5.41: the stairs go down from a small plaza on the corner of the block (cleared of its buildings), so the sidewalk stays open;
+    // where no corner can be cleared they go down the sidewalk itself
+    let pick=null,plaza=null;
+    for(const[sx,sy]of[[1,1],[-1,1],[1,-1],[-1,-1]]){const R=ugPlazaRect(c,sx,sy),cl=R&&ugCanClear(R);if(cl){pick=[sx,sy];plaza={R,old:cl};break;}}
+    if(!pick)for(const[sx,sy]of[[1,1],[-1,1],[1,-1],[-1,-1]]){let ok=true;for(let d=64;d<=196;d+=8){if(tileAt(Math.floor((c.x+sx*d)/T),Math.floor((c.y+sy*80)/T))!==WALK){ok=false;break;}}if(ok){pick=[sx,sy];break;}}
+    if(!pick)pick=[1,1];if(plaza)ugClear(plaza);
+    st.push({i,n:s.n,ix,iy,c,sx:pick[0],sy:pick[1],plaza:!!plaza});});
   const cx0=WPX/2,cy0=WPX/2;st.sort((a,b)=>Math.atan2(a.c.y-cy0,a.c.x-cx0)-Math.atan2(b.c.y-cy0,b.c.x-cx0));
   const N=st.length;
   // ---- the line: every station's platform runs west to east under its street; between them the tunnel follows the streets ----
@@ -61,12 +79,12 @@ const UGM=(()=>{const st=[];
   // ---- mark the grid ----
   const put=(x,y,k,zz)=>{if(!ugIn(x,y))return;const i=ugIdx(x,y);if(UGK[i]===3||(UGK[i]===2&&k===1))return;UGK[i]=k;UGZ[i]=zz;};
   for(let i=0;i<n;i++){const q=TR[i],b=TR[(i+1)%n];for(let h=0;h<2;h++){const x0=h?(q.x+b.x)/2:q.x,y0=h?(q.y+b.y)/2:q.y;for(let l=-34;l<=34;l+=4)put(x0-Math.sin(q.a)*l,y0+Math.cos(q.a)*l,1,q.z);}}
-  for(const o of st){const{c,sx,sy}=o,ya=c.y+sy*30,yb=c.y+sy*66,ys0=c.y+sy*66,ys1=c.y+sy*96,xt=c.x+sx*72,xb=c.x+sx*184;
+  for(const o of st){const{c,sx,sy}=o,pl=o.plaza,ya=c.y+sy*30,yb=c.y+sy*(pl?104:66),ys0=c.y+sy*(pl?104:66),ys1=c.y+sy*(pl?136:96),xt=c.x+sx*(pl?120:72),xb=c.x+sx*(pl?232:184);
     o.stair={xt,xb,y0:Math.min(ys0,ys1),y1:Math.max(ys0,ys1),ys:(ys0+ys1)/2};o.ztop=GH0(xt-sx*8,o.stair.ys);
     for(let x=o.px0;x<o.px1;x+=4)for(let y=Math.min(ya,yb);y<Math.max(ya,yb);y+=4)put(x,y,2,o.fz);
     for(let x=Math.min(xt,xb);x<Math.max(xt,xb);x+=4)for(let y=o.stair.y0;y<o.stair.y1;y+=4){if(!ugIn(x,y))continue;const t=clamp((x-xt)*sx/112,0,1),i=ugIdx(x,y);UGK[i]=3;UGZ[i]=o.ztop+(o.fz-o.ztop)*t;}
     // past the foot of the stairs the platform runs on under the sidewalk too
-    for(let x=xb;x*sx<o.px1*sx&&x*sx>=xb*sx;x+=sx*4)for(let y=o.stair.y0;y<o.stair.y1;y+=4)put(x,y,2,o.fz);
+    {const far=sx>0?o.px1:o.px0;for(let x=xb;(far-x)*sx>0;x+=sx*4)for(let y=o.stair.y0;y<o.stair.y1;y+=4)put(x,y,2,o.fz);} // (toward whichever end lies beyond the stairs)
     // tiled walls round the station (the rock within 40 of the platform and stairs)
     for(let x=o.px0-48;x<o.px1+48;x+=8)for(let y=Math.min(c.y,ys1)-48;y<Math.max(c.y,ys1)+48;y+=8)if(ugIn(x,y))UGW[ugIdx(x,y)]=1;}
   return{st,TR,L,n};})();
@@ -84,10 +102,11 @@ function ugPix(x,y){const c=UGC;if(!ugIn(x,y)){c[0]=40;c[1]=38;c[2]=36;return c;
 for(let i=props.length-1;i>=0;i--)if(props[i].k==='subway')props.splice(i,1);
 for(const o of UGM.st){const s=SUBWAY[o.i],S=o.stair,x=S.xt-o.sx*6,y=S.ys;
   for(const g of SIGNS)if(g.text==='SUBWAY'&&Math.abs(g.x-s.x)<4&&Math.abs(g.y-s.y)<4){g.x=x-o.sx*4;g.y=y-o.sy*20;}
-  s.x=x-o.sx*10;s.y=y;props.push({x,y,k:'ugent',sx:o.sx,sy:o.sy,len:Math.abs(S.xb-S.xt),hw:(S.y1-S.y0)/2,z0:o.ztop,rad:Math.abs(S.xb-S.xt)/2+20,ht:20});}
+  s.x=x-o.sx*10;s.y=y;props.push({x,y,k:'ugent',plaza:o.plaza,sx:o.sx,sy:o.sy,len:Math.abs(S.xb-S.xt),hw:(S.y1-S.y0)/2,z0:o.ztop,rad:Math.abs(S.xb-S.xt)/2+20,ht:20});}
 function drawUgEnt(o,fg){ZOFF=o.z0;const g=[40,110,60],len=o.len,cx=o.x+o.sx*(len/2+6),ys=o.y;
   // a railing along the road side and across the far end; the near end is the way in
   const yr=ys-o.sy*(o.hw+1);obox(cx,yr,0,len/2,0.7,7,8.6,g,null,fg);for(let k=0;k<=4;k++)obox(o.x+o.sx*(6+k*len/4),yr,0,0.8,0.8,0,7,g,null,fg);
+  if(o.plaza){const yr2=ys+o.sy*(o.hw+1);obox(cx,yr2,0,len/2,0.7,7,8.6,g,null,fg);for(let k=0;k<=4;k++)obox(o.x+o.sx*(6+k*len/4),yr2,0,0.8,0.8,0,7,g,null,fg);}
   const xe=o.x+o.sx*(len+6);obox(xe,ys,0,0.7,o.hw,7,8.6,g,null,fg);obox(xe,ys-o.hw,0,0.8,0.8,0,7,g,null,fg);
   for(const s of[-1,1]){const lx=o.x,ly=ys+s*(o.hw-2);obox(lx,ly,0,0.8,0.8,0,22,[34,40,36],null,fg);obox(lx,ly,0,2.4,2.4,22,27,LIGHTK>0.2?[120,255,150]:[70,170,100],null,fg,null,null,LIGHTK>0.2);
     if(LIGHTK>0.2&&proj(lx,ly,24))glow(PX,PY,3*PK,'#80ff9a',0.6*LIGHTK);}}

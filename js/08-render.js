@@ -151,7 +151,8 @@ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){
   const x=-HM+i*HS,y=-HM+j*HS,k=j*HN+i,h=HMAP[k],[e,side]=edgeOf(x,y);
   if(e<=0)continue;
   const n=fbm(x/260,y/260,11);let t,c;
-  if(e<40){t=8;c=side===2?packC(196,182,140):packC(118,110,92);}
+  const ex=Math.min(W-1,Math.max(0,Math.floor(Math.min(WPX-1,Math.max(0,x))/T))),ey=Math.min(W-1,Math.max(0,Math.floor(Math.min(WPX-1,Math.max(0,y))/T))),eRd=map[ey*W+ex]===ROAD&&!WILD[ey*W+ex];
+  if(e<40&&(side===2||eRd)){t=8;c=side===2?packC(196,182,140):packC(118,110,92);} // (v5.41: only where a street meets the edge, so the old square doesn't show through the parkland)
   else if(side===2&&h<0){t=1;c=0;}
   else if(side===2&&h<9){t=2;c=packC(214,196,150);}
   else if(h>330){t=6;c=packC(236,240,246);}
@@ -166,6 +167,9 @@ for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){
     if(onE||onNS){t=9;const rut=onE?Math.abs(Math.abs(y-ys.reduce((p2,q)=>Math.abs(y-q)<Math.abs(y-p2)?q:p2))-10)<3:Math.abs(Math.abs(x-(WPX+640))-10)<3;c=rut?packC(118,96,66):packC(150+n*20,124+n*16,86+n*10);}}
   TTYPE[k]=t;TCOL[k]=c;
 }
+// v5.41: the parkland at the city's edge (WILD) is drawn as the island's own meadow and woods, so the built-up city has a ragged outline
+for(let y=0;y<WPX;y+=HS)for(let x=0;x<WPX;x+=HS){const ti=Math.floor(y/T)*W+Math.floor(x/T);if(!WILD[ti]||(map[ti]!==GRASS&&map[ti]!==TREE))continue;const k=Math.round((y+HM)/HS)*HN+Math.round((x+HM)/HS),n=fbm(x/260,y/260,11);
+  if(n>0.5){TTYPE[k]=4;TCOL[k]=packC(42,72,40);}else{TTYPE[k]=3;TCOL[k]=packC(78+n*20,108+n*22,54+n*10);}}
 window.__terrainReady=true;
 for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS;if(y<WPX)continue;const k=j*HN+i;
   if(x>HX0-48&&x<HX1+48&&y>HCY0-48&&y<HY1+48){TTYPE[k]=0;TCOL[k]=y>HY0+T*3?packC(58,52,48):packC(150,148,142);continue;}
@@ -178,7 +182,11 @@ for(let y=-HM0+200;y<WPX+HM0-200;y+=56)for(let x=-HM0+200;x<WPX+HM0-200;x+=56){
   const gi=(((jy+HM)/HS)|0)*HN+(((jx+HM)/HS)|0),t=TTYPE[gi],r=(hash(jx*3,jy*7)%1000)/1000;
   if((t===4&&r<0.7)||(t===3&&r<0.08)||(t===8&&r<0.05))addTree(jx,jy,side===1?(r<0.03?'round':'pine'):(r<0.25?'round':'pine'),rr(1,1.5));
 }
-for(let s=20;s<WPX;s+=40){const gap=[3,9,15].some(iy=>Math.abs(s-(iy*P+2)*T)<70);props.push({x:s,y:-5,k:'rail',a:0},{x:s,y:WPX+5,k:'seawall',a:0},{x:-5,y:s,k:'rail',a:PI/2});if(!gap)props.push({x:WPX+5,y:s,k:'rail',a:PI/2});}
+// guard rails along the city's outer edge only where a street runs along it (v5.41: none through the parkland, and no seawall now the
+// south side is a beach), so the edge of the old square doesn't show
+{const rd=(tx,ty)=>tx>=0&&ty>=0&&tx<W&&ty<W&&map[ty*W+tx]===ROAD&&!WILD[ty*W+tx];
+ for(let s=20;s<WPX;s+=40){const gap=[3,9,15].some(iy=>Math.abs(s-(iy*P+2)*T)<70),ts=Math.floor(s/T);
+   if(rd(ts,0))props.push({x:s,y:-5,k:'rail',a:0});if(rd(0,ts))props.push({x:-5,y:s,k:'rail',a:PI/2});if(!gap&&rd(W-1,ts))props.push({x:WPX+5,y:s,k:'rail',a:PI/2});}}
 for(let i=0;i<9;i++){const y=rr(300,WPX-300),x=WPX+rr(160,700);if(GH(x,y)>150)continue;
   buildings.push({x,y,w:rr(70,100),h:rr(60,80),hg:0.95,col:pick(['#a8322a','#c9b79c','#8a5a3a']),st:'house',roof:pick(['#5a2a22','#3e4652']),rx:true,chim:R()<0.5,door:0,ac:[],outside:true});}
 
@@ -223,12 +231,21 @@ const ISL2C={x:12850,y:3800},ISL2M=new Uint8Array(HN*HN);
   for(let j=1;j<HN-1;j++)for(let i=1;i<HN-1;i++){const k=j*HN+i;DL[k]=Math.min(DL[k],DL[k-1]+1,DL[k-HN]+1,DL[k-HN-1]+S2,DL[k-HN+1]+S2);}
   for(let j=HN-2;j>0;j--)for(let i=HN-2;i>0;i--){const k=j*HN+i;DL[k]=Math.min(DL[k],DL[k+1]+1,DL[k+HN]+1,DL[k+HN+1]+S2,DL[k+HN-1]+S2);}
   COAST.LAND=LAND;COAST.D=DL;
+  // v5.41: open water inside the city (the south shore) lies at sea level, so it meets the sea outside without a step
+  for(let y=WPX-16*T;y<=WPX;y+=HS)for(let x=0;x<=WPX;x+=HS){const tx=Math.min(W-1,Math.floor(x/T)),ty=Math.min(W-1,Math.floor(y/T)),ti=ty*W+tx;if(map[ti]===WATER&&!RIV[ti]){const k=Math.round((y+HM)/HS)*HN+Math.round((x+HM)/HS);HMAP[k]=0;}}
+  // the south beach slopes gently down to the waterline instead of ending in a step
+  {const r0=(NB-1)*P+4+2,sh=new Int32Array(W).fill(W);for(let tx=0;tx<W;tx++)for(let ty=r0;ty<W;ty++){const ti=ty*W+tx;if(map[ti]===WATER&&!RIV[ti]){sh[tx]=ty;break;}}
+   for(let y=(r0-1)*T;y<=WPX;y+=HS)for(let x=0;x<=WPX;x+=HS){const tx=Math.min(W-1,Math.floor(x/T)),ty=Math.min(W-1,Math.floor(y/T)),ti=ty*W+tx;if(map[ti]!==GRASS||PARKT[ti]!==6)continue;
+     const k=Math.round((y+HM)/HS)*HN+Math.round((x+HM)/HS),d=sh[tx]*T-y;HMAP[k]=Math.min(HMAP[k],0.4+Math.max(0,d)*0.045);}}
+  for(let y=WPX+HS;y<=WPX+4*HS;y+=HS)for(let x=0;x<=WPX;x+=HS){const tx=Math.min(W-1,Math.floor(x/T)),ti=(W-1)*W+tx;if(map[ti]===WATER&&!RIV[ti]){const k=Math.round((y+HM)/HS)*HN+Math.round((x+HM)/HS);if(HMAP[k]<0)HMAP[k]=0;}}
   for(let j=0;j<HN;j++)for(let i=0;i<HN;i++){const x=-HM+i*HS,y=-HM+j*HS,k=j*HN+i;
     if(TTYPE[k]===0&&(y>WPX||x>WPX||x<0||y<0)&&HMAP[k]===0)continue; // the subway hall and the off-map rooms stay as they are
     if(y>WPX&&x>-40&&x<WPX+40){ // the city's own south shore: a few sandbars and grassy points off the beach, clear of the pier and the river mouth
-      if(Math.abs(x-LM.beach.x)<520||(x>RIVX0*T-200&&x<RIVX1*T+200))continue;const d=y-WPX,Ls=Math.min(380,-60+2000*Math.max(0,fbm(x/700,y/700,35)-0.4)+160*(fbm(x/240,y/240,36)-0.5));
-      if(d<Ls&&d>60){const h=Math.max(HMAP[k],2+(Ls-d)*0.06),n=fbm(x/90,y/90,34);HMAP[k]=h;if(h<8){TTYPE[k]=2;TCOL[k]=packC(212+n*12,194+n*10,148+n*8);}else{TTYPE[k]=3;TCOL[k]=packC(96+n*20,118+n*18,62+n*10);}}
-      else if(!LAND[k]&&d>420)HMAP[k]=Math.min(HMAP[k],-2-Math.min(100,DL[k]*HS*0.26)); // open sea south of the city deepens like the rest (was a shallow -40 band)
+      if(y-WPX<120&&x>40&&x<WPX-40){HMAP[k]=Math.min(HMAP[k],-1-(y-WPX)*0.09);TTYPE[k]=1;TCOL[k]=0;continue;} // v5.41: the coast outline ran 40 past the city; the beach is inside the city now, so this strip is sea
+      const clear=Math.abs(x-LM.beach.x)<520||(x>RIVX0*T-200&&x<RIVX1*T+200);const d=y-WPX,Ls=Math.min(380,-60+2000*Math.max(0,fbm(x/700,y/700,35)-0.4)+160*(fbm(x/240,y/240,36)-0.5));
+      if(false&&!clear&&d<Ls&&d>60){ /* v5.41: no sandbars any more: they ran parallel to the old straight edge; the shore itself wanders now */const h=Math.max(HMAP[k],2+(Ls-d)*0.06),n=fbm(x/90,y/90,34);HMAP[k]=h;if(h<8){TTYPE[k]=2;TCOL[k]=packC(212+n*12,194+n*10,148+n*8);}else{TTYPE[k]=3;TCOL[k]=packC(96+n*20,118+n*18,62+n*10);}}
+      else if(!LAND[k]&&d>420)HMAP[k]=Math.min(HMAP[k],-2-Math.min(100,DL[k]*HS*0.26));
+      else if(!LAND[k])HMAP[k]=Math.min(HMAP[k],-1-d*0.09); // v5.41: a gentle shelf off the beach (the old land band here stood above the water as a straight ridge) // open sea south of the city deepens like the rest (was a shallow -40 band)
       continue;}
     if(x>=0&&y>=0&&x<=WPX&&y<=WPX)continue;
     // the north-east and south-east: the land types were chosen by which side of the city a point is on, which leaves a straight seam
@@ -692,7 +709,7 @@ function renderGround(heads){
   const pix=(wx,wy,f,water,hh,flat)=>{ // flat: no glints (used where one sample fills a tall gap)
     let r,g,b;
     if(UGR||ugStair(wx,wy)){const c=ugPix(wx,wy);r=c[0];g=c[1];b=c[2];}
-    else if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){
+    else if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX&&!(WILD[((wy|0)>>5)*W+((wx|0)>>5)]&&TTYPE[(((wy+HM)/HS)|0)*HN+(((wx+HM)/HS)|0)]>=3)){
       const xi=wx|0,yi=wy|0,tx=xi>>5,ty=yi>>5,ti=ty*W+tx,t=map[ti],u=xi&31,v=yi&31,h=TILEH[ti];
       const nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
       const dp=DIAGT[ti]?diagPix(DIAGT[ti]-1,xi,yi,nz,tx,ty):null;
@@ -1639,6 +1656,6 @@ R=Math.random;
 const mmc=document.createElement('canvas');mmc.width=W;mmc.height=W;
 (function(){const m=mmc.getContext('2d');const img=m.createImageData(W,W);
   const C={[ROAD]:[105,105,112],[WALK]:[140,137,130],[BLD]:[38,38,44],[GRASS]:[60,105,45],[TREE]:[40,85,35],[LOT]:[82,84,90],[SPRAY]:[200,60,40],[CRUSH]:[150,150,40],[WATER]:[48,96,140]};
-  for(let i=0;i<W*W;i++){let c=C[map[i]];if(WILD[i]&&(map[i]===GRASS||map[i]===TREE)){const n=hash(i%W,(i/W)|0)&15;c=[46+n,84+n,40+(n>>1)];} // parkland at the city's edge reads as the island's woods, not as a lawn
+  for(let i=0;i<W*W;i++){let c=C[map[i]];if(WILD[i]&&(map[i]===GRASS||map[i]===TREE)){const n=fbm((i%W)*T/260,((i/W)|0)*T/260,11),h2=hash(i%W,(i/W)|0)&7;c=n>0.5?[42+h2,72+h2,40]:[78+n*20+h2,108+n*22+h2,54+n*10];} // parkland at the city's edge reads as the island's woods, not as a lawn
     img.data[i*4]=c[0];img.data[i*4+1]=c[1];img.data[i*4+2]=c[2];img.data[i*4+3]=255;}
   m.putImageData(img,0,0);})();
