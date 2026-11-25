@@ -31,6 +31,15 @@ An open-city crime game in the spirit of the original GTA games, for PC and mobi
 
 **Controller:** left stick move/steer · RT gas · LT brake (on foot: hold to lock on) · right stick camera on foot (flick to switch locked target) · A jump/handbrake · Y enter/exit car · RB fire · right stick aim · LB switch weapon · X horn · B look behind · L3 sprint (nitro in a car) · D-pad up radio, down phone, right mirror · Back map · Start pause.
 
+## What's new in v5.40
+- **A real subway under the city.** No more fading out and warping:
+  - Each entrance is a stairwell cut into the sidewalk, behind green railings with lamps. Walk down it, and the street gives way to a tiled station under the road, with the platform's yellow edge, pillars, benches, name boards and people waiting.
+  - Tunnels run under the streets from station to station (they go under the river too), with concrete ribs and lamps.
+  - Trains run the whole loop. Step aboard when the doors open ($5, free with a monthly pass), ride from behind the train or from the driver's cab (V), and step off at any station.
+  - Walk back up the stairs to come out exactly where that station is on the street. The big map shows the line where it really runs, and where the trains are.
+  - Down there the police up on the street lose you and can't arrest you. Stay off the tracks when a train comes.
+  - On the street, you can feel the rumble when a train passes underneath, and people walk down the stairs to catch a train.
+
 ## What's new in v5.39
 Each town on Ironwood Island takes some flavour from the games set in the city it's modelled on (the feel, not their names or maps):
 - **Ocean Drive (the Vice City beach):**
@@ -45,15 +54,6 @@ Each town on Ironwood Island takes some flavour from the games set in the city i
   - a basketball court on the beach by the pier
 - **Faster:** small props and trees far away are drawn more simply, about 20% fewer boxes a frame on Ocean Drive.
 - **Fix:** a crime reported by a witness outside any named district (out on the beltway, say) no longer crashes the frame.
-
-## What's new in v5.38
-- **Start on Ocean Drive.** A new game begins on the beach side of Ocean Drive, with a convertible at the curb. The city is over the Ironwood Bridge.
-- **Ocean Drive is busy, like the real one.**
-  - The sidewalks are crowded, with people strolling past the cafes day and night.
-  - Convertibles and classic cars cruise slowly up and down the drive, and both curbs are lined with parked cars.
-  - In the daytime the beach fills with people wandering the sand, stopping to look at the sea and chatting by the umbrellas.
-- **Beachwear.** At the beach and around Ocean Drive (and on the city's beach) people wear bikinis, swim trunks and one-piece swimsuits. Everywhere else they stay dressed.
-- **Ironwood Island is open from the start.** The "east side is closed" lock now covers only the city's own east side, so the island and the outer beltway are yours from the first minute.
 
 ## Features at a glance
 - **A whole city:** an 18×18-block city split by the East River, with named districts (Old Town, Uptown, Midtown, Downtown, the Lotus Quarter, the Docks and more), countryside, hills, farmland and beaches, all generated per browser.

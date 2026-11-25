@@ -14,6 +14,11 @@ URL = (ROOT / 'index.html').as_uri()
 CHECKS = {
     'walk (camera-relative)': """()=>{const x0=player.x,y0=player.y;keys.KeyW=true;for(let i=0;i<60;i++)update(1/60);keys.KeyW=false;
         return hyp(player.x-x0,player.y-y0)>40||'player did not move'}""",
+    'subway stairs go down to a platform and back up': """()=>{const o=UGM.st[0],S=o.stair,a=o.sx>0?0:Math.PI;player.car=null;player.x=S.xt-o.sx*30;player.y=S.ys;player.jz=0;
+        const walk=(n,ang)=>{for(let i=0;i<n;i++){player.a=player.body=ang;cam.yaw=cam.base=ang;player.y=S.ys;keys.KeyW=true;update(1/60);}keys.KeyW=false;};
+        walk(130,a);if(!player.ug)return 'not underground after the stairs (x '+Math.round(player.x)+')';UGQ=true;const z=GH(player.x,player.y);UGQ=false;
+        if(Math.abs(z-o.fz)>2)return 'not at platform level ('+Math.round(z)+' vs '+Math.round(o.fz)+')';
+        walk(170,a+Math.PI);return player.ug?'still underground after walking back up':true}""",
     'enter, drive and leave a car': """()=>{let s=null;for(let i=0;i<80&&!s;i++)s=laneSpotNear(hospitalSpawn.x+rr(-600,600),hospitalSpawn.y+rr(-600,600));if(!s)return 'no lane spot';
         for(let i=cars.length-1;i>=0;i--)if(hyp(cars[i].x-s.x,cars[i].y-s.y)<320)cars.splice(i,1); // a clear road ahead
         const c=makeCar('sedan',s.x,s.y,s.dir*PI/2);player.car=c;c.driver='player';c.ai=null;c.traffic=false;player.x=c.x;player.y=c.y;

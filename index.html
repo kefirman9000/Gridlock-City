@@ -76,7 +76,7 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 <div class="logo">GRIDLOCK<span>CITY</span></div>
 <div class="tag" id="tagline">Steal cars. Answer payphones. Lose the cops.</div>
 <nav id="mmNav"></nav>
-<div class="foot"><span id="verTxt">v5.39.0</span> &middot; <button id="updBtn">Check for updates</button> &middot; <a href="https://github.com/sponsors/kefirman9000" target="_blank" rel="noopener">&#128156; Sponsor</a><br><button id="instBtn">&#128242; Install as an app</button><div id="upd"></div></div>
+<div class="foot"><span id="verTxt">v5.40.0</span> &middot; <button id="updBtn">Check for updates</button> &middot; <a href="https://github.com/sponsors/kefirman9000" target="_blank" rel="noopener">&#128156; Sponsor</a><br><button id="instBtn">&#128242; Install as an app</button><div id="upd"></div></div>
 </div>
 <div class="mmPanel" id="mmPanel"></div>
 <button id="play" style="display:none">PLAY</button>
@@ -118,7 +118,7 @@ canvas{display:block;position:fixed;left:0;top:0;width:100vw;height:100vh;height
 <script>
 // v5.23 loading screen: the scripts load one after another (in order, sharing one global scope as before), and the page gets a chance
 // to draw between them, so the progress bar moves instead of the screen sitting blank while the city is built.
-(function(){const L=['js/01-core-map.js','js/02-world.js','js/03-ai-input.js','js/04-audio-actions.js','js/05-story.js','js/06-city-life.js','js/06r-radio.js','js/07-camera-update.js','js/08-render.js','js/08v-vehicles.js','js/08a-hud.js','js/08b-extras.js','js/08c-places.js','js/08d-life.js','js/08e-more.js','js/08f-gta3.js','js/08g-world.js','js/08i-ironwood.js','js/08h-metro.js','js/08j-landmarks.js','js/09-menu.js'],MSG={0:'Laying out the streets',3:'Hiring the traffic',4:'Writing the story',5:'Filling the sidewalks',8:'Raising the skyline and the island',11:'Opening the shops',14:'Waking up the city',17:'Almost there'};
+(function(){const L=['js/01-core-map.js','js/02-world.js','js/03-ai-input.js','js/04-audio-actions.js','js/05-story.js','js/06-city-life.js','js/06r-radio.js','js/07-camera-update.js','js/08-render.js','js/08v-vehicles.js','js/08a-hud.js','js/08b-extras.js','js/08c-places.js','js/08d-life.js','js/08e-more.js','js/08f-gta3.js','js/08g-world.js','js/08i-ironwood.js','js/08h-metro.js','js/08j-landmarks.js','js/08k-subway.js','js/09-menu.js'],MSG={0:'Laying out the streets',3:'Hiring the traffic',4:'Writing the story',5:'Filling the sidewalks',8:'Raising the skyline and the island',11:'Opening the shops',14:'Waking up the city',17:'Almost there'};
   const fill=document.getElementById('ldFill'),msg=document.getElementById('ldMsg');let i=0;
   function next(){if(i>=L.length){window.GC_READY=true;const ld=document.getElementById('loading');ld.style.opacity='0';setTimeout(()=>ld.remove(),350);return;}
     if(MSG[i])msg.textContent=MSG[i]+'...';const s=document.createElement('script');s.src=L[i];

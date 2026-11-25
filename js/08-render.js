@@ -691,7 +691,8 @@ function renderGround(heads){
   const snk=SNOWK,flk=FLOODK;
   const pix=(wx,wy,f,water,hh,flat)=>{ // flat: no glints (used where one sample fills a tall gap)
     let r,g,b;
-    if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){
+    if(UGR||ugStair(wx,wy)){const c=ugPix(wx,wy);r=c[0];g=c[1];b=c[2];}
+    else if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){
       const xi=wx|0,yi=wy|0,tx=xi>>5,ty=yi>>5,ti=ty*W+tx,t=map[ti],u=xi&31,v=yi&31,h=TILEH[ti];
       const nz=((((xi>>1)*73856093)^((yi>>1)*19349663))>>>9)&7;
       const dp=DIAGT[ti]?diagPix(DIAGT[ti]-1,xi,yi,nz,tx,ty):null;
@@ -814,7 +815,7 @@ function renderGround(heads){
     let yb=LH,f=f0,ob=0,hT=0,hB=0,pDeck=false,ph=-1e9;
     while(f<FOG1&&yb>0){
       while(ob<OCCN&&f>=OCCE[ob]){OCC[ob*lw+x]=yb;ob++;}
-      const wx=CX+dx*f,wy=CY+dy*f;let h=GH(wx,wy);let water=h<0&&(wx<0||wy<0||wx>=WPX||wy>=WPX),deck=false;if(water)h=0;else if(wx>=0&&wy>=0&&wx<WPX&&wy<WPX){const ti=((wy|0)>>5)*W+((wx|0)>>5);if(RIV[ti])h=RIVL;else if(BRT[ti])deck=true;}
+      const wx=CX+dx*f,wy=CY+dy*f;let h=GH(wx,wy);let water=!UGR&&h<0&&(wx<0||wy<0||wx>=WPX||wy>=WPX),deck=false;if(water)h=0;else if(!UGR&&wx>=0&&wy>=0&&wx<WPX&&wy<WPX){const ti=((wy|0)>>5)*W+((wx|0)>>5);if(RIV[ti])h=RIVL;else if(BRT[ti])deck=true;}
       const sy=HOR+(CZ-h)*FOC/f;let yi=Math.ceil(sy-0.5);if(yi<0)yi=0;
       // a bridge deck is a slab with open air under it: whatever lies beyond fills the gap underneath
       if(hB>hT&&!deck&&yi<hB){const y0=Math.max(yi,hT),col=pix(wx,wy,f,water,h,true);for(let y=y0;y<hB;y++)buf[y*lw+x]=col;hB=y0;}
@@ -1434,7 +1435,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
     cand.sort((a,b)=>a[0]-b[0]);if(heli&&heli.fall<=0&&stars()>=5){const tg=player.car||player;heads.push([tg.x-60,tg.y,1,0,120,1]);}for(let i=0;i<Math.min(7,cand.length);i++){const c=cand[i][1],ca=Math.cos(c.a),sa=Math.sin(c.a);heads.push([c.x+ca*c.t.L/2,c.y+sa*c.t.L/2,ca,sa,c===player.car?300:200]);}}
   // underground (subway hall) or indoors: a dark ceiling instead of the sky and the far skyline
   SHOPV=shopView();
-  if(inHall(CX,CY)||(typeof roomAt==='function'&&roomAt(CX,CY))||SHOPV){L3.fillStyle=SHOPV?'#2a2624':'#1c1d20';L3.fillRect(0,0,LW,LH);L3.fillStyle='#26282c';for(let y=4;y<HOR;y+=9)L3.fillRect(0,y,LW,1);}
+  if(UGR||inHall(CX,CY)||(typeof roomAt==='function'&&roomAt(CX,CY))||SHOPV){L3.fillStyle=SHOPV?'#2a2624':'#1c1d20';L3.fillRect(0,0,LW,LH);L3.fillStyle='#26282c';for(let y=4;y<HOR;y+=9)L3.fillRect(0,y,LW,1);}
   else{drawSky(top,bot,lightLvl,warm);farMarks();}
   renderGround(heads);
   // ---- flat things on the ground (drawn before anything stands on them) ----
@@ -1444,8 +1445,8 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   if(inHall(CX,CY)){ZOFF=0;quad(HX0,HCY0,66,HX1,HCY0,66,HX1,HY1,66,HX0,HY1,66,'rgb(26,28,30)');}
   {const rm=roomAt(CX,CY);if(rm){ZOFF=0;quad(rm.x0,rm.y0,68,rm.x1,rm.y0,68,rm.x1,rm.y1,68,rm.x0,rm.y1,68,rm.id==='club'?'rgb(10,6,16)':'rgb(40,40,44)');}}
 
-  for(const c of cars){if(!vis(c.x,c.y,60))continue;ZOFF=GH(c.x,c.y);const fg=fogAt((c.x-CX)*CC+(c.y-CY)*CS);flat(c.x+2,c.y+2,c.a,c.t.L/2+2,c.t.Wd/2+2,0.3,`rgba(0,0,0,${0.3*(1-fg)})`);}
-  for(const p of peds){if(p.gone||p.injured||(p.jz||0)>2||!vis(p.x,p.y,12))continue;ZOFF=GH(p.x,p.y);const fg=fogAt((p.x-CX)*CC+(p.y-CY)*CS);if(fg>0.8)continue;flat(p.x+1.5,p.y+1.5,0.8,4.6,3.6,0.3,`rgba(0,0,0,${0.26*(1-fg)})`);}
+  for(const c of cars){if(UGR||!vis(c.x,c.y,60))continue;ZOFF=GH(c.x,c.y);const fg=fogAt((c.x-CX)*CC+(c.y-CY)*CS);flat(c.x+2,c.y+2,c.a,c.t.L/2+2,c.t.Wd/2+2,0.3,`rgba(0,0,0,${0.3*(1-fg)})`);}
+  for(const p of peds){if(UGR||p.gone||p.injured||(p.jz||0)>2||!vis(p.x,p.y,12))continue;ZOFF=GH(p.x,p.y);const fg=fogAt((p.x-CX)*CC+(p.y-CY)*CS);if(fg>0.8)continue;flat(p.x+1.5,p.y+1.5,0.8,4.6,3.6,0.3,`rgba(0,0,0,${0.26*(1-fg)})`);}
   if(!player.car&&!player.riding&&vis(player.x,player.y,12)){const fl=footFloor(player.x,player.y,player.jz||0)[0],k=clamp(1-((player.jz||0)-fl)/60,0.3,1);ZOFF=GH(player.x,player.y);flat(player.x+1.5,player.y+1.5,0.8,4.8*k,3.8*k,fl+0.3,`rgba(0,0,0,${0.3*k})`);}
   for(const m of marks){if(m.k!=='body'||!vis(m.x,m.y,20))continue;ZOFF=GH(m.x,m.y);proj(m.x,m.y,0);drawBody3(m,0.4);}
   if(mission){const pulse=0.5+0.5*Math.sin(game.t*5);
@@ -1456,7 +1457,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   if(ringing>=0&&!mission){const ph=phones[ringing];if(vis(ph.x,ph.y,40)){ZOFF=GH(ph.x,ph.y);const f=(game.t*1.2)%1;ring3(ph.x,ph.y,10+f*30,1,`rgba(255,214,0,${1-f})`,1.5);}}
   // ---- buildings, sorted far to near ----
   const vb=[];
-  if(!inHall(CX,CY)&&!roomAt(CX,CY)&&!SHOPV)forCells(cl=>{for(const b of cl.b){
+  if(!UGR&&!inHall(CX,CY)&&!roomAt(CX,CY)&&!SHOPV)forCells(cl=>{for(const b of cl.b){
     const x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.h;
     let fmin=1e9,fmax=-1e9;
     for(let i=0;i<4;i++){const f=((i&1?x1:x0)-CX)*CC+((i&2?y1:y0)-CY)*CS;if(f<fmin)fmin=f;if(f>fmax)fmax=f;}
@@ -1471,7 +1472,7 @@ function worldPass(top,bot,lightLvl,warm){if(!MIRROR)SIGNQ.length=0;
   // ---- everything that stands up: slotted between buildings so walls hide what's behind them ----
   ITEMS.length=0;
   const HALLV=inHall(CX,CY),ROOMV=roomAt(CX,CY);
-  const add=(kind,o,x,y,rad,f,hgt,zb)=>{zb=zb||0;if(HALLV&&!inHall(x,y))return;if(SHOPV&&!(x>SHOPV.x0-4&&x<SHOPV.x1+4&&y>SHOPV.y0-4&&y<SHOPV.y1+4))return;if(ROOMV&&roomAt(x,y)!==ROOMV)return;if(!HALLV&&!ROOMV&&kind!==23&&(inHall(x,y)||roomAt(x,y)))return;const dx=x-CX,dy=y-CY;if(f==null)f=dx*CC+dy*CS;if(f<-rad||f>R0)return;if(f<34&&(kind===2||kind===3||kind===5||kind===13||kind===15))return;const r=-dx*CS+dy*CC;if(Math.abs(r)>(f+rad)*HALF+rad*2)return;
+  const add=(kind,o,x,y,rad,f,hgt,zb)=>{zb=zb||0;if(UGR?!(kind===14||(o&&o.ug)):(o&&o.ug))return;if(HALLV&&!inHall(x,y))return;if(SHOPV&&!(x>SHOPV.x0-4&&x<SHOPV.x1+4&&y>SHOPV.y0-4&&y<SHOPV.y1+4))return;if(ROOMV&&roomAt(x,y)!==ROOMV)return;if(!HALLV&&!ROOMV&&kind!==23&&(inHall(x,y)||roomAt(x,y)))return;const dx=x-CX,dy=y-CY;if(f==null)f=dx*CC+dy*CS;if(f<-rad||f>R0)return;if(f<34&&(kind===2||kind===3||kind===5||kind===13||kind===15))return;const r=-dx*CS+dy*CC;if(Math.abs(r)>(f+rad)*HALF+rad*2)return;
     const fc=Math.max(f,NEAR),k=FOC/fc,gz=GH(x,y),sx=HW+r*k,sw=rad*k,yb=HOR+(CZ-gz-zb)*k,yt=HOR+(CZ-gz-zb-(hgt||22))*k,ym=(yb+yt)/2;
     let slot=0;
     for(let i=vb.length-1;i>=0;i--){const b=vb[i];

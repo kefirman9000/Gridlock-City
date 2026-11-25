@@ -1,4 +1,4 @@
 {
-  "version": "5.39.0",
-  "notes": "Each town gets some flavour from the games set in its city: start at the Seabreeze Hotel (your first safehouse) on Ocean Drive with a lighthouse, lifeguards, mopeds and neon underglow; rooftop water tanks and billboards in Ironwood Central; hill letters, an observatory, sidewalk stars and a beach court in Palm Heights. Faster drawing of far props and trees; a crash fix for crime reports outside town."
+  "version": "5.40.0",
+  "notes": "A real subway under the city: walk down the stairwells in the sidewalk to platforms under the streets, ride trains through tunnels that run under the streets from station to station, and walk back up. No more warping."
 }

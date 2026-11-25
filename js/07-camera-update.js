@@ -52,6 +52,7 @@ function update(dt){
   game.t+=dt;
   const s0=stars();
   // ---- player ----
+  UGQ=!!player.ug; // v5.40: underground, your own moves see the subway's floors and walls (08k-subway.js)
   if(game.state==='play'){
     player.cool-=dt;player.hurt=Math.max(0,player.hurt-dt);
     if(pressed.swap)swapWeapon(pressed.swap===-1?-1:1);
@@ -136,6 +137,7 @@ function update(dt){
   pressed.enter=pressed.swap=false;
   extTick(dt);
 
+  UGQ=false;
   // ---- AI cars ----
   const actR=viewR+900,actR2=actR*actR;
   const active=[];
@@ -219,7 +221,7 @@ function update(dt){
       p.dodged=true;if(R()<0.55){const s2=lat>=0?1:-1;p.state='flee';p.panic=rr(2,4);p.fx=p.x+sa*s2*40;p.fy=p.y-ca*s2*40;p.x+=-sa*s2*10;p.y+=ca*s2*10;}}}
   // player on foot vs cars
   if(!player.car&&!player.riding&&game.state==='play'){
-    for(const c of active){
+    if(!player.ug)for(const c of active){ // (cars on the street above can't hit you in the subway)
       if(dist2(c.x,c.y,player.x,player.y)>(c.t.L/2+12)**2)continue;
       for(const cc of c.cc){
         const dx=player.x-cc[0],dy=player.y-cc[1],d2=dx*dx+dy*dy,rs=c.t.Wd/2+7;
@@ -249,6 +251,7 @@ function update(dt){
     for(const c of active)if(c.driver==='cop'&&c.ai&&c.ai.mode==='chase'&&dist2(c.x,c.y,tg.x,tg.y)<(620*SK)**2&&los(c.x,c.y,tg.x,tg.y)){seen=true;break;}
     if(!seen)for(const p of peds)if(p.cop&&p.state==='cop'&&!p.gone&&dist2(p.x,p.y,tg.x,tg.y)<(520*SK)**2&&los(p.x,p.y,tg.x,tg.y)){seen=true;break;}
     if(!seen&&heliSees())seen=true;if(!seen&&boatSeesPlayer(tg))seen=true;
+    if(player.ug)seen=false; // nobody up on the street can see you in the subway
     if(seen){seenT=0;lastSeenX=tg.x;lastSeenY=tg.y;}else seenT+=dt;
     evadeT=seenT;
     // v5.17: stars fade once they lose you, one at a time; the higher the level, the longer they search. A spray shop or a bribe still clears them at once.
@@ -398,6 +401,7 @@ function update(dt){
   shake=Math.max(0,shake-dt*30);
 
   // ---- camera ----
+  UGQ=!!player.ug; // the camera follows you underground too
   // chase camera: sits behind the car (or you) and swings round as you turn
   SCOPE.on=scopeWanted();
   if(SCOPE.on){const w=WEAPONS[player.w];if(SCOPE.zw){SCOPE.z=clamp(SCOPE.z*(SCOPE.zw<0?1.25:0.8),1.3,w.scope*1.6);SCOPE.zw=0;}else if(SCOPE.z<1.2)SCOPE.z=w.scope;
@@ -440,6 +444,7 @@ function update(dt){
      for(let s2=16;s2<Math.min(dd,dist);s2+=8){const qx=player.x-ca*s2,qy=player.y-sa*s2,lz=z0+(camZ2-z0)*s2/dist;if(GH(qx,qy)>lz-6){dd=Math.max(24,s2-12);break;}}}
     cam.dist=lerp(cam.dist,dd,Math.min(1,dt*(dd<cam.dist?16:2.5)));cam.h=lerp(cam.h,Math.max(10,hgt),Math.min(1,dt*(cam.pidle<0.3?14:3)));
     cam.x=player.x-ca*cam.dist;cam.y=player.y-sa*cam.dist;shopCam();{const gz=GH(player.x,player.y)+(player.riding?EL_H+6:player.car?(player.car.az||0)*0.85:(player.jz||0)>18?player.jz-6:(player.jz||0)*0.4);cam.gz=cam.gz==null?gz:lerp(cam.gz,gz,Math.min(1,dt*(player.car&&player.car.air>0?9:5)));}}
+  UGQ=false;
   updateAudio();
 }
 let starFlash=0,sprayCool=0,curZone=-2,zoneBanner=null,radioBanner=null;

@@ -1,6 +1,6 @@
 # Gridlock City (this repo)
 
-The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js`, `js/08g-world.js`, `js/08i-ironwood.js`, `js/08h-metro.js` and `js/08j-landmarks.js` between 08 and 09, in that order), loaded in order as
+The game is `index.html` (page, styles, menus) plus its script split into `js/01-core-map.js` … `js/09-menu.js` (with `js/06r-radio.js`, the radio stations' talk, DJ and ad content and their live clock, after 06; `js/08v-vehicles.js`, the car, bike, boat and heli drawing, right after 08; `js/08a-hud.js`, the HUD and touch controls, `js/08b-extras.js`, `js/08c-places.js`, `js/08d-life.js`, `js/08e-more.js`, `js/08f-gta3.js`, `js/08g-world.js`, `js/08i-ironwood.js`, `js/08h-metro.js`, `js/08j-landmarks.js` and `js/08k-subway.js` between 08 and 09, in that order), loaded in order as
 plain classic scripts (no build step; they share one global scope). Also `sw.js`, `manifest.json`, `version.json`. `2d.html` is the old top-down version.
 
 **Load order matters across files:** a function declaration is only hoisted within its own file. Anything a file calls *while it
@@ -97,6 +97,8 @@ v5.38 (end of 08j): new games start on Ocean Drive (`ODSTART`, `odStart()` from 
 beachgoers `p.beach` (lifePed wrapper), extra Ocean Drive walkers and cruisers in `odLifeTick`. Tests that need a city street should work from `hospitalSpawn`, not the player's start.
 v5.39 (end of 08j, `V539`): the Seabreeze Hotel safehouse at the start (`b.vhotel`), lighthouse (`b.lighthouse`), observatory (`b.observ`), hill letters (`hletter`, `HFONT`), sidewalk stars (`wstar`), beach court (`bball`), Central roof tanks/billboards, `CT.moped`.
 Props 14 tall or less are culled past 640 and props 26 tall or less past 900 (in the case 13 add of 08-render); trees switch to their simple form past 560.
+v5.40: the subway runs under the city (`js/08k-subway.js`; the old METRO loop and station hall are retired). `UGK`/`UGZ` grid (8 units: rock, track, platform, stairs), `GH` wrapped (stairs always; track/platform while `UGQ`, set in 07's player and camera sections, or `UGR` while drawing below).
+`player.ug` is set on the stairs (same x/y, no warp); while it's set, only `o.ug` things are drawn and street things (cars, police, bullets, buildings, ladders) can't reach you. Anything new that the player can touch from the street must check `player.ug`.
 `cityEdge` ends with a cleanup: every `RINGJ` node keeps an open street path into town, CUT segments are grassed, open segments are paved with their sidewalks, deg-0 nodes and stray road pieces become park.
 
 ## The island (v5.11)

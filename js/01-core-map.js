@@ -114,7 +114,9 @@
 //      police; hitting bystanders or cops still does. One incident raises the wanted level by one star at most.
 //  G4. New enemies or chases say why they're happening (a note, a WANTED reason, a radio line).
 // =====================================================================================================================
-const VERSION='5.39.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
+var UGQ=false,UGR=false; // v5.40: underground flags (see js/08k-subway.js): UGQ while your own moves run below the street, UGR while it's drawn
+function ugStair(){return false}function ugPix(){return[40,40,40]}
+const VERSION='5.40.0',REPO='kefirman9000/Gridlock-City',REPO_OLD='kefirman9000/aether-isles',PAGES_URL=/\.github\.io$/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://kefirman9000.github.io/Gridlock-City/'; // the site's own address, so links keep working whatever the repo is called
 async function fetchLatest(){for(const rp of[REPO,REPO_OLD]){try{const r=await fetch('https://raw.githubusercontent.com/'+rp+'/main/version.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json();}catch(_){}}throw new Error('offline');}
 // ================= SETUP =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
